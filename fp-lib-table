@@ -1,0 +1,5 @@
+(fp_lib_table
+  (version 7)
+  (lib (name "CSD83325L")(type "KiCad")(uri "${KIPRJMOD}/CSD83325L/footprints.pretty")(options "")(descr ""))
+  (lib (name "SolderPads")(type "KiCad")(uri "${KIPRJMOD}/SolderPads.pretty")(options "")(descr ""))
+)
