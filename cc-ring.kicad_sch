@@ -4788,6 +4788,16 @@
 	)
 	(wire
 		(pts
+			(xy 58.42 68.58) (xy 62.23 68.58)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "07e018fb-e3aa-4616-86c7-b512c3092d23")
+	)
+	(wire
+		(pts
 			(xy 212.09 93.98) (xy 212.09 95.25)
 		)
 		(stroke
@@ -4835,6 +4845,16 @@
 			(type default)
 		)
 		(uuid "13f144da-9f11-4cd4-b065-58bcdb1be0fb")
+	)
+	(wire
+		(pts
+			(xy 48.26 68.58) (xy 48.26 67.31)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "15ee9a7a-0dce-4e9a-9422-8e703b899c31")
 	)
 	(wire
 		(pts
@@ -5198,6 +5218,16 @@
 	)
 	(wire
 		(pts
+			(xy 58.42 71.12) (xy 58.42 72.39)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "4a9b967d-4fff-4a10-b035-008b12d9d9fc")
+	)
+	(wire
+		(pts
 			(xy 203.2 62.23) (xy 203.2 66.04)
 		)
 		(stroke
@@ -5258,7 +5288,7 @@
 	)
 	(wire
 		(pts
-			(xy 36.83 50.8) (xy 36.83 52.07)
+			(xy 48.26 50.8) (xy 48.26 52.07)
 		)
 		(stroke
 			(width 0)
@@ -5838,16 +5868,6 @@
 	)
 	(wire
 		(pts
-			(xy 45.72 52.07) (xy 49.53 52.07)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "c03359e7-c2bd-460b-9b1f-c1898b3d8a44")
-	)
-	(wire
-		(pts
 			(xy 187.96 139.7) (xy 187.96 140.97)
 		)
 		(stroke
@@ -6028,7 +6048,7 @@
 	)
 	(wire
 		(pts
-			(xy 40.64 52.07) (xy 36.83 52.07)
+			(xy 48.26 52.07) (xy 49.53 52.07)
 		)
 		(stroke
 			(width 0)
@@ -6158,6 +6178,16 @@
 	)
 	(wire
 		(pts
+			(xy 53.34 68.58) (xy 48.26 68.58)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "e936d615-0947-4ae7-8b1e-8588ae797dbb")
+	)
+	(wire
+		(pts
 			(xy 68.58 29.21) (xy 64.77 29.21)
 		)
 		(stroke
@@ -6215,6 +6245,16 @@
 			(type default)
 		)
 		(uuid "f5eab497-f8eb-4937-8dc8-a17cd8baf047")
+	)
+	(wire
+		(pts
+			(xy 62.23 71.12) (xy 58.42 71.12)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f6e8d722-be3e-4713-b2bb-55df36390927")
 	)
 	(wire
 		(pts
@@ -6325,6 +6365,16 @@
 			)
 		)
 		(uuid "6533f7c4-f891-44f1-b9c2-3e58f43b5de2")
+	)
+	(text "120R resistor to limit charging\ncurrent to just over 1C"
+		(exclude_from_sim no)
+		(at 28.702 56.134 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "a69169bd-e8a9-4eae-864c-5ea4ded801bb")
 	)
 	(global_label "LED_D"
 		(shape input)
@@ -8288,6 +8338,72 @@
 		)
 	)
 	(symbol
+		(lib_id "power:VDD")
+		(at 48.26 50.8 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "479f5b57-e35f-451a-9dfd-afca06c24064")
+		(property "Reference" "#PWR023"
+			(at 48.26 54.61 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "VDD"
+			(at 48.26 45.72 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 48.26 50.8 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 48.26 50.8 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"VDD\""
+			(at 48.26 50.8 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "e8e1ad93-1816-4f88-9967-2dcc0da5bb51")
+		)
+		(instances
+			(project "cc-ring"
+				(path "/0e2a213d-38d8-4c0b-a3d4-2fe8a939db16"
+					(reference "#PWR023")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Device:C_Small")
 		(at 97.79 100.33 0)
 		(unit 1)
@@ -8557,6 +8673,73 @@
 		)
 	)
 	(symbol
+		(lib_id "Connector_Generic:Conn_01x02")
+		(at 67.31 68.58 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "50e2677b-e668-42fd-991b-a987d3c05120")
+		(property "Reference" "J4"
+			(at 67.31 62.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "Charge"
+			(at 67.31 64.77 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "SolderPads:MageneticChargeConnector"
+			(at 67.31 68.58 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 67.31 68.58 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Generic connector, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)"
+			(at 67.31 68.58 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "f65a2617-c264-41bb-b974-65a2563c3bd5")
+		)
+		(pin "2"
+			(uuid "1ddc533e-bdf7-47f8-9384-ba589c053b77")
+		)
+		(instances
+			(project ""
+				(path "/0e2a213d-38d8-4c0b-a3d4-2fe8a939db16"
+					(reference "J4")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "LED:WS2812B-2020")
 		(at 391.16 148.59 0)
 		(unit 1)
@@ -8764,6 +8947,73 @@
 		)
 	)
 	(symbol
+		(lib_id "power:GND")
+		(at 58.42 72.39 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "5e95b505-b0dc-4587-bbd6-2ff4f9134287")
+		(property "Reference" "#PWR052"
+			(at 58.42 78.74 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 58.42 77.47 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" ""
+			(at 58.42 72.39 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 58.42 72.39 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 58.42 72.39 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "552f3cd6-2014-4a15-b8cf-430c18ad41c9")
+		)
+		(instances
+			(project "cc-ring"
+				(path "/0e2a213d-38d8-4c0b-a3d4-2fe8a939db16"
+					(reference "#PWR052")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Connector_Generic:Conn_01x02")
 		(at 73.66 31.75 0)
 		(mirror x)
@@ -8827,6 +9077,74 @@
 			(project "cc-ring"
 				(path "/0e2a213d-38d8-4c0b-a3d4-2fe8a939db16"
 					(reference "J3")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R_Small")
+		(at 55.88 68.58 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "62ede91d-480e-4564-8ef3-bdc704e8d4e6")
+		(property "Reference" "R2"
+			(at 55.88 63.5 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "120"
+			(at 55.88 66.04 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
+			(at 55.88 68.58 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 55.88 68.58 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Resistor, small symbol"
+			(at 55.88 68.58 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "2b171b09-0ab0-46c7-a2cf-a2c850288aa3")
+		)
+		(pin "2"
+			(uuid "7bcff28c-208e-4cd4-92de-0850b9b62fca")
+		)
+		(instances
+			(project "cc-ring"
+				(path "/0e2a213d-38d8-4c0b-a3d4-2fe8a939db16"
+					(reference "R2")
 					(unit 1)
 				)
 			)
@@ -11735,18 +12053,17 @@
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(uuid "cc2ea0f9-7fcc-4396-bf3c-de1c185076a1")
 		(property "Reference" "J2"
-			(at 55.88 45.72 0)
+			(at 55.372 45.72 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 			)
 		)
-		(property "Value" "Charge/debug"
-			(at 55.88 48.26 0)
+		(property "Value" "Debug"
+			(at 55.626 48.26 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -11932,6 +12249,71 @@
 			(project ""
 				(path "/0e2a213d-38d8-4c0b-a3d4-2fe8a939db16"
 					(reference "J1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+BATT")
+		(at 48.26 67.31 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "d569afeb-c164-4b5d-8fde-75cf8d95d1ed")
+		(property "Reference" "#PWR051"
+			(at 48.26 71.12 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+BATT"
+			(at 48.006 63.246 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 48.26 67.31 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 48.26 67.31 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"+BATT\""
+			(at 48.26 67.31 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "8538255f-05ff-42b4-9d6a-dedf2b416924")
+		)
+		(instances
+			(project "cc-ring"
+				(path "/0e2a213d-38d8-4c0b-a3d4-2fe8a939db16"
+					(reference "#PWR051")
 					(unit 1)
 				)
 			)
@@ -12199,72 +12581,6 @@
 			(project "cc-ring"
 				(path "/0e2a213d-38d8-4c0b-a3d4-2fe8a939db16"
 					(reference "#PWR021")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "power:+BATT")
-		(at 36.83 50.8 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "e67ca29a-553f-4084-9192-d79c05b2e642")
-		(property "Reference" "#PWR023"
-			(at 36.83 54.61 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "+BATT"
-			(at 36.83 45.72 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 36.83 50.8 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 36.83 50.8 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"+BATT\""
-			(at 36.83 50.8 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "5ac096b3-0685-4328-a2ed-cb55f2c85dc1")
-		)
-		(instances
-			(project "cc-ring"
-				(path "/0e2a213d-38d8-4c0b-a3d4-2fe8a939db16"
-					(reference "#PWR023")
 					(unit 1)
 				)
 			)
@@ -12830,74 +13146,6 @@
 			(project "cc-ring"
 				(path "/0e2a213d-38d8-4c0b-a3d4-2fe8a939db16"
 					(reference "#PWR040")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:R_Small")
-		(at 43.18 52.07 90)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "fe1eb6ee-5369-4d0e-9014-046b84a7940e")
-		(property "Reference" "R2"
-			(at 43.18 46.99 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "220"
-			(at 43.18 49.53 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
-			(at 43.18 52.07 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 43.18 52.07 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Resistor, small symbol"
-			(at 43.18 52.07 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "4105f1e8-1e5f-4a58-a11e-8cb70d63902f")
-		)
-		(pin "2"
-			(uuid "aa6c24d2-7699-4bad-9e41-acd20ee327ad")
-		)
-		(instances
-			(project ""
-				(path "/0e2a213d-38d8-4c0b-a3d4-2fe8a939db16"
-					(reference "R2")
 					(unit 1)
 				)
 			)

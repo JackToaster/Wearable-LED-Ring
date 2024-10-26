@@ -1,0 +1,228 @@
+(footprint "MageneticChargeConnector"
+	(version 20240108)
+	(generator "pcbnew")
+	(generator_version "8.0")
+	(layer "F.Cu")
+	(property "Reference" "REF**"
+		(at 0.25 -3.75 0)
+		(unlocked yes)
+		(layer "F.SilkS")
+		(uuid "85289ecf-4562-49bb-b14a-de2a686854da")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Value" "MageneticChargeConnector"
+		(at 0 3.75 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(uuid "c1040b62-0331-42ea-a115-79a438bf909b")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Footprint" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "eab94708-723a-45e4-a1a9-16e1638a9025")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "e6b32f19-a979-4737-839b-753f51e25d90")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "1235773e-e706-4a9e-a5bf-d06793ec65be")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(attr smd)
+	(fp_poly
+		(pts
+			(arc
+				(start -1.559625 0.259938)
+				(mid -1.202062 1.027155)
+				(end -0.5 1.5)
+			)
+			(arc
+				(start -0.5 1.250001)
+				(mid -1.035021 0.860949)
+				(end -1.320147 0.26403)
+			)
+		)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(fill solid)
+		(layer "F.Paste")
+		(uuid "8978a714-07c9-42fa-9a91-6f88fb5ccaf0")
+	)
+	(fp_poly
+		(pts
+			(arc
+				(start -0.259937 -1.559625)
+				(mid -1.027154 -1.202062)
+				(end -1.499999 -0.5)
+			)
+			(arc
+				(start -1.25 -0.5)
+				(mid -0.860948 -1.035021)
+				(end -0.264029 -1.320147)
+			)
+		)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(fill solid)
+		(layer "F.Paste")
+		(uuid "9586c948-15a1-41ea-9eec-d51a92cdb9bd")
+	)
+	(fp_poly
+		(pts
+			(arc
+				(start 0.259938 1.559625)
+				(mid 1.027155 1.202062)
+				(end 1.5 0.5)
+			)
+			(arc
+				(start 1.250001 0.5)
+				(mid 0.860949 1.035021)
+				(end 0.26403 1.320147)
+			)
+		)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(fill solid)
+		(layer "F.Paste")
+		(uuid "2fae65c0-27f0-4299-9e46-e85a6a25baec")
+	)
+	(fp_poly
+		(pts
+			(arc
+				(start 1.559625 -0.259938)
+				(mid 1.202062 -1.027155)
+				(end 0.5 -1.5)
+			)
+			(arc
+				(start 0.5 -1.250001)
+				(mid 1.035021 -0.860949)
+				(end 1.320147 -0.26403)
+			)
+		)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(fill solid)
+		(layer "F.Paste")
+		(uuid "72f07806-1ef6-458c-825d-8c41b97c3d06")
+	)
+	(fp_text user "${REFERENCE}"
+		(at 0 5.25 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(uuid "1d11664e-77ad-4916-b6d1-850ade7635e0")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(pad "1" smd circle
+		(at 0 0)
+		(size 1.5 1.5)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+		(solder_paste_margin -0.1)
+		(uuid "9f70eb78-2602-4a63-9d81-78f34f60d6aa")
+	)
+	(pad "2" smd custom
+		(at 1.5 0)
+		(size 0.2 0.2)
+		(layers "F.Cu" "F.Mask")
+		(thermal_bridge_angle 90)
+		(options
+			(clearance outline)
+			(anchor circle)
+		)
+		(primitives
+			(gr_poly
+				(pts
+					(arc
+						(start 0.25 0)
+						(mid -1.5 -1.75)
+						(end -3.25 0)
+					)
+					(arc
+						(start -2.75 0)
+						(mid -1.5 -1.25)
+						(end -0.25 0)
+					)
+				)
+				(width 0)
+				(fill yes)
+			)
+			(gr_poly
+				(pts
+					(arc
+						(start -3.250402 -0.020034)
+						(mid -1.500402 1.729966)
+						(end 0.249598 -0.020034)
+					)
+					(arc
+						(start -0.250402 -0.020034)
+						(mid -1.500402 1.229966)
+						(end -2.750402 -0.020034)
+					)
+				)
+				(width 0)
+				(fill yes)
+			)
+			(gr_poly
+				(pts
+					(xy -0.1 -0.05) (xy -0.096194 -0.069134) (xy -0.085355 -0.085355) (xy -0.069134 -0.096194) (xy -0.05 -0.1)
+					(xy 0.05 -0.1) (xy 0.069134 -0.096194) (xy 0.085355 -0.085355) (xy 0.096194 -0.069134) (xy 0.1 -0.05)
+					(xy 0.1 0.05) (xy 0.096194 0.069134) (xy 0.085355 0.085355) (xy 0.069134 0.096194) (xy 0.05 0.1)
+					(xy -0.05 0.1) (xy -0.069134 0.096194) (xy -0.085355 0.085355) (xy -0.096194 0.069134) (xy -0.1 0.05)
+				)
+				(width 0)
+				(fill yes)
+			)
+		)
+		(uuid "68d846ce-b0de-4d07-916b-4e309b5f118b")
+	)
+)
