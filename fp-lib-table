@@ -2,4 +2,6 @@
   (version 7)
   (lib (name "CSD83325L")(type "KiCad")(uri "${KIPRJMOD}/CSD83325L/footprints.pretty")(options "")(descr ""))
   (lib (name "SolderPads")(type "KiCad")(uri "${KIPRJMOD}/SolderPads.pretty")(options "")(descr ""))
+  (lib (name "tlv707")(type "KiCad")(uri "${KIPRJMOD}/tlv707.pretty")(options "")(descr ""))
+  (lib (name "pretzel")(type "KiCad")(uri "${KIPRJMOD}/pretzel.pretty")(options "")(descr ""))
 )
