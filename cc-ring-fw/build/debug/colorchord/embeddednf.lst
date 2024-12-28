@@ -1,0 +1,1861 @@
+ARM GAS  /tmp/ccqT9Ncy.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"embeddednf.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "colorchord/embeddednf.c"
+  20              		.section	.text.UpdateFreqs,"ax",%progbits
+  21              		.align	1
+  22              		.global	UpdateFreqs
+  23              		.syntax unified
+  24              		.thumb
+  25              		.thumb_func
+  27              	UpdateFreqs:
+  28              	.LFB3:
+   1:colorchord/embeddednf.c **** //Copyright 2015 <>< Charles Lohr under the ColorChord License.
+   2:colorchord/embeddednf.c **** 
+   3:colorchord/embeddednf.c **** #include "embeddednf.h"
+   4:colorchord/embeddednf.c **** #include <stdio.h>
+   5:colorchord/embeddednf.c **** #include <string.h>
+   6:colorchord/embeddednf.c **** 
+   7:colorchord/embeddednf.c **** uint16_t folded_bins[FIXBPERO];
+   8:colorchord/embeddednf.c **** uint16_t fuzzed_bins[FIXBINS];
+   9:colorchord/embeddednf.c **** uint8_t  note_peak_freqs[MAXNOTES];
+  10:colorchord/embeddednf.c **** uint16_t note_peak_amps[MAXNOTES];
+  11:colorchord/embeddednf.c **** uint16_t note_peak_amps2[MAXNOTES];
+  12:colorchord/embeddednf.c **** uint8_t  note_jumped_to[MAXNOTES];
+  13:colorchord/embeddednf.c **** 
+  14:colorchord/embeddednf.c **** 
+  15:colorchord/embeddednf.c **** #ifndef PRECOMPUTE_FREQUENCY_TABLE
+  16:colorchord/embeddednf.c **** static const float bf_table[24] = {
+  17:colorchord/embeddednf.c ****         1.000000, 1.029302, 1.059463, 1.090508, 1.122462, 1.155353, 
+  18:colorchord/embeddednf.c ****         1.189207, 1.224054, 1.259921, 1.296840, 1.334840, 1.373954, 
+  19:colorchord/embeddednf.c ****         1.414214, 1.455653, 1.498307, 1.542211, 1.587401, 1.633915, 
+  20:colorchord/embeddednf.c ****         1.681793, 1.731073, 1.781797, 1.834008, 1.887749, 1.943064 };
+  21:colorchord/embeddednf.c **** 
+  22:colorchord/embeddednf.c **** /* The above table was generated using the following code:
+  23:colorchord/embeddednf.c **** 
+  24:colorchord/embeddednf.c **** #include <stdio.h>
+  25:colorchord/embeddednf.c **** #include <math.h>
+  26:colorchord/embeddednf.c **** 
+  27:colorchord/embeddednf.c **** int main()
+  28:colorchord/embeddednf.c **** {
+  29:colorchord/embeddednf.c **** 	int i;
+  30:colorchord/embeddednf.c **** 	#define FIXBPERO 24
+ARM GAS  /tmp/ccqT9Ncy.s 			page 2
+
+
+  31:colorchord/embeddednf.c **** 	printf( "const float bf_table[%d] = {", FIXBPERO );
+  32:colorchord/embeddednf.c **** 	for( i = 0; i < FIXBPERO; i++ )
+  33:colorchord/embeddednf.c **** 	{
+  34:colorchord/embeddednf.c **** 		if( ( i % 6 ) == 0 )
+  35:colorchord/embeddednf.c **** 			printf( "\n\t" );
+  36:colorchord/embeddednf.c **** 		printf( "%f, ", pow( 2, (float)i / (float)FIXBPERO ) );
+  37:colorchord/embeddednf.c **** 	}
+  38:colorchord/embeddednf.c **** 	printf( "};\n" );
+  39:colorchord/embeddednf.c **** 	return 0;
+  40:colorchord/embeddednf.c **** }
+  41:colorchord/embeddednf.c **** */
+  42:colorchord/embeddednf.c **** 
+  43:colorchord/embeddednf.c **** #endif
+  44:colorchord/embeddednf.c **** 
+  45:colorchord/embeddednf.c **** #define BUILD_BUG_ON(condition) ((void)sizeof(char[1 - 2*!!(condition)]))
+  46:colorchord/embeddednf.c **** 
+  47:colorchord/embeddednf.c **** 
+  48:colorchord/embeddednf.c **** void UpdateFreqs()
+  49:colorchord/embeddednf.c **** {
+  29              		.loc 1 49 1 view -0
+  30              		.cfi_startproc
+  31              		@ args = 0, pretend = 0, frame = 0
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  33 0000 08B5     		push	{r3, lr}
+  34              		.cfi_def_cfa_offset 8
+  35              		.cfi_offset 3, -8
+  36              		.cfi_offset 14, -4
+  50:colorchord/embeddednf.c **** 
+  51:colorchord/embeddednf.c **** #ifndef PRECOMPUTE_FREQUENCY_TABLE
+  52:colorchord/embeddednf.c **** 	uint16_t fbins[FIXBPERO];
+  53:colorchord/embeddednf.c **** 	int i;
+  54:colorchord/embeddednf.c **** 
+  55:colorchord/embeddednf.c **** 	BUILD_BUG_ON( sizeof(bf_table) != FIXBPERO*4 );
+  56:colorchord/embeddednf.c **** 
+  57:colorchord/embeddednf.c **** 	//Warning: This does floating point.  Avoid doing this frequently.  If you
+  58:colorchord/embeddednf.c **** 	//absolutely cannot have floating point on your system, you may precompute
+  59:colorchord/embeddednf.c **** 	//this and store it as a table.  It does preclude you from changing
+  60:colorchord/embeddednf.c **** 	//BASE_FREQ in runtime.
+  61:colorchord/embeddednf.c **** 
+  62:colorchord/embeddednf.c **** 	for( i = 0; i < FIXBPERO; i++ )
+  63:colorchord/embeddednf.c **** 	{
+  64:colorchord/embeddednf.c **** 		float frq =  ( bf_table[i] * BASE_FREQ );
+  65:colorchord/embeddednf.c **** 		fbins[i] = ( 65536.0 ) / ( DFREQ ) * frq * 16 + 0.5;
+  66:colorchord/embeddednf.c **** 	}
+  67:colorchord/embeddednf.c **** #else
+  68:colorchord/embeddednf.c **** 
+  69:colorchord/embeddednf.c **** 	#define PCOMP( f )  (uint16_t)((65536.0)/(DFREQ) * (f * BASE_FREQ) * 16 + 0.5)
+  70:colorchord/embeddednf.c **** 
+  71:colorchord/embeddednf.c **** 	static const uint16_t fbins[FIXBPERO] = { 
+  37              		.loc 1 71 2 view .LVU1
+  72:colorchord/embeddednf.c **** 		PCOMP( 1.000000 ), PCOMP( 1.029302 ), PCOMP( 1.059463 ), PCOMP( 1.090508 ), PCOMP( 1.122462 ), PC
+  73:colorchord/embeddednf.c **** 		PCOMP( 1.189207 ), PCOMP( 1.224054 ), PCOMP( 1.259921 ), PCOMP( 1.296840 ), PCOMP( 1.334840 ), PC
+  74:colorchord/embeddednf.c **** 		PCOMP( 1.414214 ), PCOMP( 1.455653 ), PCOMP( 1.498307 ), PCOMP( 1.542211 ), PCOMP( 1.587401 ), PC
+  75:colorchord/embeddednf.c **** 		PCOMP( 1.681793 ), PCOMP( 1.731073 ), PCOMP( 1.781797 ), PCOMP( 1.834008 ), PCOMP( 1.887749 ), PC
+  76:colorchord/embeddednf.c **** #endif
+  77:colorchord/embeddednf.c **** 
+  78:colorchord/embeddednf.c **** #ifdef USE_32DFT
+ARM GAS  /tmp/ccqT9Ncy.s 			page 3
+
+
+  79:colorchord/embeddednf.c **** 	UpdateBins32( fbins );
+  38              		.loc 1 79 2 view .LVU2
+  39 0002 0248     		ldr	r0, .L3
+  40 0004 FFF7FEFF 		bl	UpdateBins32
+  41              	.LVL0:
+  80:colorchord/embeddednf.c **** #else
+  81:colorchord/embeddednf.c **** 	UpdateBinsForProgressiveIntegerSkippyInt( fbins );
+  82:colorchord/embeddednf.c **** #endif
+  83:colorchord/embeddednf.c **** }
+  42              		.loc 1 83 1 is_stmt 0 view .LVU3
+  43 0008 08BD     		pop	{r3, pc}
+  44              	.L4:
+  45 000a 00BF     		.align	2
+  46              	.L3:
+  47 000c 00000000 		.word	fbins.0
+  48              		.cfi_endproc
+  49              	.LFE3:
+  51              		.section	.text.InitColorChord,"ax",%progbits
+  52              		.align	1
+  53              		.global	InitColorChord
+  54              		.syntax unified
+  55              		.thumb
+  56              		.thumb_func
+  58              	InitColorChord:
+  59              	.LFB4:
+  84:colorchord/embeddednf.c **** 
+  85:colorchord/embeddednf.c **** void InitColorChord()
+  86:colorchord/embeddednf.c **** {
+  60              		.loc 1 86 1 is_stmt 1 view -0
+  61              		.cfi_startproc
+  62              		@ args = 0, pretend = 0, frame = 0
+  63              		@ frame_needed = 0, uses_anonymous_args = 0
+  64 0000 08B5     		push	{r3, lr}
+  65              		.cfi_def_cfa_offset 8
+  66              		.cfi_offset 3, -8
+  67              		.cfi_offset 14, -4
+  87:colorchord/embeddednf.c **** 	int i;
+  68              		.loc 1 87 2 view .LVU5
+  88:colorchord/embeddednf.c **** 	//Set up and initialize arrays.
+  89:colorchord/embeddednf.c **** 	for( i = 0; i < MAXNOTES; i++ )
+  69              		.loc 1 89 2 view .LVU6
+  70              	.LVL1:
+  71              		.loc 1 89 9 is_stmt 0 view .LVU7
+  72 0002 0023     		movs	r3, #0
+  73              		.loc 1 89 2 view .LVU8
+  74 0004 0AE0     		b	.L6
+  75              	.LVL2:
+  76              	.L7:
+  90:colorchord/embeddednf.c **** 	{
+  91:colorchord/embeddednf.c **** 		note_peak_freqs[i] = 255;
+  77              		.loc 1 91 3 is_stmt 1 view .LVU9
+  78              		.loc 1 91 22 is_stmt 0 view .LVU10
+  79 0006 0E4A     		ldr	r2, .L9
+  80 0008 FF21     		movs	r1, #255
+  81 000a D154     		strb	r1, [r2, r3]
+  92:colorchord/embeddednf.c **** 		note_peak_amps[i] = 0;
+  82              		.loc 1 92 3 is_stmt 1 view .LVU11
+ARM GAS  /tmp/ccqT9Ncy.s 			page 4
+
+
+  83              		.loc 1 92 21 is_stmt 0 view .LVU12
+  84 000c 0022     		movs	r2, #0
+  85 000e 0D49     		ldr	r1, .L9+4
+  86 0010 21F81320 		strh	r2, [r1, r3, lsl #1]	@ movhi
+  93:colorchord/embeddednf.c **** 		note_peak_amps2[i] = 0;
+  87              		.loc 1 93 3 is_stmt 1 view .LVU13
+  88              		.loc 1 93 22 is_stmt 0 view .LVU14
+  89 0014 0C49     		ldr	r1, .L9+8
+  90 0016 21F81320 		strh	r2, [r1, r3, lsl #1]	@ movhi
+  89:colorchord/embeddednf.c **** 	{
+  91              		.loc 1 89 29 is_stmt 1 discriminator 3 view .LVU15
+  92 001a 0133     		adds	r3, r3, #1
+  93              	.LVL3:
+  94              	.L6:
+  89:colorchord/embeddednf.c **** 	{
+  95              		.loc 1 89 16 discriminator 1 view .LVU16
+  96 001c 0B2B     		cmp	r3, #11
+  97 001e F2DD     		ble	.L7
+  94:colorchord/embeddednf.c **** 	}
+  95:colorchord/embeddednf.c **** 
+  96:colorchord/embeddednf.c **** 	memset( folded_bins, 0, sizeof( folded_bins ) );
+  98              		.loc 1 96 2 view .LVU17
+  99 0020 3022     		movs	r2, #48
+ 100 0022 0021     		movs	r1, #0
+ 101 0024 0948     		ldr	r0, .L9+12
+ 102 0026 FFF7FEFF 		bl	memset
+ 103              	.LVL4:
+  97:colorchord/embeddednf.c **** 	memset( fuzzed_bins, 0, sizeof( fuzzed_bins ) );
+ 104              		.loc 1 97 2 view .LVU18
+ 105 002a F022     		movs	r2, #240
+ 106 002c 0021     		movs	r1, #0
+ 107 002e 0848     		ldr	r0, .L9+16
+ 108 0030 FFF7FEFF 		bl	memset
+ 109              	.LVL5:
+  98:colorchord/embeddednf.c **** 
+  99:colorchord/embeddednf.c **** 	//Step 1: Initialize the Integer DFT.
+ 100:colorchord/embeddednf.c **** #ifdef USE_32DFT
+ 101:colorchord/embeddednf.c **** 	SetupDFTProgressive32();
+ 110              		.loc 1 101 2 view .LVU19
+ 111 0034 FFF7FEFF 		bl	SetupDFTProgressive32
+ 112              	.LVL6:
+ 102:colorchord/embeddednf.c **** #else
+ 103:colorchord/embeddednf.c **** 	SetupDFTProgressiveIntegerSkippy();
+ 104:colorchord/embeddednf.c **** #endif
+ 105:colorchord/embeddednf.c **** 
+ 106:colorchord/embeddednf.c **** 	//Step 2: Set up the frequency list.  You could do this multiple times
+ 107:colorchord/embeddednf.c **** 	//if you want to change the loadout of the frequencies.
+ 108:colorchord/embeddednf.c **** 	UpdateFreqs();
+ 113              		.loc 1 108 2 view .LVU20
+ 114 0038 FFF7FEFF 		bl	UpdateFreqs
+ 115              	.LVL7:
+ 109:colorchord/embeddednf.c **** }
+ 116              		.loc 1 109 1 is_stmt 0 view .LVU21
+ 117 003c 08BD     		pop	{r3, pc}
+ 118              	.L10:
+ 119 003e 00BF     		.align	2
+ 120              	.L9:
+ARM GAS  /tmp/ccqT9Ncy.s 			page 5
+
+
+ 121 0040 00000000 		.word	note_peak_freqs
+ 122 0044 00000000 		.word	note_peak_amps
+ 123 0048 00000000 		.word	note_peak_amps2
+ 124 004c 00000000 		.word	folded_bins
+ 125 0050 00000000 		.word	fuzzed_bins
+ 126              		.cfi_endproc
+ 127              	.LFE4:
+ 129              		.section	.text.HandleFrameInfo,"ax",%progbits
+ 130              		.align	1
+ 131              		.global	HandleFrameInfo
+ 132              		.syntax unified
+ 133              		.thumb
+ 134              		.thumb_func
+ 136              	HandleFrameInfo:
+ 137              	.LFB5:
+ 110:colorchord/embeddednf.c **** 
+ 111:colorchord/embeddednf.c **** void HandleFrameInfo()
+ 112:colorchord/embeddednf.c **** {
+ 138              		.loc 1 112 1 is_stmt 1 view -0
+ 139              		.cfi_startproc
+ 140              		@ args = 0, pretend = 0, frame = 64
+ 141              		@ frame_needed = 0, uses_anonymous_args = 0
+ 142 0000 2DE9F043 		push	{r4, r5, r6, r7, r8, r9, lr}
+ 143              		.cfi_def_cfa_offset 28
+ 144              		.cfi_offset 4, -28
+ 145              		.cfi_offset 5, -24
+ 146              		.cfi_offset 6, -20
+ 147              		.cfi_offset 7, -16
+ 148              		.cfi_offset 8, -12
+ 149              		.cfi_offset 9, -8
+ 150              		.cfi_offset 14, -4
+ 151 0004 91B0     		sub	sp, sp, #68
+ 152              		.cfi_def_cfa_offset 96
+ 113:colorchord/embeddednf.c **** 	int i, j, k;
+ 153              		.loc 1 113 2 view .LVU23
+ 114:colorchord/embeddednf.c **** 	uint8_t hitnotes[MAXNOTES];
+ 154              		.loc 1 114 2 view .LVU24
+ 115:colorchord/embeddednf.c **** 	memset( hitnotes, 0, sizeof( hitnotes ) );
+ 155              		.loc 1 115 2 view .LVU25
+ 156 0006 0024     		movs	r4, #0
+ 157 0008 0D94     		str	r4, [sp, #52]
+ 158 000a 0E94     		str	r4, [sp, #56]
+ 159 000c 0F94     		str	r4, [sp, #60]
+ 116:colorchord/embeddednf.c **** 
+ 117:colorchord/embeddednf.c **** #ifdef USE_32DFT
+ 118:colorchord/embeddednf.c **** 	uint16_t * strens;
+ 160              		.loc 1 118 2 view .LVU26
+ 119:colorchord/embeddednf.c **** 	UpdateOutputBins32();
+ 161              		.loc 1 119 2 view .LVU27
+ 162 000e FFF7FEFF 		bl	UpdateOutputBins32
+ 163              	.LVL8:
+ 120:colorchord/embeddednf.c **** 	strens = embeddedbins32;
+ 164              		.loc 1 120 2 view .LVU28
+ 121:colorchord/embeddednf.c **** #else
+ 122:colorchord/embeddednf.c **** 	uint16_t * strens = embeddedbins;
+ 123:colorchord/embeddednf.c **** #endif
+ 124:colorchord/embeddednf.c **** 
+ARM GAS  /tmp/ccqT9Ncy.s 			page 6
+
+
+ 125:colorchord/embeddednf.c **** 	//Copy out the bins from the DFT to our fuzzed bins.
+ 126:colorchord/embeddednf.c **** 	for( i = 0; i < FIXBINS; i++ )
+ 165              		.loc 1 126 2 view .LVU29
+ 166              		.loc 1 126 9 is_stmt 0 view .LVU30
+ 167 0012 2246     		mov	r2, r4
+ 168              		.loc 1 126 2 view .LVU31
+ 169 0014 0DE0     		b	.L12
+ 170              	.LVL9:
+ 171              	.L13:
+ 127:colorchord/embeddednf.c **** 	{
+ 128:colorchord/embeddednf.c **** 		fuzzed_bins[i] = (fuzzed_bins[i] + (strens[i]>>FUZZ_IIR_BITS) -
+ 172              		.loc 1 128 3 is_stmt 1 view .LVU32
+ 173              		.loc 1 128 32 is_stmt 0 view .LVU33
+ 174 0016 8F49     		ldr	r1, .L84
+ 175 0018 31F81200 		ldrh	r0, [r1, r2, lsl #1]
+ 176              		.loc 1 128 45 view .LVU34
+ 177 001c 8E4B     		ldr	r3, .L84+4
+ 178 001e 33F81230 		ldrh	r3, [r3, r2, lsl #1]
+ 179              		.loc 1 128 36 view .LVU35
+ 180 0022 00EB5303 		add	r3, r0, r3, lsr #1
+ 181 0026 9BB2     		uxth	r3, r3
+ 182              		.loc 1 128 65 view .LVU36
+ 183 0028 A3EB5003 		sub	r3, r3, r0, lsr #1
+ 184              		.loc 1 128 18 view .LVU37
+ 185 002c 21F81230 		strh	r3, [r1, r2, lsl #1]	@ movhi
+ 126:colorchord/embeddednf.c **** 	{
+ 186              		.loc 1 126 28 is_stmt 1 discriminator 3 view .LVU38
+ 187 0030 0132     		adds	r2, r2, #1
+ 188              	.LVL10:
+ 189              	.L12:
+ 126:colorchord/embeddednf.c **** 	{
+ 190              		.loc 1 126 16 discriminator 1 view .LVU39
+ 191 0032 772A     		cmp	r2, #119
+ 192 0034 EFDD     		ble	.L13
+ 129:colorchord/embeddednf.c **** 			(fuzzed_bins[i]>>FUZZ_IIR_BITS));
+ 130:colorchord/embeddednf.c **** 	}
+ 131:colorchord/embeddednf.c **** 
+ 132:colorchord/embeddednf.c **** 	//Taper first octave
+ 133:colorchord/embeddednf.c **** 	for( i = 0; i < FIXBPERO; i++ )
+ 193              		.loc 1 133 9 is_stmt 0 view .LVU40
+ 194 0036 0023     		movs	r3, #0
+ 195 0038 0CE0     		b	.L14
+ 196              	.LVL11:
+ 197              	.L15:
+ 198              	.LBB2:
+ 134:colorchord/embeddednf.c **** 	{
+ 135:colorchord/embeddednf.c **** 		uint32_t taperamt = (65536 / FIXBPERO) * i;
+ 199              		.loc 1 135 3 is_stmt 1 view .LVU41
+ 200              		.loc 1 135 42 is_stmt 0 view .LVU42
+ 201 003a 40F6AA21 		movw	r1, #2730
+ 202 003e 03FB01F1 		mul	r1, r3, r1
+ 203              	.LVL12:
+ 136:colorchord/embeddednf.c **** 		fuzzed_bins[i] = (taperamt * fuzzed_bins[i]) >> 16;
+ 204              		.loc 1 136 3 is_stmt 1 view .LVU43
+ 205              		.loc 1 136 43 is_stmt 0 view .LVU44
+ 206 0042 8448     		ldr	r0, .L84
+ 207 0044 30F81320 		ldrh	r2, [r0, r3, lsl #1]
+ARM GAS  /tmp/ccqT9Ncy.s 			page 7
+
+
+ 208              		.loc 1 136 30 view .LVU45
+ 209 0048 01FB02F2 		mul	r2, r1, r2
+ 210              		.loc 1 136 48 view .LVU46
+ 211 004c 120C     		lsrs	r2, r2, #16
+ 212              		.loc 1 136 18 view .LVU47
+ 213 004e 20F81320 		strh	r2, [r0, r3, lsl #1]	@ movhi
+ 214              	.LBE2:
+ 133:colorchord/embeddednf.c **** 	{
+ 215              		.loc 1 133 29 is_stmt 1 discriminator 3 view .LVU48
+ 216 0052 0133     		adds	r3, r3, #1
+ 217              	.LVL13:
+ 218              	.L14:
+ 133:colorchord/embeddednf.c **** 	{
+ 219              		.loc 1 133 16 discriminator 1 view .LVU49
+ 220 0054 172B     		cmp	r3, #23
+ 221 0056 F0DD     		ble	.L15
+ 137:colorchord/embeddednf.c **** 	}
+ 138:colorchord/embeddednf.c **** 
+ 139:colorchord/embeddednf.c **** 	//Taper last octave
+ 140:colorchord/embeddednf.c **** 	for( i = 0; i < FIXBPERO; i++ )
+ 222              		.loc 1 140 9 is_stmt 0 view .LVU50
+ 223 0058 0022     		movs	r2, #0
+ 224 005a 0EE0     		b	.L16
+ 225              	.LVL14:
+ 226              	.L17:
+ 227              	.LBB3:
+ 141:colorchord/embeddednf.c **** 	{
+ 142:colorchord/embeddednf.c **** 		int newi = FIXBINS - i - 1;
+ 228              		.loc 1 142 3 is_stmt 1 view .LVU51
+ 229              		.loc 1 142 7 is_stmt 0 view .LVU52
+ 230 005c C2F17704 		rsb	r4, r2, #119
+ 231              	.LVL15:
+ 143:colorchord/embeddednf.c **** 		uint32_t taperamt = (65536 / FIXBPERO) * i;
+ 232              		.loc 1 143 3 is_stmt 1 view .LVU53
+ 233              		.loc 1 143 42 is_stmt 0 view .LVU54
+ 234 0060 40F6AA21 		movw	r1, #2730
+ 235 0064 02FB01F1 		mul	r1, r2, r1
+ 236              	.LVL16:
+ 144:colorchord/embeddednf.c **** 		fuzzed_bins[newi] = (taperamt * fuzzed_bins[newi]) >> 16;
+ 237              		.loc 1 144 3 is_stmt 1 view .LVU55
+ 238              		.loc 1 144 46 is_stmt 0 view .LVU56
+ 239 0068 7A48     		ldr	r0, .L84
+ 240 006a 30F81430 		ldrh	r3, [r0, r4, lsl #1]
+ 241              		.loc 1 144 33 view .LVU57
+ 242 006e 01FB03F3 		mul	r3, r1, r3
+ 243              		.loc 1 144 54 view .LVU58
+ 244 0072 1B0C     		lsrs	r3, r3, #16
+ 245              		.loc 1 144 21 view .LVU59
+ 246 0074 20F81430 		strh	r3, [r0, r4, lsl #1]	@ movhi
+ 247              	.LBE3:
+ 140:colorchord/embeddednf.c **** 	{
+ 248              		.loc 1 140 29 is_stmt 1 discriminator 3 view .LVU60
+ 249 0078 0132     		adds	r2, r2, #1
+ 250              	.LVL17:
+ 251              	.L16:
+ 140:colorchord/embeddednf.c **** 	{
+ 252              		.loc 1 140 16 discriminator 1 view .LVU61
+ARM GAS  /tmp/ccqT9Ncy.s 			page 8
+
+
+ 253 007a 172A     		cmp	r2, #23
+ 254 007c EEDD     		ble	.L17
+ 145:colorchord/embeddednf.c **** 	}
+ 146:colorchord/embeddednf.c **** 
+ 147:colorchord/embeddednf.c **** 	//Fold the bins from fuzzedbins into one octave.
+ 148:colorchord/embeddednf.c **** 	for( i = 0; i < FIXBPERO; i++ )
+ 255              		.loc 1 148 9 is_stmt 0 view .LVU62
+ 256 007e 0023     		movs	r3, #0
+ 257 0080 04E0     		b	.L18
+ 258              	.LVL18:
+ 259              	.L19:
+ 149:colorchord/embeddednf.c **** 		folded_bins[i] = 0;
+ 260              		.loc 1 149 3 is_stmt 1 view .LVU63
+ 261              		.loc 1 149 18 is_stmt 0 view .LVU64
+ 262 0082 764A     		ldr	r2, .L84+8
+ 263 0084 0021     		movs	r1, #0
+ 264 0086 22F81310 		strh	r1, [r2, r3, lsl #1]	@ movhi
+ 148:colorchord/embeddednf.c **** 		folded_bins[i] = 0;
+ 265              		.loc 1 148 29 is_stmt 1 discriminator 3 view .LVU65
+ 266 008a 0133     		adds	r3, r3, #1
+ 267              	.LVL19:
+ 268              	.L18:
+ 148:colorchord/embeddednf.c **** 		folded_bins[i] = 0;
+ 269              		.loc 1 148 16 discriminator 1 view .LVU66
+ 270 008c 172B     		cmp	r3, #23
+ 271 008e F8DD     		ble	.L19
+ 150:colorchord/embeddednf.c **** 	k = 0;
+ 272              		.loc 1 150 4 is_stmt 0 view .LVU67
+ 273 0090 0021     		movs	r1, #0
+ 151:colorchord/embeddednf.c **** 	for( j = 0; j < OCTAVES; j++ )
+ 274              		.loc 1 151 9 view .LVU68
+ 275 0092 0D46     		mov	r5, r1
+ 276 0094 0DE0     		b	.L20
+ 277              	.LVL20:
+ 278              	.L21:
+ 152:colorchord/embeddednf.c **** 	{
+ 153:colorchord/embeddednf.c **** 		for( i = 0; i < FIXBPERO; i++ )
+ 154:colorchord/embeddednf.c **** 		{
+ 155:colorchord/embeddednf.c **** 			folded_bins[i] += fuzzed_bins[k++];
+ 279              		.loc 1 155 4 is_stmt 1 view .LVU69
+ 280              		.loc 1 155 33 is_stmt 0 view .LVU70
+ 281 0096 6F4A     		ldr	r2, .L84
+ 282 0098 32F81140 		ldrh	r4, [r2, r1, lsl #1]
+ 283              		.loc 1 155 15 view .LVU71
+ 284 009c 6F48     		ldr	r0, .L84+8
+ 285 009e 30F81320 		ldrh	r2, [r0, r3, lsl #1]
+ 286              		.loc 1 155 19 view .LVU72
+ 287 00a2 2244     		add	r2, r2, r4
+ 288 00a4 20F81320 		strh	r2, [r0, r3, lsl #1]	@ movhi
+ 153:colorchord/embeddednf.c **** 		{
+ 289              		.loc 1 153 30 is_stmt 1 discriminator 3 view .LVU73
+ 290 00a8 0133     		adds	r3, r3, #1
+ 291              	.LVL21:
+ 292              		.loc 1 155 35 is_stmt 0 view .LVU74
+ 293 00aa 0131     		adds	r1, r1, #1
+ 294              	.LVL22:
+ 295              	.L22:
+ARM GAS  /tmp/ccqT9Ncy.s 			page 9
+
+
+ 153:colorchord/embeddednf.c **** 		{
+ 296              		.loc 1 153 17 is_stmt 1 discriminator 1 view .LVU75
+ 297 00ac 172B     		cmp	r3, #23
+ 298 00ae F2DD     		ble	.L21
+ 151:colorchord/embeddednf.c **** 	for( j = 0; j < OCTAVES; j++ )
+ 299              		.loc 1 151 28 discriminator 2 view .LVU76
+ 300 00b0 0135     		adds	r5, r5, #1
+ 301              	.LVL23:
+ 302              	.L20:
+ 151:colorchord/embeddednf.c **** 	for( j = 0; j < OCTAVES; j++ )
+ 303              		.loc 1 151 16 discriminator 1 view .LVU77
+ 304 00b2 042D     		cmp	r5, #4
+ 305 00b4 01DC     		bgt	.L69
+ 153:colorchord/embeddednf.c **** 		{
+ 306              		.loc 1 153 10 is_stmt 0 view .LVU78
+ 307 00b6 0023     		movs	r3, #0
+ 308              	.LVL24:
+ 153:colorchord/embeddednf.c **** 		{
+ 309              		.loc 1 153 10 view .LVU79
+ 310 00b8 F8E7     		b	.L22
+ 311              	.LVL25:
+ 312              	.L69:
+ 156:colorchord/embeddednf.c **** 		}
+ 157:colorchord/embeddednf.c **** 	}
+ 158:colorchord/embeddednf.c **** 
+ 159:colorchord/embeddednf.c **** 	//Now, we must blur the folded bins to get a good result.
+ 160:colorchord/embeddednf.c **** 	//Sometimes you may notice every other bin being out-of
+ 161:colorchord/embeddednf.c **** 	//line, and this fixes that.  We may consider running this
+ 162:colorchord/embeddednf.c **** 	//more than once, but in my experience, once is enough.
+ 163:colorchord/embeddednf.c **** 	for( j = 0; j < FILTER_BLUR_PASSES; j++ )
+ 313              		.loc 1 163 9 view .LVU80
+ 314 00ba 0025     		movs	r5, #0
+ 315              	.LVL26:
+ 316              		.loc 1 163 9 view .LVU81
+ 317 00bc 2DE0     		b	.L23
+ 318              	.LVL27:
+ 319              	.L71:
+ 320              	.LBB4:
+ 321              	.LBB5:
+ 164:colorchord/embeddednf.c **** 	{
+ 165:colorchord/embeddednf.c **** 		//Extra scoping because this is a large on-stack buffer.
+ 166:colorchord/embeddednf.c **** 		uint16_t folded_out[FIXBPERO];
+ 167:colorchord/embeddednf.c **** 		uint8_t adjLeft = FIXBPERO-1;
+ 168:colorchord/embeddednf.c **** 		uint8_t adjRight = 1;
+ 169:colorchord/embeddednf.c **** 		for( i = 0; i < FIXBPERO; i++ )
+ 170:colorchord/embeddednf.c **** 		{
+ 171:colorchord/embeddednf.c **** 			uint16_t lbin = folded_bins[adjLeft]>>2;
+ 172:colorchord/embeddednf.c **** 			uint16_t rbin = folded_bins[adjRight]>>2;
+ 173:colorchord/embeddednf.c **** 			uint16_t tbin = folded_bins[i]>>1;
+ 174:colorchord/embeddednf.c **** 			folded_out[i] = lbin + rbin + tbin;
+ 175:colorchord/embeddednf.c **** 
+ 176:colorchord/embeddednf.c **** 			//We do this funny dance to avoid a modulus operation.  On some
+ 177:colorchord/embeddednf.c **** 			//processors, a modulus operation is slow.  This is cheap.
+ 178:colorchord/embeddednf.c **** 			adjLeft++; if( adjLeft == FIXBPERO ) adjLeft = 0;
+ 322              		.loc 1 178 49 discriminator 1 view .LVU82
+ 323 00be 0022     		movs	r2, #0
+ 324              	.LVL28:
+ARM GAS  /tmp/ccqT9Ncy.s 			page 10
+
+
+ 325              		.loc 1 178 49 discriminator 1 view .LVU83
+ 326 00c0 17E0     		b	.L24
+ 327              	.LVL29:
+ 328              	.L25:
+ 329              		.loc 1 178 49 discriminator 1 view .LVU84
+ 330              	.LBE5:
+ 169:colorchord/embeddednf.c **** 		{
+ 331              		.loc 1 169 30 is_stmt 1 discriminator 2 view .LVU85
+ 332 00c2 0130     		adds	r0, r0, #1
+ 333              	.LVL30:
+ 334              	.L29:
+ 169:colorchord/embeddednf.c **** 		{
+ 335              		.loc 1 169 17 discriminator 1 view .LVU86
+ 336 00c4 1728     		cmp	r0, #23
+ 337 00c6 1ADC     		bgt	.L70
+ 338              	.LBB6:
+ 171:colorchord/embeddednf.c **** 			uint16_t rbin = folded_bins[adjRight]>>2;
+ 339              		.loc 1 171 4 view .LVU87
+ 171:colorchord/embeddednf.c **** 			uint16_t rbin = folded_bins[adjRight]>>2;
+ 340              		.loc 1 171 31 is_stmt 0 view .LVU88
+ 341 00c8 644C     		ldr	r4, .L84+8
+ 342 00ca 34F81260 		ldrh	r6, [r4, r2, lsl #1]
+ 343              	.LVL31:
+ 172:colorchord/embeddednf.c **** 			uint16_t tbin = folded_bins[i]>>1;
+ 344              		.loc 1 172 4 is_stmt 1 view .LVU89
+ 172:colorchord/embeddednf.c **** 			uint16_t tbin = folded_bins[i]>>1;
+ 345              		.loc 1 172 31 is_stmt 0 view .LVU90
+ 346 00ce 34F81130 		ldrh	r3, [r4, r1, lsl #1]
+ 172:colorchord/embeddednf.c **** 			uint16_t tbin = folded_bins[i]>>1;
+ 347              		.loc 1 172 13 view .LVU91
+ 348 00d2 9B08     		lsrs	r3, r3, #2
+ 349              	.LVL32:
+ 173:colorchord/embeddednf.c **** 			folded_out[i] = lbin + rbin + tbin;
+ 350              		.loc 1 173 4 is_stmt 1 view .LVU92
+ 173:colorchord/embeddednf.c **** 			folded_out[i] = lbin + rbin + tbin;
+ 351              		.loc 1 173 31 is_stmt 0 view .LVU93
+ 352 00d4 34F81040 		ldrh	r4, [r4, r0, lsl #1]
+ 353              	.LVL33:
+ 174:colorchord/embeddednf.c **** 
+ 354              		.loc 1 174 4 is_stmt 1 view .LVU94
+ 174:colorchord/embeddednf.c **** 
+ 355              		.loc 1 174 25 is_stmt 0 view .LVU95
+ 356 00d8 03EB9603 		add	r3, r3, r6, lsr #2
+ 357              	.LVL34:
+ 174:colorchord/embeddednf.c **** 
+ 358              		.loc 1 174 32 view .LVU96
+ 359 00dc 03EB5403 		add	r3, r3, r4, lsr #1
+ 174:colorchord/embeddednf.c **** 
+ 360              		.loc 1 174 18 view .LVU97
+ 361 00e0 10AC     		add	r4, sp, #64
+ 362              	.LVL35:
+ 174:colorchord/embeddednf.c **** 
+ 363              		.loc 1 174 18 view .LVU98
+ 364 00e2 04EB4004 		add	r4, r4, r0, lsl #1
+ 365 00e6 24F83C3C 		strh	r3, [r4, #-60]	@ movhi
+ 366              		.loc 1 178 4 is_stmt 1 view .LVU99
+ 367              		.loc 1 178 11 is_stmt 0 view .LVU100
+ARM GAS  /tmp/ccqT9Ncy.s 			page 11
+
+
+ 368 00ea 0132     		adds	r2, r2, #1
+ 369              	.LVL36:
+ 370              		.loc 1 178 11 view .LVU101
+ 371 00ec D2B2     		uxtb	r2, r2
+ 372              	.LVL37:
+ 373              		.loc 1 178 15 is_stmt 1 view .LVU102
+ 374              		.loc 1 178 17 is_stmt 0 view .LVU103
+ 375 00ee 182A     		cmp	r2, #24
+ 376 00f0 E5D0     		beq	.L71
+ 377              	.LVL38:
+ 378              	.L24:
+ 179:colorchord/embeddednf.c **** 			adjRight++; if( adjRight == FIXBPERO ) adjRight = 0;
+ 379              		.loc 1 179 4 is_stmt 1 view .LVU104
+ 380              		.loc 1 179 12 is_stmt 0 view .LVU105
+ 381 00f2 0131     		adds	r1, r1, #1
+ 382              	.LVL39:
+ 383              		.loc 1 179 12 view .LVU106
+ 384 00f4 C9B2     		uxtb	r1, r1
+ 385              	.LVL40:
+ 386              		.loc 1 179 16 is_stmt 1 view .LVU107
+ 387              		.loc 1 179 18 is_stmt 0 view .LVU108
+ 388 00f6 1829     		cmp	r1, #24
+ 389 00f8 E3D1     		bne	.L25
+ 390              		.loc 1 179 52 discriminator 1 view .LVU109
+ 391 00fa 0021     		movs	r1, #0
+ 392              	.LVL41:
+ 393              		.loc 1 179 52 discriminator 1 view .LVU110
+ 394 00fc E1E7     		b	.L25
+ 395              	.LVL42:
+ 396              	.L70:
+ 397              		.loc 1 179 52 discriminator 1 view .LVU111
+ 398              	.LBE6:
+ 180:colorchord/embeddednf.c **** 		}
+ 181:colorchord/embeddednf.c **** 
+ 182:colorchord/embeddednf.c **** 		for( i = 0; i < FIXBPERO; i++ )
+ 399              		.loc 1 182 10 view .LVU112
+ 400 00fe 0023     		movs	r3, #0
+ 401 0100 08E0     		b	.L27
+ 402              	.LVL43:
+ 403              	.L28:
+ 183:colorchord/embeddednf.c **** 		{
+ 184:colorchord/embeddednf.c **** 			folded_bins[i] = folded_out[i];
+ 404              		.loc 1 184 4 is_stmt 1 view .LVU113
+ 405              		.loc 1 184 31 is_stmt 0 view .LVU114
+ 406 0102 10AA     		add	r2, sp, #64
+ 407 0104 02EB4302 		add	r2, r2, r3, lsl #1
+ 408 0108 32F83C1C 		ldrh	r1, [r2, #-60]
+ 409              		.loc 1 184 19 view .LVU115
+ 410 010c 534A     		ldr	r2, .L84+8
+ 411 010e 22F81310 		strh	r1, [r2, r3, lsl #1]	@ movhi
+ 182:colorchord/embeddednf.c **** 		{
+ 412              		.loc 1 182 30 is_stmt 1 discriminator 3 view .LVU116
+ 413 0112 0133     		adds	r3, r3, #1
+ 414              	.LVL44:
+ 415              	.L27:
+ 182:colorchord/embeddednf.c **** 		{
+ 416              		.loc 1 182 17 discriminator 1 view .LVU117
+ARM GAS  /tmp/ccqT9Ncy.s 			page 12
+
+
+ 417 0114 172B     		cmp	r3, #23
+ 418 0116 F4DD     		ble	.L28
+ 419              	.LBE4:
+ 163:colorchord/embeddednf.c **** 	{
+ 420              		.loc 1 163 39 discriminator 2 view .LVU118
+ 421 0118 0135     		adds	r5, r5, #1
+ 422              	.LVL45:
+ 423              	.L23:
+ 163:colorchord/embeddednf.c **** 	{
+ 424              		.loc 1 163 16 discriminator 1 view .LVU119
+ 425 011a 012D     		cmp	r5, #1
+ 426 011c 03DC     		bgt	.L72
+ 427              	.LBB7:
+ 168:colorchord/embeddednf.c **** 		for( i = 0; i < FIXBPERO; i++ )
+ 428              		.loc 1 168 11 is_stmt 0 view .LVU120
+ 429 011e 0121     		movs	r1, #1
+ 167:colorchord/embeddednf.c **** 		uint8_t adjRight = 1;
+ 430              		.loc 1 167 11 view .LVU121
+ 431 0120 1722     		movs	r2, #23
+ 169:colorchord/embeddednf.c **** 		{
+ 432              		.loc 1 169 10 view .LVU122
+ 433 0122 0020     		movs	r0, #0
+ 434 0124 CEE7     		b	.L29
+ 435              	.L72:
+ 436              	.LBE7:
+ 437              	.LBB8:
+ 185:colorchord/embeddednf.c **** 		}
+ 186:colorchord/embeddednf.c **** 	}
+ 187:colorchord/embeddednf.c **** 
+ 188:colorchord/embeddednf.c **** 	//Next, we have to find the peaks, this is what "decompose" does in our
+ 189:colorchord/embeddednf.c **** 	//normal tool.  As a warning, it expects that the values in foolded_bins
+ 190:colorchord/embeddednf.c **** 	//do NOT exceed 32767.
+ 191:colorchord/embeddednf.c **** 	{
+ 192:colorchord/embeddednf.c **** 		uint8_t adjLeft = FIXBPERO-1;
+ 193:colorchord/embeddednf.c **** 		uint8_t adjRight = 1;
+ 438              		.loc 1 193 11 view .LVU123
+ 439 0126 0125     		movs	r5, #1
+ 440              	.LVL46:
+ 192:colorchord/embeddednf.c **** 		uint8_t adjRight = 1;
+ 441              		.loc 1 192 11 view .LVU124
+ 442 0128 1724     		movs	r4, #23
+ 194:colorchord/embeddednf.c **** 		for( i = 0; i < FIXBPERO; i++ )
+ 443              		.loc 1 194 10 view .LVU125
+ 444 012a 0026     		movs	r6, #0
+ 445 012c 47E0     		b	.L30
+ 446              	.LVL47:
+ 447              	.L78:
+ 448              	.LBB9:
+ 195:colorchord/embeddednf.c **** 		{
+ 196:colorchord/embeddednf.c **** 			int16_t prev = folded_bins[adjLeft];
+ 197:colorchord/embeddednf.c **** 			int16_t next = folded_bins[adjRight];
+ 198:colorchord/embeddednf.c **** 			int16_t this = folded_bins[i];
+ 199:colorchord/embeddednf.c **** 			uint8_t thisfreq = i<<SEMIBITSPERBIN;
+ 200:colorchord/embeddednf.c **** 			int16_t offset;
+ 201:colorchord/embeddednf.c **** 			adjLeft++; if( adjLeft == FIXBPERO ) adjLeft = 0;
+ 449              		.loc 1 201 49 discriminator 1 view .LVU126
+ 450 012e 0024     		movs	r4, #0
+ARM GAS  /tmp/ccqT9Ncy.s 			page 13
+
+
+ 451              	.LVL48:
+ 452              		.loc 1 201 49 discriminator 1 view .LVU127
+ 453 0130 55E0     		b	.L31
+ 454              	.LVL49:
+ 455              	.L79:
+ 202:colorchord/embeddednf.c **** 			adjRight++; if( adjRight == FIXBPERO ) adjRight = 0;
+ 456              		.loc 1 202 52 discriminator 1 view .LVU128
+ 457 0132 0025     		movs	r5, #0
+ 458              	.LVL50:
+ 459              		.loc 1 202 52 discriminator 1 view .LVU129
+ 460 0134 57E0     		b	.L32
+ 461              	.LVL51:
+ 462              	.L35:
+ 203:colorchord/embeddednf.c **** 			if( this < MIN_AMP_FOR_NOTE ) continue;
+ 204:colorchord/embeddednf.c **** 			if( prev > this || next > this ) continue;
+ 205:colorchord/embeddednf.c **** 			if( prev == this && next == this ) continue;
+ 206:colorchord/embeddednf.c **** 
+ 207:colorchord/embeddednf.c **** 			//i is at a peak... 
+ 208:colorchord/embeddednf.c **** 			int32_t totaldiff = (( this - prev ) + ( this - next ));
+ 209:colorchord/embeddednf.c **** 			int32_t porpdiffP = ((this-prev)<<16) / totaldiff; //close to 0 =
+ 210:colorchord/embeddednf.c **** 					//closer to this side, 32768 = in the middle, 65535 away.
+ 211:colorchord/embeddednf.c **** 			int32_t porpdiffN = ((this-next)<<16) / totaldiff;
+ 212:colorchord/embeddednf.c **** 
+ 213:colorchord/embeddednf.c **** 			if( porpdiffP < porpdiffN )
+ 214:colorchord/embeddednf.c **** 			{
+ 215:colorchord/embeddednf.c **** 				//Closer to prev.
+ 216:colorchord/embeddednf.c **** 				offset = -(32768 - porpdiffP);
+ 217:colorchord/embeddednf.c **** 			}
+ 218:colorchord/embeddednf.c **** 			else
+ 219:colorchord/embeddednf.c **** 			{
+ 220:colorchord/embeddednf.c **** 				//Closer to next
+ 221:colorchord/embeddednf.c **** 				offset = (32768 - porpdiffN);
+ 463              		.loc 1 221 5 is_stmt 1 view .LVU130
+ 464              		.loc 1 221 21 is_stmt 0 view .LVU131
+ 465 0136 C3F50043 		rsb	r3, r3, #32768
+ 466              	.LVL52:
+ 467              		.loc 1 221 12 view .LVU132
+ 468 013a 1BB2     		sxth	r3, r3
+ 469 013c 6BE0     		b	.L36
+ 470              	.LVL53:
+ 471              	.L75:
+ 472              	.LBB10:
+ 222:colorchord/embeddednf.c **** 			}
+ 223:colorchord/embeddednf.c **** 
+ 224:colorchord/embeddednf.c **** 			//Need to round.  That's what that extra +(15.. is in the center.
+ 225:colorchord/embeddednf.c **** 			thisfreq += (offset+(1<<(15-SEMIBITSPERBIN)))>>(16-SEMIBITSPERBIN);
+ 226:colorchord/embeddednf.c **** 
+ 227:colorchord/embeddednf.c **** 			//In the event we went 'below zero' need to wrap to the top.
+ 228:colorchord/embeddednf.c **** 			if( thisfreq > 255-(1<<SEMIBITSPERBIN) )
+ 229:colorchord/embeddednf.c **** 				thisfreq = (1<<SEMIBITSPERBIN)*FIXBPERO - (256-thisfreq);
+ 230:colorchord/embeddednf.c **** 
+ 231:colorchord/embeddednf.c **** 			//Okay, we have a peak, and a frequency. Now, we need to search
+ 232:colorchord/embeddednf.c **** 			//through the existing notes to see if we have any matches.
+ 233:colorchord/embeddednf.c **** 			//If we have a note that's close enough, we will try to pull it
+ 234:colorchord/embeddednf.c **** 			//closer to us and boost it.
+ 235:colorchord/embeddednf.c **** 			int8_t lowest_found_free_note = -1;
+ 236:colorchord/embeddednf.c **** 			int8_t closest_note_id = -1;
+ARM GAS  /tmp/ccqT9Ncy.s 			page 14
+
+
+ 237:colorchord/embeddednf.c **** 			int16_t closest_note_distance = 32767;
+ 238:colorchord/embeddednf.c **** 			
+ 239:colorchord/embeddednf.c **** 			for( j = 0; j < MAXNOTES; j++ )
+ 240:colorchord/embeddednf.c **** 			{
+ 241:colorchord/embeddednf.c **** 				uint8_t nf = note_peak_freqs[j];
+ 242:colorchord/embeddednf.c **** 
+ 243:colorchord/embeddednf.c **** 				if( nf == 255 )
+ 244:colorchord/embeddednf.c **** 				{
+ 245:colorchord/embeddednf.c **** 					if( lowest_found_free_note == -1 )
+ 473              		.loc 1 245 6 is_stmt 1 view .LVU133
+ 474              		.loc 1 245 8 is_stmt 0 view .LVU134
+ 475 013e B8F1FF3F 		cmp	r8, #-1
+ 476 0142 13D0     		beq	.L73
+ 477              	.LVL54:
+ 478              	.L41:
+ 479              		.loc 1 245 8 view .LVU135
+ 480              	.LBE10:
+ 239:colorchord/embeddednf.c **** 			{
+ 481              		.loc 1 239 31 is_stmt 1 discriminator 2 view .LVU136
+ 482 0144 0132     		adds	r2, r2, #1
+ 483              	.LVL55:
+ 484              	.L38:
+ 239:colorchord/embeddednf.c **** 			{
+ 485              		.loc 1 239 18 discriminator 1 view .LVU137
+ 486 0146 0B2A     		cmp	r2, #11
+ 487 0148 15DC     		bgt	.L74
+ 488              	.LBB11:
+ 241:colorchord/embeddednf.c **** 
+ 489              		.loc 1 241 5 view .LVU138
+ 241:colorchord/embeddednf.c **** 
+ 490              		.loc 1 241 13 is_stmt 0 view .LVU139
+ 491 014a 454B     		ldr	r3, .L84+12
+ 492 014c 995C     		ldrb	r1, [r3, r2]	@ zero_extendqisi2
+ 493              	.LVL56:
+ 243:colorchord/embeddednf.c **** 				{
+ 494              		.loc 1 243 5 is_stmt 1 view .LVU140
+ 243:colorchord/embeddednf.c **** 				{
+ 495              		.loc 1 243 7 is_stmt 0 view .LVU141
+ 496 014e FF29     		cmp	r1, #255
+ 497 0150 F5D0     		beq	.L75
+ 246:colorchord/embeddednf.c **** 						lowest_found_free_note = j;
+ 247:colorchord/embeddednf.c **** 					continue;
+ 248:colorchord/embeddednf.c **** 				}
+ 249:colorchord/embeddednf.c **** 
+ 250:colorchord/embeddednf.c **** 				int16_t distance = thisfreq - nf;
+ 498              		.loc 1 250 5 is_stmt 1 view .LVU142
+ 499              	.LVL57:
+ 251:colorchord/embeddednf.c **** 
+ 252:colorchord/embeddednf.c **** 				if( distance < 0 ) distance = -distance;
+ 500              		.loc 1 252 5 view .LVU143
+ 501              		.loc 1 252 7 is_stmt 0 view .LVU144
+ 502 0152 431A     		subs	r3, r0, r1
+ 503              	.LVL58:
+ 504              		.loc 1 252 7 view .LVU145
+ 505 0154 0DD4     		bmi	.L76
+ 506              	.LVL59:
+ 507              	.L42:
+ARM GAS  /tmp/ccqT9Ncy.s 			page 15
+
+
+ 253:colorchord/embeddednf.c **** 
+ 254:colorchord/embeddednf.c **** 				//Make sure that if we've wrapped around the right side of the
+ 255:colorchord/embeddednf.c **** 				//array, we can detect it and loop it back.
+ 256:colorchord/embeddednf.c **** 				if( distance > ((1<<(SEMIBITSPERBIN-1))*FIXBPERO) )
+ 508              		.loc 1 256 5 is_stmt 1 view .LVU146
+ 509              		.loc 1 256 7 is_stmt 0 view .LVU147
+ 510 0156 602B     		cmp	r3, #96
+ 511 0158 02DD     		ble	.L43
+ 257:colorchord/embeddednf.c **** 				{
+ 258:colorchord/embeddednf.c **** 					distance = ((1<<(SEMIBITSPERBIN))*FIXBPERO) - distance;
+ 512              		.loc 1 258 6 is_stmt 1 view .LVU148
+ 513              		.loc 1 258 50 is_stmt 0 view .LVU149
+ 514 015a C3F1C003 		rsb	r3, r3, #192
+ 515              	.LVL60:
+ 516              		.loc 1 258 15 view .LVU150
+ 517 015e 1BB2     		sxth	r3, r3
+ 518              	.L43:
+ 519              	.LVL61:
+ 259:colorchord/embeddednf.c **** 				}
+ 260:colorchord/embeddednf.c **** 
+ 261:colorchord/embeddednf.c **** 				//If we find a note closer to where we are than any of the 
+ 262:colorchord/embeddednf.c **** 				//others, we can mark it as our desired note.
+ 263:colorchord/embeddednf.c **** 				if( distance < closest_note_distance )
+ 520              		.loc 1 263 5 is_stmt 1 view .LVU151
+ 521              		.loc 1 263 7 is_stmt 0 view .LVU152
+ 522 0160 9C45     		cmp	ip, r3
+ 523 0162 EFDD     		ble	.L41
+ 264:colorchord/embeddednf.c **** 				{	
+ 265:colorchord/embeddednf.c **** 					closest_note_id = j;
+ 524              		.loc 1 265 6 is_stmt 1 view .LVU153
+ 525              		.loc 1 265 22 is_stmt 0 view .LVU154
+ 526 0164 4FFA82FE 		sxtb	lr, r2
+ 527              	.LVL62:
+ 266:colorchord/embeddednf.c **** 					closest_note_distance = distance;
+ 528              		.loc 1 266 6 is_stmt 1 view .LVU155
+ 529              		.loc 1 266 28 is_stmt 0 view .LVU156
+ 530 0168 9C46     		mov	ip, r3
+ 531 016a EBE7     		b	.L41
+ 532              	.LVL63:
+ 533              	.L73:
+ 246:colorchord/embeddednf.c **** 					continue;
+ 534              		.loc 1 246 7 is_stmt 1 view .LVU157
+ 246:colorchord/embeddednf.c **** 					continue;
+ 535              		.loc 1 246 30 is_stmt 0 view .LVU158
+ 536 016c 4FFA82F8 		sxtb	r8, r2
+ 537              	.LVL64:
+ 247:colorchord/embeddednf.c **** 				}
+ 538              		.loc 1 247 6 is_stmt 1 view .LVU159
+ 539 0170 E8E7     		b	.L41
+ 540              	.LVL65:
+ 541              	.L76:
+ 252:colorchord/embeddednf.c **** 
+ 542              		.loc 1 252 24 discriminator 1 view .LVU160
+ 252:colorchord/embeddednf.c **** 
+ 543              		.loc 1 252 33 is_stmt 0 discriminator 1 view .LVU161
+ 544 0172 0B1A     		subs	r3, r1, r0
+ 545              	.LVL66:
+ARM GAS  /tmp/ccqT9Ncy.s 			page 16
+
+
+ 252:colorchord/embeddednf.c **** 
+ 546              		.loc 1 252 33 discriminator 1 view .LVU162
+ 547 0174 EFE7     		b	.L42
+ 548              	.LVL67:
+ 549              	.L74:
+ 252:colorchord/embeddednf.c **** 
+ 550              		.loc 1 252 33 discriminator 1 view .LVU163
+ 551              	.LBE11:
+ 267:colorchord/embeddednf.c **** 				}
+ 268:colorchord/embeddednf.c **** 			}
+ 269:colorchord/embeddednf.c **** 
+ 270:colorchord/embeddednf.c **** 			int8_t marked_note = -1;
+ 552              		.loc 1 270 4 is_stmt 1 view .LVU164
+ 271:colorchord/embeddednf.c **** 
+ 272:colorchord/embeddednf.c **** 			if( closest_note_distance <= MAX_JUMP_DISTANCE )
+ 553              		.loc 1 272 4 view .LVU165
+ 554              		.loc 1 272 6 is_stmt 0 view .LVU166
+ 555 0176 BCF1040F 		cmp	ip, #4
+ 556 017a 5CDC     		bgt	.L45
+ 273:colorchord/embeddednf.c **** 			{
+ 274:colorchord/embeddednf.c **** 				//We found the note we need to augment.
+ 275:colorchord/embeddednf.c **** 				note_peak_freqs[closest_note_id] = thisfreq;
+ 557              		.loc 1 275 5 is_stmt 1 view .LVU167
+ 558              		.loc 1 275 38 is_stmt 0 view .LVU168
+ 559 017c 384B     		ldr	r3, .L84+12
+ 560 017e 03F80E00 		strb	r0, [r3, lr]
+ 276:colorchord/embeddednf.c **** 				marked_note = closest_note_id;
+ 561              		.loc 1 276 5 is_stmt 1 view .LVU169
+ 562              	.LVL68:
+ 277:colorchord/embeddednf.c **** 			}
+ 278:colorchord/embeddednf.c **** 
+ 279:colorchord/embeddednf.c **** 			//The note was not found.
+ 280:colorchord/embeddednf.c **** 			else if( lowest_found_free_note != -1 )
+ 281:colorchord/embeddednf.c **** 			{
+ 282:colorchord/embeddednf.c **** 				note_peak_freqs[lowest_found_free_note] = thisfreq;
+ 283:colorchord/embeddednf.c **** 				marked_note = lowest_found_free_note;
+ 284:colorchord/embeddednf.c **** 			}
+ 285:colorchord/embeddednf.c **** 
+ 286:colorchord/embeddednf.c **** 			//If we found a note to attach to, we have to use the IIR to
+ 287:colorchord/embeddednf.c **** 			//increase the strength of the note, but we can't exactly snap
+ 288:colorchord/embeddednf.c **** 			//it to the new strength.
+ 289:colorchord/embeddednf.c **** 			if( marked_note != -1 )
+ 563              		.loc 1 289 4 view .LVU170
+ 564              		.loc 1 289 6 is_stmt 0 view .LVU171
+ 565 0182 BEF1FF3F 		cmp	lr, #-1
+ 566 0186 19D0     		beq	.L33
+ 567              	.LVL69:
+ 568              	.L46:
+ 290:colorchord/embeddednf.c **** 			{
+ 291:colorchord/embeddednf.c **** 				hitnotes[marked_note] = 1;
+ 569              		.loc 1 291 5 is_stmt 1 view .LVU172
+ 570              		.loc 1 291 27 is_stmt 0 view .LVU173
+ 571 0188 0EF14003 		add	r3, lr, #64
+ 572 018c 6B44     		add	r3, sp, r3
+ 573 018e 0122     		movs	r2, #1
+ 574              	.LVL70:
+ 575              		.loc 1 291 27 view .LVU174
+ARM GAS  /tmp/ccqT9Ncy.s 			page 17
+
+
+ 576 0190 03F80C2C 		strb	r2, [r3, #-12]
+ 292:colorchord/embeddednf.c **** 
+ 293:colorchord/embeddednf.c **** 				note_peak_amps[marked_note] =
+ 577              		.loc 1 293 5 is_stmt 1 view .LVU175
+ 294:colorchord/embeddednf.c **** 					note_peak_amps[marked_note] -
+ 578              		.loc 1 294 20 is_stmt 0 view .LVU176
+ 579 0194 334A     		ldr	r2, .L84+16
+ 580 0196 32F81E30 		ldrh	r3, [r2, lr, lsl #1]
+ 581              		.loc 1 294 34 view .LVU177
+ 582 019a A3EB1313 		sub	r3, r3, r3, lsr #4
+ 295:colorchord/embeddednf.c **** 					(note_peak_amps[marked_note]>>AMP_1_IIR_BITS) +
+ 583              		.loc 1 295 52 view .LVU178
+ 584 019e 7910     		asrs	r1, r7, #1
+ 585 01a0 11FA83F3 		uxtah	r3, r1, r3
+ 293:colorchord/embeddednf.c **** 					note_peak_amps[marked_note] -
+ 586              		.loc 1 293 33 view .LVU179
+ 587 01a4 22F81E30 		strh	r3, [r2, lr, lsl #1]	@ movhi
+ 296:colorchord/embeddednf.c **** 					(this>>(AMP_1_IIR_BITS-3));
+ 297:colorchord/embeddednf.c **** 
+ 298:colorchord/embeddednf.c **** 				note_peak_amps2[marked_note] =
+ 588              		.loc 1 298 5 is_stmt 1 view .LVU180
+ 299:colorchord/embeddednf.c **** 					note_peak_amps2[marked_note] -
+ 589              		.loc 1 299 21 is_stmt 0 view .LVU181
+ 590 01a8 2F4A     		ldr	r2, .L84+20
+ 591 01aa 32F81E30 		ldrh	r3, [r2, lr, lsl #1]
+ 592              		.loc 1 299 35 view .LVU182
+ 593 01ae A3EB9303 		sub	r3, r3, r3, lsr #2
+ 300:colorchord/embeddednf.c **** 					(note_peak_amps2[marked_note]>>AMP_2_IIR_BITS) +
+ 301:colorchord/embeddednf.c **** 					((this<<3)>>(AMP_2_IIR_BITS));
+ 594              		.loc 1 301 16 view .LVU183
+ 595 01b2 7F00     		lsls	r7, r7, #1
+ 596              	.LVL71:
+ 300:colorchord/embeddednf.c **** 					(note_peak_amps2[marked_note]>>AMP_2_IIR_BITS) +
+ 597              		.loc 1 300 53 view .LVU184
+ 598 01b4 17FA83F3 		uxtah	r3, r7, r3
+ 298:colorchord/embeddednf.c **** 					note_peak_amps2[marked_note] -
+ 599              		.loc 1 298 34 view .LVU185
+ 600 01b8 22F81E30 		strh	r3, [r2, lr, lsl #1]	@ movhi
+ 601              	.LVL72:
+ 602              	.L33:
+ 298:colorchord/embeddednf.c **** 					note_peak_amps2[marked_note] -
+ 603              		.loc 1 298 34 view .LVU186
+ 604              	.LBE9:
+ 194:colorchord/embeddednf.c **** 		{
+ 605              		.loc 1 194 30 is_stmt 1 discriminator 2 view .LVU187
+ 606 01bc 0136     		adds	r6, r6, #1
+ 607              	.LVL73:
+ 608              	.L30:
+ 194:colorchord/embeddednf.c **** 		{
+ 609              		.loc 1 194 17 discriminator 1 view .LVU188
+ 610 01be 172E     		cmp	r6, #23
+ 611 01c0 41DC     		bgt	.L77
+ 612              	.LBB12:
+ 196:colorchord/embeddednf.c **** 			int16_t next = folded_bins[adjRight];
+ 613              		.loc 1 196 4 view .LVU189
+ 196:colorchord/embeddednf.c **** 			int16_t next = folded_bins[adjRight];
+ 614              		.loc 1 196 30 is_stmt 0 view .LVU190
+ARM GAS  /tmp/ccqT9Ncy.s 			page 18
+
+
+ 615 01c2 2649     		ldr	r1, .L84+8
+ 196:colorchord/embeddednf.c **** 			int16_t next = folded_bins[adjRight];
+ 616              		.loc 1 196 12 view .LVU191
+ 617 01c4 31F91420 		ldrsh	r2, [r1, r4, lsl #1]
+ 618              	.LVL74:
+ 197:colorchord/embeddednf.c **** 			int16_t this = folded_bins[i];
+ 619              		.loc 1 197 4 is_stmt 1 view .LVU192
+ 197:colorchord/embeddednf.c **** 			int16_t this = folded_bins[i];
+ 620              		.loc 1 197 12 is_stmt 0 view .LVU193
+ 621 01c8 31F91530 		ldrsh	r3, [r1, r5, lsl #1]
+ 622              	.LVL75:
+ 198:colorchord/embeddednf.c **** 			uint8_t thisfreq = i<<SEMIBITSPERBIN;
+ 623              		.loc 1 198 4 is_stmt 1 view .LVU194
+ 198:colorchord/embeddednf.c **** 			uint8_t thisfreq = i<<SEMIBITSPERBIN;
+ 624              		.loc 1 198 12 is_stmt 0 view .LVU195
+ 625 01cc 31F91670 		ldrsh	r7, [r1, r6, lsl #1]
+ 626              	.LVL76:
+ 199:colorchord/embeddednf.c **** 			int16_t offset;
+ 627              		.loc 1 199 4 is_stmt 1 view .LVU196
+ 199:colorchord/embeddednf.c **** 			int16_t offset;
+ 628              		.loc 1 199 24 is_stmt 0 view .LVU197
+ 629 01d0 F0B2     		uxtb	r0, r6
+ 199:colorchord/embeddednf.c **** 			int16_t offset;
+ 630              		.loc 1 199 12 view .LVU198
+ 631 01d2 C000     		lsls	r0, r0, #3
+ 632 01d4 C0B2     		uxtb	r0, r0
+ 633              	.LVL77:
+ 200:colorchord/embeddednf.c **** 			adjLeft++; if( adjLeft == FIXBPERO ) adjLeft = 0;
+ 634              		.loc 1 200 4 is_stmt 1 view .LVU199
+ 201:colorchord/embeddednf.c **** 			adjRight++; if( adjRight == FIXBPERO ) adjRight = 0;
+ 635              		.loc 1 201 4 view .LVU200
+ 201:colorchord/embeddednf.c **** 			adjRight++; if( adjRight == FIXBPERO ) adjRight = 0;
+ 636              		.loc 1 201 11 is_stmt 0 view .LVU201
+ 637 01d6 0134     		adds	r4, r4, #1
+ 638              	.LVL78:
+ 201:colorchord/embeddednf.c **** 			adjRight++; if( adjRight == FIXBPERO ) adjRight = 0;
+ 639              		.loc 1 201 11 view .LVU202
+ 640 01d8 E4B2     		uxtb	r4, r4
+ 641              	.LVL79:
+ 201:colorchord/embeddednf.c **** 			adjRight++; if( adjRight == FIXBPERO ) adjRight = 0;
+ 642              		.loc 1 201 15 is_stmt 1 view .LVU203
+ 201:colorchord/embeddednf.c **** 			adjRight++; if( adjRight == FIXBPERO ) adjRight = 0;
+ 643              		.loc 1 201 17 is_stmt 0 view .LVU204
+ 644 01da 182C     		cmp	r4, #24
+ 645 01dc A7D0     		beq	.L78
+ 646              	.LVL80:
+ 647              	.L31:
+ 202:colorchord/embeddednf.c **** 			if( this < MIN_AMP_FOR_NOTE ) continue;
+ 648              		.loc 1 202 4 is_stmt 1 view .LVU205
+ 202:colorchord/embeddednf.c **** 			if( this < MIN_AMP_FOR_NOTE ) continue;
+ 649              		.loc 1 202 12 is_stmt 0 view .LVU206
+ 650 01de 0135     		adds	r5, r5, #1
+ 651              	.LVL81:
+ 202:colorchord/embeddednf.c **** 			if( this < MIN_AMP_FOR_NOTE ) continue;
+ 652              		.loc 1 202 12 view .LVU207
+ 653 01e0 EDB2     		uxtb	r5, r5
+ 654              	.LVL82:
+ARM GAS  /tmp/ccqT9Ncy.s 			page 19
+
+
+ 202:colorchord/embeddednf.c **** 			if( this < MIN_AMP_FOR_NOTE ) continue;
+ 655              		.loc 1 202 16 is_stmt 1 view .LVU208
+ 202:colorchord/embeddednf.c **** 			if( this < MIN_AMP_FOR_NOTE ) continue;
+ 656              		.loc 1 202 18 is_stmt 0 view .LVU209
+ 657 01e2 182D     		cmp	r5, #24
+ 658 01e4 A5D0     		beq	.L79
+ 659              	.LVL83:
+ 660              	.L32:
+ 203:colorchord/embeddednf.c **** 			if( prev > this || next > this ) continue;
+ 661              		.loc 1 203 4 is_stmt 1 view .LVU210
+ 203:colorchord/embeddednf.c **** 			if( prev > this || next > this ) continue;
+ 662              		.loc 1 203 6 is_stmt 0 view .LVU211
+ 663 01e6 4F2F     		cmp	r7, #79
+ 664 01e8 E8DD     		ble	.L33
+ 204:colorchord/embeddednf.c **** 			if( prev == this && next == this ) continue;
+ 665              		.loc 1 204 4 is_stmt 1 view .LVU212
+ 204:colorchord/embeddednf.c **** 			if( prev == this && next == this ) continue;
+ 666              		.loc 1 204 6 is_stmt 0 view .LVU213
+ 667 01ea BA42     		cmp	r2, r7
+ 668 01ec E6DC     		bgt	.L33
+ 204:colorchord/embeddednf.c **** 			if( prev == this && next == this ) continue;
+ 669              		.loc 1 204 20 discriminator 2 view .LVU214
+ 670 01ee BB42     		cmp	r3, r7
+ 671 01f0 E4DC     		bgt	.L33
+ 205:colorchord/embeddednf.c **** 
+ 672              		.loc 1 205 4 is_stmt 1 view .LVU215
+ 205:colorchord/embeddednf.c **** 
+ 673              		.loc 1 205 6 is_stmt 0 view .LVU216
+ 674 01f2 BA42     		cmp	r2, r7
+ 675 01f4 01D1     		bne	.L34
+ 205:colorchord/embeddednf.c **** 
+ 676              		.loc 1 205 21 discriminator 1 view .LVU217
+ 677 01f6 BB42     		cmp	r3, r7
+ 678 01f8 E0D0     		beq	.L33
+ 679              	.L34:
+ 208:colorchord/embeddednf.c **** 			int32_t porpdiffP = ((this-prev)<<16) / totaldiff; //close to 0 =
+ 680              		.loc 1 208 4 is_stmt 1 view .LVU218
+ 208:colorchord/embeddednf.c **** 			int32_t porpdiffP = ((this-prev)<<16) / totaldiff; //close to 0 =
+ 681              		.loc 1 208 32 is_stmt 0 view .LVU219
+ 682 01fa BA1A     		subs	r2, r7, r2
+ 683              	.LVL84:
+ 208:colorchord/embeddednf.c **** 			int32_t porpdiffP = ((this-prev)<<16) / totaldiff; //close to 0 =
+ 684              		.loc 1 208 50 view .LVU220
+ 685 01fc FB1A     		subs	r3, r7, r3
+ 686              	.LVL85:
+ 208:colorchord/embeddednf.c **** 			int32_t porpdiffP = ((this-prev)<<16) / totaldiff; //close to 0 =
+ 687              		.loc 1 208 12 view .LVU221
+ 688 01fe D118     		adds	r1, r2, r3
+ 689              	.LVL86:
+ 209:colorchord/embeddednf.c **** 					//closer to this side, 32768 = in the middle, 65535 away.
+ 690              		.loc 1 209 4 is_stmt 1 view .LVU222
+ 209:colorchord/embeddednf.c **** 					//closer to this side, 32768 = in the middle, 65535 away.
+ 691              		.loc 1 209 36 is_stmt 0 view .LVU223
+ 692 0200 1204     		lsls	r2, r2, #16
+ 209:colorchord/embeddednf.c **** 					//closer to this side, 32768 = in the middle, 65535 away.
+ 693              		.loc 1 209 12 view .LVU224
+ 694 0202 92FBF1F2 		sdiv	r2, r2, r1
+ARM GAS  /tmp/ccqT9Ncy.s 			page 20
+
+
+ 695              	.LVL87:
+ 211:colorchord/embeddednf.c **** 
+ 696              		.loc 1 211 4 is_stmt 1 view .LVU225
+ 211:colorchord/embeddednf.c **** 
+ 697              		.loc 1 211 36 is_stmt 0 view .LVU226
+ 698 0206 1B04     		lsls	r3, r3, #16
+ 211:colorchord/embeddednf.c **** 
+ 699              		.loc 1 211 12 view .LVU227
+ 700 0208 93FBF1F3 		sdiv	r3, r3, r1
+ 701              	.LVL88:
+ 213:colorchord/embeddednf.c **** 			{
+ 702              		.loc 1 213 4 is_stmt 1 view .LVU228
+ 213:colorchord/embeddednf.c **** 			{
+ 703              		.loc 1 213 6 is_stmt 0 view .LVU229
+ 704 020c 9A42     		cmp	r2, r3
+ 705 020e 92DA     		bge	.L35
+ 216:colorchord/embeddednf.c **** 			}
+ 706              		.loc 1 216 5 is_stmt 1 view .LVU230
+ 216:colorchord/embeddednf.c **** 			}
+ 707              		.loc 1 216 14 is_stmt 0 view .LVU231
+ 708 0210 A2F50042 		sub	r2, r2, #32768
+ 709              	.LVL89:
+ 216:colorchord/embeddednf.c **** 			}
+ 710              		.loc 1 216 12 view .LVU232
+ 711 0214 13B2     		sxth	r3, r2
+ 712              	.LVL90:
+ 713              	.L36:
+ 225:colorchord/embeddednf.c **** 
+ 714              		.loc 1 225 4 is_stmt 1 view .LVU233
+ 225:colorchord/embeddednf.c **** 
+ 715              		.loc 1 225 23 is_stmt 0 view .LVU234
+ 716 0216 03F58053 		add	r3, r3, #4096
+ 717              	.LVL91:
+ 225:colorchord/embeddednf.c **** 
+ 718              		.loc 1 225 13 view .LVU235
+ 719 021a 00EB6330 		add	r0, r0, r3, asr #13
+ 720              	.LVL92:
+ 225:colorchord/embeddednf.c **** 
+ 721              		.loc 1 225 13 view .LVU236
+ 722 021e C0B2     		uxtb	r0, r0
+ 723              	.LVL93:
+ 228:colorchord/embeddednf.c **** 				thisfreq = (1<<SEMIBITSPERBIN)*FIXBPERO - (256-thisfreq);
+ 724              		.loc 1 228 4 is_stmt 1 view .LVU237
+ 228:colorchord/embeddednf.c **** 				thisfreq = (1<<SEMIBITSPERBIN)*FIXBPERO - (256-thisfreq);
+ 725              		.loc 1 228 6 is_stmt 0 view .LVU238
+ 726 0220 F728     		cmp	r0, #247
+ 727 0222 01D9     		bls	.L37
+ 229:colorchord/embeddednf.c **** 
+ 728              		.loc 1 229 5 is_stmt 1 view .LVU239
+ 229:colorchord/embeddednf.c **** 
+ 729              		.loc 1 229 14 is_stmt 0 view .LVU240
+ 730 0224 4038     		subs	r0, r0, #64
+ 731              	.LVL94:
+ 229:colorchord/embeddednf.c **** 
+ 732              		.loc 1 229 14 view .LVU241
+ 733 0226 C0B2     		uxtb	r0, r0
+ 734              	.LVL95:
+ARM GAS  /tmp/ccqT9Ncy.s 			page 21
+
+
+ 735              	.L37:
+ 235:colorchord/embeddednf.c **** 			int8_t closest_note_id = -1;
+ 736              		.loc 1 235 4 is_stmt 1 view .LVU242
+ 236:colorchord/embeddednf.c **** 			int16_t closest_note_distance = 32767;
+ 737              		.loc 1 236 4 view .LVU243
+ 237:colorchord/embeddednf.c **** 			
+ 738              		.loc 1 237 4 view .LVU244
+ 239:colorchord/embeddednf.c **** 			{
+ 739              		.loc 1 239 4 view .LVU245
+ 237:colorchord/embeddednf.c **** 			
+ 740              		.loc 1 237 12 is_stmt 0 view .LVU246
+ 741 0228 47F6FF7C 		movw	ip, #32767
+ 236:colorchord/embeddednf.c **** 			int16_t closest_note_distance = 32767;
+ 742              		.loc 1 236 11 view .LVU247
+ 743 022c 4FF0FF3E 		mov	lr, #-1
+ 235:colorchord/embeddednf.c **** 			int8_t closest_note_id = -1;
+ 744              		.loc 1 235 11 view .LVU248
+ 745 0230 F046     		mov	r8, lr
+ 239:colorchord/embeddednf.c **** 			{
+ 746              		.loc 1 239 11 view .LVU249
+ 747 0232 0022     		movs	r2, #0
+ 239:colorchord/embeddednf.c **** 			{
+ 748              		.loc 1 239 4 view .LVU250
+ 749 0234 87E7     		b	.L38
+ 750              	.LVL96:
+ 751              	.L45:
+ 280:colorchord/embeddednf.c **** 			{
+ 752              		.loc 1 280 9 is_stmt 1 view .LVU251
+ 280:colorchord/embeddednf.c **** 			{
+ 753              		.loc 1 280 11 is_stmt 0 view .LVU252
+ 754 0236 B8F1FF3F 		cmp	r8, #-1
+ 755 023a BFD0     		beq	.L33
+ 282:colorchord/embeddednf.c **** 				marked_note = lowest_found_free_note;
+ 756              		.loc 1 282 5 is_stmt 1 view .LVU253
+ 282:colorchord/embeddednf.c **** 				marked_note = lowest_found_free_note;
+ 757              		.loc 1 282 45 is_stmt 0 view .LVU254
+ 758 023c 084B     		ldr	r3, .L84+12
+ 759 023e 03F80800 		strb	r0, [r3, r8]
+ 283:colorchord/embeddednf.c **** 			}
+ 760              		.loc 1 283 5 is_stmt 1 view .LVU255
+ 761              	.LVL97:
+ 289:colorchord/embeddednf.c **** 			{
+ 762              		.loc 1 289 4 view .LVU256
+ 283:colorchord/embeddednf.c **** 			}
+ 763              		.loc 1 283 17 is_stmt 0 view .LVU257
+ 764 0242 C646     		mov	lr, r8
+ 765              	.LVL98:
+ 283:colorchord/embeddednf.c **** 			}
+ 766              		.loc 1 283 17 view .LVU258
+ 767 0244 A0E7     		b	.L46
+ 768              	.LVL99:
+ 769              	.L77:
+ 283:colorchord/embeddednf.c **** 			}
+ 770              		.loc 1 283 17 view .LVU259
+ 771              	.LBE12:
+ 772              	.LBE8:
+ 302:colorchord/embeddednf.c **** 			}
+ARM GAS  /tmp/ccqT9Ncy.s 			page 22
+
+
+ 303:colorchord/embeddednf.c **** 		}
+ 304:colorchord/embeddednf.c **** 	}
+ 305:colorchord/embeddednf.c **** 
+ 306:colorchord/embeddednf.c **** #if 0
+ 307:colorchord/embeddednf.c **** 	for( i = 0; i < MAXNOTES; i++ )
+ 308:colorchord/embeddednf.c **** 	{
+ 309:colorchord/embeddednf.c **** 		if( note_peak_freqs[i] == 255 ) continue;
+ 310:colorchord/embeddednf.c **** 		printf( "%d / ", note_peak_amps[i] );
+ 311:colorchord/embeddednf.c **** 	}
+ 312:colorchord/embeddednf.c **** 	printf( "\n" );
+ 313:colorchord/embeddednf.c **** #endif
+ 314:colorchord/embeddednf.c **** 
+ 315:colorchord/embeddednf.c **** 	//Now we need to handle combining notes.
+ 316:colorchord/embeddednf.c **** 	for( i = 0; i < MAXNOTES; i++ )
+ 773              		.loc 1 316 9 view .LVU260
+ 774 0246 0020     		movs	r0, #0
+ 775 0248 64E0     		b	.L48
+ 776              	.LVL100:
+ 777              	.L81:
+ 778              	.LBB13:
+ 317:colorchord/embeddednf.c **** 	for( j = 0; j < i; j++ )
+ 318:colorchord/embeddednf.c **** 	{
+ 319:colorchord/embeddednf.c **** 		//We'd be combining nf2 (j) into nf1 (i) if they're close enough.
+ 320:colorchord/embeddednf.c **** 		uint8_t nf1 = note_peak_freqs[i];
+ 321:colorchord/embeddednf.c **** 		uint8_t nf2 = note_peak_freqs[j];
+ 322:colorchord/embeddednf.c **** 		int16_t distance = nf1 - nf2;
+ 323:colorchord/embeddednf.c **** 
+ 324:colorchord/embeddednf.c **** 		if( nf1 == 255 || nf2 == 255 ) continue;
+ 325:colorchord/embeddednf.c **** 
+ 326:colorchord/embeddednf.c **** 		if( distance < 0 ) distance = -distance;
+ 779              		.loc 1 326 22 is_stmt 1 discriminator 1 view .LVU261
+ 780              		.loc 1 326 31 is_stmt 0 discriminator 1 view .LVU262
+ 781 024a 191B     		subs	r1, r3, r4
+ 782              	.LVL101:
+ 783              		.loc 1 326 31 discriminator 1 view .LVU263
+ 784 024c 27E0     		b	.L50
+ 785              	.LVL102:
+ 786              	.L66:
+ 327:colorchord/embeddednf.c **** 
+ 328:colorchord/embeddednf.c **** 		//If it wraps around above the halfway point, then we're closer to it
+ 329:colorchord/embeddednf.c **** 		//on the other side. 
+ 330:colorchord/embeddednf.c **** 		if( distance > ((1<<(SEMIBITSPERBIN-1))*FIXBPERO) )
+ 331:colorchord/embeddednf.c **** 		{
+ 332:colorchord/embeddednf.c **** 			distance = ((1<<(SEMIBITSPERBIN))*FIXBPERO) - distance;
+ 333:colorchord/embeddednf.c **** 		}
+ 334:colorchord/embeddednf.c **** 
+ 335:colorchord/embeddednf.c **** 		if( distance > MAX_COMBINE_DISTANCE )
+ 336:colorchord/embeddednf.c **** 		{
+ 337:colorchord/embeddednf.c **** 			continue;
+ 338:colorchord/embeddednf.c **** 		}
+ 339:colorchord/embeddednf.c **** 
+ 340:colorchord/embeddednf.c **** 		int into;
+ 341:colorchord/embeddednf.c **** 		int from;
+ 342:colorchord/embeddednf.c **** 
+ 343:colorchord/embeddednf.c **** 		if( note_peak_amps[i] > note_peak_amps[j] )
+ 344:colorchord/embeddednf.c **** 		{
+ 345:colorchord/embeddednf.c **** 			into = i;
+ARM GAS  /tmp/ccqT9Ncy.s 			page 23
+
+
+ 346:colorchord/embeddednf.c **** 			from = j;
+ 347:colorchord/embeddednf.c **** 		}
+ 348:colorchord/embeddednf.c **** 		else
+ 349:colorchord/embeddednf.c **** 		{
+ 350:colorchord/embeddednf.c **** 			into = j;
+ 351:colorchord/embeddednf.c **** 			from = i;
+ 787              		.loc 1 351 9 view .LVU264
+ 788 024e 0146     		mov	r1, r0
+ 350:colorchord/embeddednf.c **** 			from = i;
+ 789              		.loc 1 350 9 view .LVU265
+ 790 0250 9446     		mov	ip, r2
+ 791 0252 34E0     		b	.L52
+ 792              	.L85:
+ 793              		.align	2
+ 794              	.L84:
+ 795 0254 00000000 		.word	fuzzed_bins
+ 796 0258 00000000 		.word	embeddedbins32
+ 797 025c 00000000 		.word	folded_bins
+ 798 0260 00000000 		.word	note_peak_freqs
+ 799 0264 00000000 		.word	note_peak_amps
+ 800 0268 00000000 		.word	note_peak_amps2
+ 801              	.LVL103:
+ 802              	.L54:
+ 352:colorchord/embeddednf.c **** 		}
+ 353:colorchord/embeddednf.c **** 
+ 354:colorchord/embeddednf.c **** 		//We need to combine the notes.  We need to move the new note freq
+ 355:colorchord/embeddednf.c **** 		//towards the stronger of the two notes.  
+ 356:colorchord/embeddednf.c **** 		int16_t amp1 = note_peak_amps[into];
+ 357:colorchord/embeddednf.c **** 		int16_t amp2 = note_peak_amps[from];
+ 358:colorchord/embeddednf.c **** 
+ 359:colorchord/embeddednf.c **** 		//0 to 32768 porportional to how much of amp1 we want.
+ 360:colorchord/embeddednf.c **** 		uint32_t porp = (amp1<<15) / (amp1+amp2);  
+ 361:colorchord/embeddednf.c **** 		uint16_t newnote = (nf1 * porp + nf2 * (32768-porp))>>15;
+ 362:colorchord/embeddednf.c **** 
+ 363:colorchord/embeddednf.c **** 		//When combining notes, we have to use the stronger amplitude note.
+ 364:colorchord/embeddednf.c **** 		//trying to average or combine the power of the notes looks awful.
+ 365:colorchord/embeddednf.c **** 		note_peak_freqs[into] = newnote;
+ 366:colorchord/embeddednf.c **** 		note_peak_amps[into] = (note_peak_amps[into]>note_peak_amps[from])?
+ 367:colorchord/embeddednf.c **** 				note_peak_amps[into]:note_peak_amps[j];
+ 368:colorchord/embeddednf.c **** 		note_peak_amps2[into] = (note_peak_amps2[into]>note_peak_amps2[from])?
+ 803              		.loc 1 368 25 discriminator 4 view .LVU266
+ 804 026c 424C     		ldr	r4, .L86
+ 805 026e 24F81C30 		strh	r3, [r4, ip, lsl #1]	@ movhi
+ 369:colorchord/embeddednf.c **** 				note_peak_amps2[into]:note_peak_amps2[j];
+ 370:colorchord/embeddednf.c **** 
+ 371:colorchord/embeddednf.c **** 		note_peak_freqs[from] = 255;
+ 806              		.loc 1 371 3 is_stmt 1 view .LVU267
+ 807              		.loc 1 371 25 is_stmt 0 view .LVU268
+ 808 0272 424B     		ldr	r3, .L86+4
+ 809 0274 FF24     		movs	r4, #255
+ 810 0276 5C54     		strb	r4, [r3, r1]
+ 372:colorchord/embeddednf.c **** 		note_peak_amps[from] = 0;
+ 811              		.loc 1 372 3 is_stmt 1 view .LVU269
+ 812              		.loc 1 372 24 is_stmt 0 view .LVU270
+ 813 0278 414B     		ldr	r3, .L86+8
+ 814 027a 0024     		movs	r4, #0
+ 815 027c 23F81140 		strh	r4, [r3, r1, lsl #1]	@ movhi
+ARM GAS  /tmp/ccqT9Ncy.s 			page 24
+
+
+ 373:colorchord/embeddednf.c **** 		note_jumped_to[from] = i;
+ 816              		.loc 1 373 3 is_stmt 1 view .LVU271
+ 817              		.loc 1 373 24 is_stmt 0 view .LVU272
+ 818 0280 404B     		ldr	r3, .L86+12
+ 819 0282 5854     		strb	r0, [r3, r1]
+ 820              	.LVL104:
+ 821              	.L49:
+ 822              		.loc 1 373 24 view .LVU273
+ 823              	.LBE13:
+ 317:colorchord/embeddednf.c **** 	{
+ 824              		.loc 1 317 22 is_stmt 1 discriminator 2 view .LVU274
+ 825 0284 0132     		adds	r2, r2, #1
+ 826              	.LVL105:
+ 827              	.L56:
+ 317:colorchord/embeddednf.c **** 	{
+ 828              		.loc 1 317 16 discriminator 1 view .LVU275
+ 829 0286 9042     		cmp	r0, r2
+ 830 0288 43DD     		ble	.L80
+ 831              	.LBB14:
+ 320:colorchord/embeddednf.c **** 		uint8_t nf2 = note_peak_freqs[j];
+ 832              		.loc 1 320 3 view .LVU276
+ 320:colorchord/embeddednf.c **** 		uint8_t nf2 = note_peak_freqs[j];
+ 833              		.loc 1 320 11 is_stmt 0 view .LVU277
+ 834 028a 3C4B     		ldr	r3, .L86+4
+ 835 028c 1C5C     		ldrb	r4, [r3, r0]	@ zero_extendqisi2
+ 836              	.LVL106:
+ 321:colorchord/embeddednf.c **** 		int16_t distance = nf1 - nf2;
+ 837              		.loc 1 321 3 is_stmt 1 view .LVU278
+ 321:colorchord/embeddednf.c **** 		int16_t distance = nf1 - nf2;
+ 838              		.loc 1 321 11 is_stmt 0 view .LVU279
+ 839 028e 9B5C     		ldrb	r3, [r3, r2]	@ zero_extendqisi2
+ 840              	.LVL107:
+ 322:colorchord/embeddednf.c **** 
+ 841              		.loc 1 322 3 is_stmt 1 view .LVU280
+ 322:colorchord/embeddednf.c **** 
+ 842              		.loc 1 322 11 is_stmt 0 view .LVU281
+ 843 0290 E11A     		subs	r1, r4, r3
+ 844              	.LVL108:
+ 324:colorchord/embeddednf.c **** 
+ 845              		.loc 1 324 3 is_stmt 1 view .LVU282
+ 324:colorchord/embeddednf.c **** 
+ 846              		.loc 1 324 5 is_stmt 0 view .LVU283
+ 847 0292 FF2C     		cmp	r4, #255
+ 848 0294 F6D0     		beq	.L49
+ 324:colorchord/embeddednf.c **** 
+ 849              		.loc 1 324 18 discriminator 2 view .LVU284
+ 850 0296 FF2B     		cmp	r3, #255
+ 851 0298 F4D0     		beq	.L49
+ 326:colorchord/embeddednf.c **** 
+ 852              		.loc 1 326 3 is_stmt 1 view .LVU285
+ 326:colorchord/embeddednf.c **** 
+ 853              		.loc 1 326 5 is_stmt 0 view .LVU286
+ 854 029a 0029     		cmp	r1, #0
+ 855 029c D5DB     		blt	.L81
+ 856              	.LVL109:
+ 857              	.L50:
+ 330:colorchord/embeddednf.c **** 		{
+ARM GAS  /tmp/ccqT9Ncy.s 			page 25
+
+
+ 858              		.loc 1 330 3 is_stmt 1 view .LVU287
+ 330:colorchord/embeddednf.c **** 		{
+ 859              		.loc 1 330 5 is_stmt 0 view .LVU288
+ 860 029e 6029     		cmp	r1, #96
+ 861 02a0 02DD     		ble	.L51
+ 332:colorchord/embeddednf.c **** 		}
+ 862              		.loc 1 332 4 is_stmt 1 view .LVU289
+ 332:colorchord/embeddednf.c **** 		}
+ 863              		.loc 1 332 48 is_stmt 0 view .LVU290
+ 864 02a2 C1F1C001 		rsb	r1, r1, #192
+ 865              	.LVL110:
+ 332:colorchord/embeddednf.c **** 		}
+ 866              		.loc 1 332 13 view .LVU291
+ 867 02a6 09B2     		sxth	r1, r1
+ 868              	.L51:
+ 869              	.LVL111:
+ 335:colorchord/embeddednf.c **** 		{
+ 870              		.loc 1 335 3 is_stmt 1 view .LVU292
+ 335:colorchord/embeddednf.c **** 		{
+ 871              		.loc 1 335 5 is_stmt 0 view .LVU293
+ 872 02a8 0729     		cmp	r1, #7
+ 873 02aa EBDC     		bgt	.L49
+ 340:colorchord/embeddednf.c **** 		int from;
+ 874              		.loc 1 340 3 is_stmt 1 view .LVU294
+ 341:colorchord/embeddednf.c **** 
+ 875              		.loc 1 341 3 view .LVU295
+ 343:colorchord/embeddednf.c **** 		{
+ 876              		.loc 1 343 3 view .LVU296
+ 343:colorchord/embeddednf.c **** 		{
+ 877              		.loc 1 343 21 is_stmt 0 view .LVU297
+ 878 02ac 3449     		ldr	r1, .L86+8
+ 879              	.LVL112:
+ 343:colorchord/embeddednf.c **** 		{
+ 880              		.loc 1 343 21 view .LVU298
+ 881 02ae 31F81060 		ldrh	r6, [r1, r0, lsl #1]
+ 343:colorchord/embeddednf.c **** 		{
+ 882              		.loc 1 343 41 view .LVU299
+ 883 02b2 31F81250 		ldrh	r5, [r1, r2, lsl #1]
+ 343:colorchord/embeddednf.c **** 		{
+ 884              		.loc 1 343 5 view .LVU300
+ 885 02b6 AE42     		cmp	r6, r5
+ 886 02b8 C9D9     		bls	.L66
+ 346:colorchord/embeddednf.c **** 		}
+ 887              		.loc 1 346 9 view .LVU301
+ 888 02ba 1146     		mov	r1, r2
+ 345:colorchord/embeddednf.c **** 			from = j;
+ 889              		.loc 1 345 9 view .LVU302
+ 890 02bc 8446     		mov	ip, r0
+ 891              	.L52:
+ 892              	.LVL113:
+ 356:colorchord/embeddednf.c **** 		int16_t amp2 = note_peak_amps[from];
+ 893              		.loc 1 356 3 is_stmt 1 view .LVU303
+ 356:colorchord/embeddednf.c **** 		int16_t amp2 = note_peak_amps[from];
+ 894              		.loc 1 356 32 is_stmt 0 view .LVU304
+ 895 02be DFF8C0E0 		ldr	lr, .L86+8
+ 896 02c2 3EF81C60 		ldrh	r6, [lr, ip, lsl #1]
+ 356:colorchord/embeddednf.c **** 		int16_t amp2 = note_peak_amps[from];
+ARM GAS  /tmp/ccqT9Ncy.s 			page 26
+
+
+ 897              		.loc 1 356 11 view .LVU305
+ 898 02c6 3EF91C90 		ldrsh	r9, [lr, ip, lsl #1]
+ 899              	.LVL114:
+ 357:colorchord/embeddednf.c **** 
+ 900              		.loc 1 357 3 is_stmt 1 view .LVU306
+ 357:colorchord/embeddednf.c **** 
+ 901              		.loc 1 357 32 is_stmt 0 view .LVU307
+ 902 02ca 3EF81170 		ldrh	r7, [lr, r1, lsl #1]
+ 357:colorchord/embeddednf.c **** 
+ 903              		.loc 1 357 11 view .LVU308
+ 904 02ce 3EF91180 		ldrsh	r8, [lr, r1, lsl #1]
+ 905              	.LVL115:
+ 360:colorchord/embeddednf.c **** 		uint16_t newnote = (nf1 * porp + nf2 * (32768-porp))>>15;
+ 906              		.loc 1 360 3 is_stmt 1 view .LVU309
+ 360:colorchord/embeddednf.c **** 		uint16_t newnote = (nf1 * porp + nf2 * (32768-porp))>>15;
+ 907              		.loc 1 360 24 is_stmt 0 view .LVU310
+ 908 02d2 4FEAC93E 		lsl	lr, r9, #15
+ 360:colorchord/embeddednf.c **** 		uint16_t newnote = (nf1 * porp + nf2 * (32768-porp))>>15;
+ 909              		.loc 1 360 37 view .LVU311
+ 910 02d6 C844     		add	r8, r8, r9
+ 911              	.LVL116:
+ 360:colorchord/embeddednf.c **** 		uint16_t newnote = (nf1 * porp + nf2 * (32768-porp))>>15;
+ 912              		.loc 1 360 30 view .LVU312
+ 913 02d8 9EFBF8FE 		sdiv	lr, lr, r8
+ 914              	.LVL117:
+ 361:colorchord/embeddednf.c **** 
+ 915              		.loc 1 361 3 is_stmt 1 view .LVU313
+ 361:colorchord/embeddednf.c **** 
+ 916              		.loc 1 361 48 is_stmt 0 view .LVU314
+ 917 02dc CEF50048 		rsb	r8, lr, #32768
+ 361:colorchord/embeddednf.c **** 
+ 918              		.loc 1 361 40 view .LVU315
+ 919 02e0 08FB03F3 		mul	r3, r8, r3
+ 920              	.LVL118:
+ 361:colorchord/embeddednf.c **** 
+ 921              		.loc 1 361 34 view .LVU316
+ 922 02e4 0EFB0433 		mla	r3, lr, r4, r3
+ 361:colorchord/embeddednf.c **** 
+ 923              		.loc 1 361 55 view .LVU317
+ 924 02e8 DB0B     		lsrs	r3, r3, #15
+ 925              	.LVL119:
+ 365:colorchord/embeddednf.c **** 		note_peak_amps[into] = (note_peak_amps[into]>note_peak_amps[from])?
+ 926              		.loc 1 365 3 is_stmt 1 view .LVU318
+ 365:colorchord/embeddednf.c **** 		note_peak_amps[into] = (note_peak_amps[into]>note_peak_amps[from])?
+ 927              		.loc 1 365 25 is_stmt 0 view .LVU319
+ 928 02ea 244C     		ldr	r4, .L86+4
+ 929              	.LVL120:
+ 365:colorchord/embeddednf.c **** 		note_peak_amps[into] = (note_peak_amps[into]>note_peak_amps[from])?
+ 930              		.loc 1 365 25 view .LVU320
+ 931 02ec 04F80C30 		strb	r3, [r4, ip]
+ 932              	.LVL121:
+ 366:colorchord/embeddednf.c **** 				note_peak_amps[into]:note_peak_amps[j];
+ 933              		.loc 1 366 3 is_stmt 1 view .LVU321
+ 366:colorchord/embeddednf.c **** 				note_peak_amps[into]:note_peak_amps[j];
+ 934              		.loc 1 366 24 is_stmt 0 view .LVU322
+ 935 02f0 BE42     		cmp	r6, r7
+ 936 02f2 00D9     		bls	.L53
+ARM GAS  /tmp/ccqT9Ncy.s 			page 27
+
+
+ 366:colorchord/embeddednf.c **** 				note_peak_amps[into]:note_peak_amps[j];
+ 937              		.loc 1 366 24 discriminator 1 view .LVU323
+ 938 02f4 3546     		mov	r5, r6
+ 939              	.L53:
+ 366:colorchord/embeddednf.c **** 				note_peak_amps[into]:note_peak_amps[j];
+ 940              		.loc 1 366 24 discriminator 4 view .LVU324
+ 941 02f6 224B     		ldr	r3, .L86+8
+ 942              	.LVL122:
+ 366:colorchord/embeddednf.c **** 				note_peak_amps[into]:note_peak_amps[j];
+ 943              		.loc 1 366 24 discriminator 4 view .LVU325
+ 944 02f8 23F81C50 		strh	r5, [r3, ip, lsl #1]	@ movhi
+ 945              	.LVL123:
+ 368:colorchord/embeddednf.c **** 				note_peak_amps2[into]:note_peak_amps2[j];
+ 946              		.loc 1 368 3 is_stmt 1 view .LVU326
+ 368:colorchord/embeddednf.c **** 				note_peak_amps2[into]:note_peak_amps2[j];
+ 947              		.loc 1 368 43 is_stmt 0 view .LVU327
+ 948 02fc 1E4C     		ldr	r4, .L86
+ 949 02fe 34F81C30 		ldrh	r3, [r4, ip, lsl #1]
+ 368:colorchord/embeddednf.c **** 				note_peak_amps2[into]:note_peak_amps2[j];
+ 950              		.loc 1 368 65 view .LVU328
+ 951 0302 34F81140 		ldrh	r4, [r4, r1, lsl #1]
+ 368:colorchord/embeddednf.c **** 				note_peak_amps2[into]:note_peak_amps2[j];
+ 952              		.loc 1 368 25 view .LVU329
+ 953 0306 A342     		cmp	r3, r4
+ 954 0308 B0D8     		bhi	.L54
+ 368:colorchord/embeddednf.c **** 				note_peak_amps2[into]:note_peak_amps2[j];
+ 955              		.loc 1 368 25 discriminator 2 view .LVU330
+ 956 030a 1B4B     		ldr	r3, .L86
+ 957 030c 33F81230 		ldrh	r3, [r3, r2, lsl #1]
+ 958 0310 ACE7     		b	.L54
+ 959              	.LVL124:
+ 960              	.L80:
+ 368:colorchord/embeddednf.c **** 				note_peak_amps2[into]:note_peak_amps2[j];
+ 961              		.loc 1 368 25 discriminator 2 view .LVU331
+ 962              	.LBE14:
+ 316:colorchord/embeddednf.c **** 	for( j = 0; j < i; j++ )
+ 963              		.loc 1 316 29 is_stmt 1 discriminator 2 view .LVU332
+ 964 0312 0130     		adds	r0, r0, #1
+ 965              	.LVL125:
+ 966              	.L48:
+ 316:colorchord/embeddednf.c **** 	for( j = 0; j < i; j++ )
+ 967              		.loc 1 316 16 discriminator 1 view .LVU333
+ 968 0314 0B28     		cmp	r0, #11
+ 969 0316 01DC     		bgt	.L82
+ 317:colorchord/embeddednf.c **** 	{
+ 970              		.loc 1 317 9 is_stmt 0 view .LVU334
+ 971 0318 0022     		movs	r2, #0
+ 972 031a B4E7     		b	.L56
+ 973              	.L82:
+ 374:colorchord/embeddednf.c **** 	}
+ 375:colorchord/embeddednf.c **** 
+ 376:colorchord/embeddednf.c **** 	//For al lof the notes that have not been hit, we have to allow them to
+ 377:colorchord/embeddednf.c **** 	//to decay.  We only do this for notes that have not found a peak.
+ 378:colorchord/embeddednf.c **** 	for( i = 0; i < MAXNOTES; i++ )
+ 974              		.loc 1 378 9 view .LVU335
+ 975 031c 0022     		movs	r2, #0
+ 976 031e 00E0     		b	.L57
+ARM GAS  /tmp/ccqT9Ncy.s 			page 28
+
+
+ 977              	.LVL126:
+ 978              	.L58:
+ 979              		.loc 1 378 29 is_stmt 1 discriminator 2 view .LVU336
+ 980 0320 0132     		adds	r2, r2, #1
+ 981              	.LVL127:
+ 982              	.L57:
+ 983              		.loc 1 378 16 discriminator 1 view .LVU337
+ 984 0322 0B2A     		cmp	r2, #11
+ 985 0324 25DC     		bgt	.L83
+ 379:colorchord/embeddednf.c **** 	{
+ 380:colorchord/embeddednf.c **** 		if( note_peak_freqs[i] == 255 || hitnotes[i] ) continue;
+ 986              		.loc 1 380 3 view .LVU338
+ 987              		.loc 1 380 22 is_stmt 0 view .LVU339
+ 988 0326 154B     		ldr	r3, .L86+4
+ 989 0328 9B5C     		ldrb	r3, [r3, r2]	@ zero_extendqisi2
+ 990              		.loc 1 380 5 view .LVU340
+ 991 032a FF2B     		cmp	r3, #255
+ 992 032c F8D0     		beq	.L58
+ 993              		.loc 1 380 44 discriminator 2 view .LVU341
+ 994 032e 02F14003 		add	r3, r2, #64
+ 995 0332 6B44     		add	r3, sp, r3
+ 996 0334 13F80C3C 		ldrb	r3, [r3, #-12]	@ zero_extendqisi2
+ 997              		.loc 1 380 33 discriminator 2 view .LVU342
+ 998 0338 002B     		cmp	r3, #0
+ 999 033a F1D1     		bne	.L58
+ 381:colorchord/embeddednf.c **** 
+ 382:colorchord/embeddednf.c **** 		note_peak_amps[i] -= note_peak_amps[i]>>AMP_1_IIR_BITS;
+ 1000              		.loc 1 382 3 is_stmt 1 view .LVU343
+ 1001              		.loc 1 382 17 is_stmt 0 view .LVU344
+ 1002 033c 1049     		ldr	r1, .L86+8
+ 1003 033e 31F81230 		ldrh	r3, [r1, r2, lsl #1]
+ 1004              		.loc 1 382 21 view .LVU345
+ 1005 0342 A3EB1313 		sub	r3, r3, r3, lsr #4
+ 1006 0346 9BB2     		uxth	r3, r3
+ 1007 0348 21F81230 		strh	r3, [r1, r2, lsl #1]	@ movhi
+ 383:colorchord/embeddednf.c **** 		note_peak_amps2[i] -= note_peak_amps2[i]>>AMP_2_IIR_BITS;
+ 1008              		.loc 1 383 3 is_stmt 1 view .LVU346
+ 1009              		.loc 1 383 18 is_stmt 0 view .LVU347
+ 1010 034c 0A48     		ldr	r0, .L86
+ 1011 034e 30F81210 		ldrh	r1, [r0, r2, lsl #1]
+ 1012              		.loc 1 383 22 view .LVU348
+ 1013 0352 A1EB9101 		sub	r1, r1, r1, lsr #2
+ 1014 0356 20F81210 		strh	r1, [r0, r2, lsl #1]	@ movhi
+ 384:colorchord/embeddednf.c **** 
+ 385:colorchord/embeddednf.c **** 		//In the event a note is not strong enough anymore, it is to be
+ 386:colorchord/embeddednf.c **** 		//returned back into the great pool of unused notes.
+ 387:colorchord/embeddednf.c **** 		if( note_peak_amps[i] < MINIMUM_AMP_FOR_NOTE_TO_DISAPPEAR )
+ 1015              		.loc 1 387 3 is_stmt 1 view .LVU349
+ 1016              		.loc 1 387 5 is_stmt 0 view .LVU350
+ 1017 035a 3F2B     		cmp	r3, #63
+ 1018 035c E0D8     		bhi	.L58
+ 388:colorchord/embeddednf.c **** 		{
+ 389:colorchord/embeddednf.c **** 			note_peak_freqs[i] = 255;
+ 1019              		.loc 1 389 4 is_stmt 1 view .LVU351
+ 1020              		.loc 1 389 23 is_stmt 0 view .LVU352
+ 1021 035e 074B     		ldr	r3, .L86+4
+ 1022 0360 FF21     		movs	r1, #255
+ARM GAS  /tmp/ccqT9Ncy.s 			page 29
+
+
+ 1023 0362 9954     		strb	r1, [r3, r2]
+ 390:colorchord/embeddednf.c **** 			note_peak_amps[i] = 0;
+ 1024              		.loc 1 390 4 is_stmt 1 view .LVU353
+ 1025              		.loc 1 390 22 is_stmt 0 view .LVU354
+ 1026 0364 0023     		movs	r3, #0
+ 1027 0366 0649     		ldr	r1, .L86+8
+ 1028 0368 21F81230 		strh	r3, [r1, r2, lsl #1]	@ movhi
+ 391:colorchord/embeddednf.c **** 			note_peak_amps2[i] = 0;
+ 1029              		.loc 1 391 4 is_stmt 1 view .LVU355
+ 1030              		.loc 1 391 23 is_stmt 0 view .LVU356
+ 1031 036c 20F81230 		strh	r3, [r0, r2, lsl #1]	@ movhi
+ 1032 0370 D6E7     		b	.L58
+ 1033              	.L83:
+ 392:colorchord/embeddednf.c **** 		}
+ 393:colorchord/embeddednf.c **** 	}
+ 394:colorchord/embeddednf.c **** 
+ 395:colorchord/embeddednf.c **** 	//We now have notes!!!
+ 396:colorchord/embeddednf.c **** #if 0
+ 397:colorchord/embeddednf.c **** 	for( i = 0; i < MAXNOTES; i++ )
+ 398:colorchord/embeddednf.c **** 	{
+ 399:colorchord/embeddednf.c **** 		if( note_peak_freqs[i] == 255 ) continue;
+ 400:colorchord/embeddednf.c **** 		printf( "(%3d %4d %4d) ", note_peak_freqs[i], note_peak_amps[i], note_peak_amps2[i] );
+ 401:colorchord/embeddednf.c **** 	}
+ 402:colorchord/embeddednf.c **** 	printf( "\n") ;
+ 403:colorchord/embeddednf.c **** #endif
+ 404:colorchord/embeddednf.c **** 
+ 405:colorchord/embeddednf.c **** #if 0
+ 406:colorchord/embeddednf.c **** 	for( i = 0; i < FIXBPERO; i++ )
+ 407:colorchord/embeddednf.c **** 	{
+ 408:colorchord/embeddednf.c **** 		printf( "%4d ", folded_bins[i] );
+ 409:colorchord/embeddednf.c **** 	}
+ 410:colorchord/embeddednf.c **** 	printf( "\n" );
+ 411:colorchord/embeddednf.c **** #endif
+ 412:colorchord/embeddednf.c **** 
+ 413:colorchord/embeddednf.c **** 
+ 414:colorchord/embeddednf.c **** }
+ 1034              		.loc 1 414 1 view .LVU357
+ 1035 0372 11B0     		add	sp, sp, #68
+ 1036              		.cfi_def_cfa_offset 28
+ 1037              		@ sp needed
+ 1038 0374 BDE8F083 		pop	{r4, r5, r6, r7, r8, r9, pc}
+ 1039              	.L87:
+ 1040              		.align	2
+ 1041              	.L86:
+ 1042 0378 00000000 		.word	note_peak_amps2
+ 1043 037c 00000000 		.word	note_peak_freqs
+ 1044 0380 00000000 		.word	note_peak_amps
+ 1045 0384 00000000 		.word	note_jumped_to
+ 1046              		.cfi_endproc
+ 1047              	.LFE5:
+ 1049              		.section	.rodata.fbins.0,"a"
+ 1050              		.align	2
+ 1053              	fbins.0:
+ 1054 0000 B40B     		.short	2996
+ 1055 0002 0C0C     		.short	3084
+ 1056 0004 660C     		.short	3174
+ 1057 0006 C30C     		.short	3267
+ARM GAS  /tmp/ccqT9Ncy.s 			page 30
+
+
+ 1058 0008 230D     		.short	3363
+ 1059 000a 850D     		.short	3461
+ 1060 000c EB0D     		.short	3563
+ 1061 000e 530E     		.short	3667
+ 1062 0010 BF0E     		.short	3775
+ 1063 0012 2D0F     		.short	3885
+ 1064 0014 9F0F     		.short	3999
+ 1065 0016 1410     		.short	4116
+ 1066 0018 8D10     		.short	4237
+ 1067 001a 0911     		.short	4361
+ 1068 001c 8911     		.short	4489
+ 1069 001e 0C12     		.short	4620
+ 1070 0020 9412     		.short	4756
+ 1071 0022 1F13     		.short	4895
+ 1072 0024 AF13     		.short	5039
+ 1073 0026 4214     		.short	5186
+ 1074 0028 DA14     		.short	5338
+ 1075 002a 7715     		.short	5495
+ 1076 002c 1816     		.short	5656
+ 1077 002e BD16     		.short	5821
+ 1078              		.global	note_jumped_to
+ 1079              		.section	.bss.note_jumped_to,"aw",%nobits
+ 1080              		.align	2
+ 1083              	note_jumped_to:
+ 1084 0000 00000000 		.space	12
+ 1084      00000000 
+ 1084      00000000 
+ 1085              		.global	note_peak_amps2
+ 1086              		.section	.bss.note_peak_amps2,"aw",%nobits
+ 1087              		.align	2
+ 1090              	note_peak_amps2:
+ 1091 0000 00000000 		.space	24
+ 1091      00000000 
+ 1091      00000000 
+ 1091      00000000 
+ 1091      00000000 
+ 1092              		.global	note_peak_amps
+ 1093              		.section	.bss.note_peak_amps,"aw",%nobits
+ 1094              		.align	2
+ 1097              	note_peak_amps:
+ 1098 0000 00000000 		.space	24
+ 1098      00000000 
+ 1098      00000000 
+ 1098      00000000 
+ 1098      00000000 
+ 1099              		.global	note_peak_freqs
+ 1100              		.section	.bss.note_peak_freqs,"aw",%nobits
+ 1101              		.align	2
+ 1104              	note_peak_freqs:
+ 1105 0000 00000000 		.space	12
+ 1105      00000000 
+ 1105      00000000 
+ 1106              		.global	fuzzed_bins
+ 1107              		.section	.bss.fuzzed_bins,"aw",%nobits
+ 1108              		.align	2
+ 1111              	fuzzed_bins:
+ 1112 0000 00000000 		.space	240
+ARM GAS  /tmp/ccqT9Ncy.s 			page 31
+
+
+ 1112      00000000 
+ 1112      00000000 
+ 1112      00000000 
+ 1112      00000000 
+ 1113              		.global	folded_bins
+ 1114              		.section	.bss.folded_bins,"aw",%nobits
+ 1115              		.align	2
+ 1118              	folded_bins:
+ 1119 0000 00000000 		.space	48
+ 1119      00000000 
+ 1119      00000000 
+ 1119      00000000 
+ 1119      00000000 
+ 1120              		.text
+ 1121              	.Letext0:
+ 1122              		.file 2 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 1123              		.file 3 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 1124              		.file 4 "colorchord/DFT32.h"
+ 1125              		.file 5 "colorchord/embeddednf.h"
+ 1126              		.file 6 "/usr/arm-none-eabi/include/string.h"
+ 1127              		.file 7 "<built-in>"
+ARM GAS  /tmp/ccqT9Ncy.s 			page 32
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 embeddednf.c
+     /tmp/ccqT9Ncy.s:21     .text.UpdateFreqs:00000000 $t
+     /tmp/ccqT9Ncy.s:27     .text.UpdateFreqs:00000000 UpdateFreqs
+     /tmp/ccqT9Ncy.s:47     .text.UpdateFreqs:0000000c $d
+     /tmp/ccqT9Ncy.s:1053   .rodata.fbins.0:00000000 fbins.0
+     /tmp/ccqT9Ncy.s:52     .text.InitColorChord:00000000 $t
+     /tmp/ccqT9Ncy.s:58     .text.InitColorChord:00000000 InitColorChord
+     /tmp/ccqT9Ncy.s:121    .text.InitColorChord:00000040 $d
+     /tmp/ccqT9Ncy.s:1104   .bss.note_peak_freqs:00000000 note_peak_freqs
+     /tmp/ccqT9Ncy.s:1097   .bss.note_peak_amps:00000000 note_peak_amps
+     /tmp/ccqT9Ncy.s:1090   .bss.note_peak_amps2:00000000 note_peak_amps2
+     /tmp/ccqT9Ncy.s:1118   .bss.folded_bins:00000000 folded_bins
+     /tmp/ccqT9Ncy.s:1111   .bss.fuzzed_bins:00000000 fuzzed_bins
+     /tmp/ccqT9Ncy.s:130    .text.HandleFrameInfo:00000000 $t
+     /tmp/ccqT9Ncy.s:136    .text.HandleFrameInfo:00000000 HandleFrameInfo
+     /tmp/ccqT9Ncy.s:795    .text.HandleFrameInfo:00000254 $d
+     /tmp/ccqT9Ncy.s:804    .text.HandleFrameInfo:0000026c $t
+     /tmp/ccqT9Ncy.s:1042   .text.HandleFrameInfo:00000378 $d
+     /tmp/ccqT9Ncy.s:1083   .bss.note_jumped_to:00000000 note_jumped_to
+     /tmp/ccqT9Ncy.s:1050   .rodata.fbins.0:00000000 $d
+     /tmp/ccqT9Ncy.s:1080   .bss.note_jumped_to:00000000 $d
+     /tmp/ccqT9Ncy.s:1087   .bss.note_peak_amps2:00000000 $d
+     /tmp/ccqT9Ncy.s:1094   .bss.note_peak_amps:00000000 $d
+     /tmp/ccqT9Ncy.s:1101   .bss.note_peak_freqs:00000000 $d
+     /tmp/ccqT9Ncy.s:1108   .bss.fuzzed_bins:00000000 $d
+     /tmp/ccqT9Ncy.s:1115   .bss.folded_bins:00000000 $d
+
+UNDEFINED SYMBOLS
+UpdateBins32
+memset
+SetupDFTProgressive32
+UpdateOutputBins32
+embeddedbins32

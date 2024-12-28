@@ -1,0 +1,10 @@
+{
+    "cortex-debug.armToolchainPath": "/usr/bin",
+    "cortex-debug.openocdPath": "/usr/bin/openocd",
+    "files.associations": {
+        "embeddedout.h": "c",
+        "dma.h": "c",
+        "main.h": "c",
+        "pdm.h": "c"
+    }
+}

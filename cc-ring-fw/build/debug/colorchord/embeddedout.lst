@@ -1,0 +1,1944 @@
+ARM GAS  /tmp/ccEJjeSr.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"embeddedout.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "colorchord/embeddedout.c"
+  20              		.section	.text.EHSVtoHEX,"ax",%progbits
+  21              		.align	1
+  22              		.global	EHSVtoHEX
+  23              		.syntax unified
+  24              		.thumb
+  25              		.thumb_func
+  27              	EHSVtoHEX:
+  28              	.LVL0:
+  29              	.LFB3:
+   1:colorchord/embeddedout.c **** //Copyright 2015 <>< Charles Lohr under the ColorChord License.
+   2:colorchord/embeddedout.c **** 
+   3:colorchord/embeddedout.c **** #include "embeddedout.h"
+   4:colorchord/embeddedout.c **** 
+   5:colorchord/embeddedout.c **** //uint8_t ledArray[NUM_LIN_LEDS]; //Points to which notes correspond to these LEDs
+   6:colorchord/embeddedout.c **** uint8_t ledOut[NUM_LIN_LEDS*3];
+   7:colorchord/embeddedout.c **** 
+   8:colorchord/embeddedout.c **** uint16_t ledSpin;
+   9:colorchord/embeddedout.c **** uint16_t ledAmpOut[NUM_LIN_LEDS];
+  10:colorchord/embeddedout.c **** uint8_t ledFreqOut[NUM_LIN_LEDS];
+  11:colorchord/embeddedout.c **** uint8_t ledFreqOutOld[NUM_LIN_LEDS];
+  12:colorchord/embeddedout.c **** 
+  13:colorchord/embeddedout.c **** uint8_t RootNoteOffset;
+  14:colorchord/embeddedout.c **** 
+  15:colorchord/embeddedout.c **** void UpdateLinearLEDs()
+  16:colorchord/embeddedout.c **** {
+  17:colorchord/embeddedout.c **** 	//Source material:
+  18:colorchord/embeddedout.c **** 	/*
+  19:colorchord/embeddedout.c **** 		extern uint8_t  note_peak_freqs[];
+  20:colorchord/embeddedout.c **** 		extern uint16_t note_peak_amps[];  //[MAXNOTES] 
+  21:colorchord/embeddedout.c **** 		extern uint16_t note_peak_amps2[];  //[MAXNOTES]  (Responds quicker)
+  22:colorchord/embeddedout.c **** 		extern uint8_t  note_jumped_to[]; //[MAXNOTES] When a note combines into another one,
+  23:colorchord/embeddedout.c **** 	*/
+  24:colorchord/embeddedout.c **** 
+  25:colorchord/embeddedout.c **** 	//Goal: Make splotches of light that are porportional to the strength of notes.
+  26:colorchord/embeddedout.c **** 	//Color them according to value in note_peak_amps2.
+  27:colorchord/embeddedout.c **** 
+  28:colorchord/embeddedout.c **** 	uint8_t i;
+  29:colorchord/embeddedout.c **** 	int8_t k;
+ARM GAS  /tmp/ccEJjeSr.s 			page 2
+
+
+  30:colorchord/embeddedout.c **** 	uint16_t j, l;
+  31:colorchord/embeddedout.c **** 	uint32_t total_size_all_notes = 0;
+  32:colorchord/embeddedout.c **** 	int32_t porpamps[MAXNOTES]; //LEDs for each corresponding note.
+  33:colorchord/embeddedout.c **** 	uint8_t sorted_note_map[MAXNOTES]; //mapping from which note into the array of notes from the rest
+  34:colorchord/embeddedout.c **** 	uint8_t sorted_map_count = 0;
+  35:colorchord/embeddedout.c **** 	uint32_t note_nerf_a = 0;
+  36:colorchord/embeddedout.c **** 
+  37:colorchord/embeddedout.c **** 	for( i = 0; i < MAXNOTES; i++ )
+  38:colorchord/embeddedout.c **** 	{
+  39:colorchord/embeddedout.c **** 		if( note_peak_freqs[i] == 255 ) continue;
+  40:colorchord/embeddedout.c **** 		note_nerf_a += note_peak_amps[i];
+  41:colorchord/embeddedout.c **** 	}
+  42:colorchord/embeddedout.c **** 
+  43:colorchord/embeddedout.c **** 	note_nerf_a = ((note_nerf_a * NERF_NOTE_PORP)>>8);
+  44:colorchord/embeddedout.c **** 
+  45:colorchord/embeddedout.c **** 
+  46:colorchord/embeddedout.c **** 	for( i = 0; i < MAXNOTES; i++ )
+  47:colorchord/embeddedout.c **** 	{
+  48:colorchord/embeddedout.c **** 		uint16_t ist = note_peak_amps[i];
+  49:colorchord/embeddedout.c **** 		uint8_t nff = note_peak_freqs[i];
+  50:colorchord/embeddedout.c **** 		if( nff == 255 )
+  51:colorchord/embeddedout.c **** 		{
+  52:colorchord/embeddedout.c **** 			continue;
+  53:colorchord/embeddedout.c **** 		}
+  54:colorchord/embeddedout.c **** 		if( ist < note_nerf_a )
+  55:colorchord/embeddedout.c **** 		{
+  56:colorchord/embeddedout.c **** 			continue;
+  57:colorchord/embeddedout.c **** 		}
+  58:colorchord/embeddedout.c **** 
+  59:colorchord/embeddedout.c **** #if SORT_NOTES
+  60:colorchord/embeddedout.c **** 		for( j = 0; j < sorted_map_count; j++ )
+  61:colorchord/embeddedout.c **** 		{
+  62:colorchord/embeddedout.c **** 			if( note_peak_freqs[ sorted_note_map[j] ] > nff )
+  63:colorchord/embeddedout.c **** 			{
+  64:colorchord/embeddedout.c **** 				break; // so j is correct place to insert
+  65:colorchord/embeddedout.c **** 			}
+  66:colorchord/embeddedout.c **** 		}
+  67:colorchord/embeddedout.c **** 		for( k = sorted_map_count; k > j; k-- ) // make room
+  68:colorchord/embeddedout.c **** 		{
+  69:colorchord/embeddedout.c **** 			sorted_note_map[k] = sorted_note_map[k-1];
+  70:colorchord/embeddedout.c **** 		}
+  71:colorchord/embeddedout.c **** 		sorted_note_map[j] = i; // insert in correct place
+  72:colorchord/embeddedout.c **** #else
+  73:colorchord/embeddedout.c **** 		sorted_note_map[sorted_map_count] = i; // insert at end
+  74:colorchord/embeddedout.c **** #endif
+  75:colorchord/embeddedout.c **** 		sorted_map_count++;
+  76:colorchord/embeddedout.c **** 	}
+  77:colorchord/embeddedout.c **** 
+  78:colorchord/embeddedout.c **** #if 0
+  79:colorchord/embeddedout.c **** 	for( i = 0; i < sorted_map_count; i++ )
+  80:colorchord/embeddedout.c **** 	{
+  81:colorchord/embeddedout.c **** 		printf( "%d: %d: %d /", sorted_note_map[i],  note_peak_freqs[sorted_note_map[i]], note_peak_amps[
+  82:colorchord/embeddedout.c **** 	}
+  83:colorchord/embeddedout.c **** 	printf( "\n" );
+  84:colorchord/embeddedout.c **** #endif
+  85:colorchord/embeddedout.c **** 
+  86:colorchord/embeddedout.c **** 	uint16_t local_peak_amps[MAXNOTES];
+ARM GAS  /tmp/ccEJjeSr.s 			page 3
+
+
+  87:colorchord/embeddedout.c **** 	uint16_t local_peak_amps2[MAXNOTES];
+  88:colorchord/embeddedout.c **** 	uint8_t  local_peak_freq[MAXNOTES];
+  89:colorchord/embeddedout.c **** 
+  90:colorchord/embeddedout.c **** 	//Make a copy of all of the variables into local ones so we don't have to keep double-dereferencin
+  91:colorchord/embeddedout.c **** 	for( i = 0; i < sorted_map_count; i++ )
+  92:colorchord/embeddedout.c **** 	{
+  93:colorchord/embeddedout.c **** 		//printf( "%5d ", local_peak_amps[i] );
+  94:colorchord/embeddedout.c **** 		local_peak_amps[i] = note_peak_amps[sorted_note_map[i]] - note_nerf_a;
+  95:colorchord/embeddedout.c **** 		local_peak_amps2[i] = note_peak_amps2[sorted_note_map[i]];
+  96:colorchord/embeddedout.c **** 		local_peak_freq[i] = note_peak_freqs[sorted_note_map[i]];
+  97:colorchord/embeddedout.c **** //		printf( "%5d ", local_peak_amps[i] );
+  98:colorchord/embeddedout.c **** 	}
+  99:colorchord/embeddedout.c **** //	printf( "\n" );
+ 100:colorchord/embeddedout.c **** 
+ 101:colorchord/embeddedout.c **** 	for( i = 0; i < sorted_map_count; i++ )
+ 102:colorchord/embeddedout.c **** 	{
+ 103:colorchord/embeddedout.c **** 		uint16_t ist = local_peak_amps[i];
+ 104:colorchord/embeddedout.c **** 		porpamps[i] = 0;
+ 105:colorchord/embeddedout.c **** 		total_size_all_notes += local_peak_amps[i];
+ 106:colorchord/embeddedout.c **** 	}
+ 107:colorchord/embeddedout.c **** 
+ 108:colorchord/embeddedout.c **** 	if( total_size_all_notes == 0 )
+ 109:colorchord/embeddedout.c **** 	{
+ 110:colorchord/embeddedout.c **** 		for( j = 0; j < USE_NUM_LIN_LEDS * 3; j++ )
+ 111:colorchord/embeddedout.c **** 		{
+ 112:colorchord/embeddedout.c **** 			ledOut[j] = 0;
+ 113:colorchord/embeddedout.c **** 		}
+ 114:colorchord/embeddedout.c **** 		return;
+ 115:colorchord/embeddedout.c **** 	}
+ 116:colorchord/embeddedout.c **** 
+ 117:colorchord/embeddedout.c **** 	uint32_t porportional = (uint32_t)(USE_NUM_LIN_LEDS<<16)/((uint32_t)total_size_all_notes);
+ 118:colorchord/embeddedout.c **** 
+ 119:colorchord/embeddedout.c **** 	uint16_t total_accounted_leds = 0;
+ 120:colorchord/embeddedout.c **** 
+ 121:colorchord/embeddedout.c **** 	for( i = 0; i < sorted_map_count; i++ )
+ 122:colorchord/embeddedout.c **** 	{
+ 123:colorchord/embeddedout.c **** 		porpamps[i] = (local_peak_amps[i] * porportional) >> 16;
+ 124:colorchord/embeddedout.c **** 		total_accounted_leds += porpamps[i];
+ 125:colorchord/embeddedout.c **** 	}
+ 126:colorchord/embeddedout.c **** 
+ 127:colorchord/embeddedout.c **** 	int16_t total_unaccounted_leds = USE_NUM_LIN_LEDS - total_accounted_leds;
+ 128:colorchord/embeddedout.c **** 
+ 129:colorchord/embeddedout.c **** 	int addedlast = 1;
+ 130:colorchord/embeddedout.c **** 	do
+ 131:colorchord/embeddedout.c **** 	{
+ 132:colorchord/embeddedout.c **** 		for( i = 0; i < sorted_map_count && total_unaccounted_leds; i++ )
+ 133:colorchord/embeddedout.c **** 		{
+ 134:colorchord/embeddedout.c **** 			porpamps[i]++; total_unaccounted_leds--;
+ 135:colorchord/embeddedout.c **** 			addedlast = 1;
+ 136:colorchord/embeddedout.c **** 		}
+ 137:colorchord/embeddedout.c **** 	} while( addedlast && total_unaccounted_leds );
+ 138:colorchord/embeddedout.c **** 
+ 139:colorchord/embeddedout.c **** 	//Put the frequencies on a ring.
+ 140:colorchord/embeddedout.c **** 	j = 0;
+ 141:colorchord/embeddedout.c **** 	for( i = 0; i < sorted_map_count; i++ )
+ 142:colorchord/embeddedout.c **** 	{
+ 143:colorchord/embeddedout.c **** 		while( porpamps[i] > 0 )
+ARM GAS  /tmp/ccEJjeSr.s 			page 4
+
+
+ 144:colorchord/embeddedout.c **** 		{
+ 145:colorchord/embeddedout.c **** 			ledFreqOut[j] = local_peak_freq[i];
+ 146:colorchord/embeddedout.c **** 			ledAmpOut[j] = (local_peak_amps2[i]*NOTE_FINAL_AMP)>>8;
+ 147:colorchord/embeddedout.c **** 			j++;
+ 148:colorchord/embeddedout.c **** 			porpamps[i]--;
+ 149:colorchord/embeddedout.c **** 		}
+ 150:colorchord/embeddedout.c **** 	}
+ 151:colorchord/embeddedout.c **** 
+ 152:colorchord/embeddedout.c **** 	//This part totally can't run on an embedded system.
+ 153:colorchord/embeddedout.c **** #if LIN_WRAPAROUND
+ 154:colorchord/embeddedout.c **** 	uint16_t midx = 0;
+ 155:colorchord/embeddedout.c **** 	uint32_t mqty = 100000000;
+ 156:colorchord/embeddedout.c **** 	for( j = 0; j < USE_NUM_LIN_LEDS; j++ )
+ 157:colorchord/embeddedout.c **** 	{
+ 158:colorchord/embeddedout.c **** 		uint32_t dqty;
+ 159:colorchord/embeddedout.c **** 		uint16_t localj;
+ 160:colorchord/embeddedout.c **** 
+ 161:colorchord/embeddedout.c **** 		dqty = 0;
+ 162:colorchord/embeddedout.c **** 		localj = j;
+ 163:colorchord/embeddedout.c **** 		for( l = 0; l < USE_NUM_LIN_LEDS; l++ )
+ 164:colorchord/embeddedout.c **** 		{
+ 165:colorchord/embeddedout.c **** 			int32_t d = (int32_t)ledFreqOut[localj] - (int32_t)ledFreqOutOld[l];
+ 166:colorchord/embeddedout.c **** 			if( d < 0 ) d *= -1;
+ 167:colorchord/embeddedout.c **** 			if( d > (NOTERANGE>>1) ) { d = NOTERANGE - d + 1; }
+ 168:colorchord/embeddedout.c **** 			dqty += ( d * d );
+ 169:colorchord/embeddedout.c **** 
+ 170:colorchord/embeddedout.c **** 			localj++;
+ 171:colorchord/embeddedout.c **** 			if( localj == USE_NUM_LIN_LEDS ) localj = 0;
+ 172:colorchord/embeddedout.c **** 		}
+ 173:colorchord/embeddedout.c **** 
+ 174:colorchord/embeddedout.c **** 		if( dqty < mqty )
+ 175:colorchord/embeddedout.c **** 		{
+ 176:colorchord/embeddedout.c **** 			mqty = dqty;
+ 177:colorchord/embeddedout.c **** 			midx = j;
+ 178:colorchord/embeddedout.c **** 		}
+ 179:colorchord/embeddedout.c **** 	}
+ 180:colorchord/embeddedout.c **** 
+ 181:colorchord/embeddedout.c **** 	ledSpin = midx;
+ 182:colorchord/embeddedout.c **** 
+ 183:colorchord/embeddedout.c **** #else
+ 184:colorchord/embeddedout.c **** 	ledSpin = 0;
+ 185:colorchord/embeddedout.c **** #endif
+ 186:colorchord/embeddedout.c **** 
+ 187:colorchord/embeddedout.c **** 	j = ledSpin;
+ 188:colorchord/embeddedout.c **** 	for( l = 0; l < USE_NUM_LIN_LEDS; l++, j++ )
+ 189:colorchord/embeddedout.c **** 	{
+ 190:colorchord/embeddedout.c **** 		if( j >= USE_NUM_LIN_LEDS ) j = 0;
+ 191:colorchord/embeddedout.c **** 		ledFreqOutOld[l] = ledFreqOut[j];
+ 192:colorchord/embeddedout.c **** 
+ 193:colorchord/embeddedout.c **** 		uint16_t amp = ledAmpOut[j];
+ 194:colorchord/embeddedout.c **** 		if( amp > 255 ) amp = 255;
+ 195:colorchord/embeddedout.c **** 		uint32_t color = ECCtoHEX( (ledFreqOut[j]+RootNoteOffset)%NOTERANGE, 255, amp );
+ 196:colorchord/embeddedout.c **** 		ledOut[l*3+0] = ( color >> 0 ) & 0xff;
+ 197:colorchord/embeddedout.c **** 		ledOut[l*3+1] = ( color >> 8 ) & 0xff;
+ 198:colorchord/embeddedout.c **** 		ledOut[l*3+2] = ( color >>16 ) & 0xff;
+ 199:colorchord/embeddedout.c **** 	}
+ 200:colorchord/embeddedout.c **** /*	j = ledSpin;
+ARM GAS  /tmp/ccEJjeSr.s 			page 5
+
+
+ 201:colorchord/embeddedout.c **** 	for( i = 0; i < sorted_map_count; i++ )
+ 202:colorchord/embeddedout.c **** 	{
+ 203:colorchord/embeddedout.c **** 		while( porpamps[i] > 0 )
+ 204:colorchord/embeddedout.c **** 		{
+ 205:colorchord/embeddedout.c **** 			uint16_t amp = ((uint32_t)local_peak_amps2[i] * NOTE_FINAL_AMP) >> 8;
+ 206:colorchord/embeddedout.c **** 			if( amp > 255 ) amp = 255;
+ 207:colorchord/embeddedout.c **** 			uint32_t color = ECCtoHEX( local_peak_freq[i], 255, amp );
+ 208:colorchord/embeddedout.c **** 			ledOut[j*3+0] = ( color >> 0 ) & 0xff;
+ 209:colorchord/embeddedout.c **** 			ledOut[j*3+1] = ( color >> 8 ) & 0xff;
+ 210:colorchord/embeddedout.c **** 			ledOut[j*3+2] = ( color >>16 ) & 0xff;
+ 211:colorchord/embeddedout.c **** 
+ 212:colorchord/embeddedout.c **** 			j++;
+ 213:colorchord/embeddedout.c **** 			if( j == USE_NUM_LIN_LEDS ) j = 0;
+ 214:colorchord/embeddedout.c **** 			porpamps[i]--;
+ 215:colorchord/embeddedout.c **** 		}
+ 216:colorchord/embeddedout.c **** 	}*/
+ 217:colorchord/embeddedout.c **** 
+ 218:colorchord/embeddedout.c **** 	//Now, we use porpamps to march through the LEDs, coloring them.
+ 219:colorchord/embeddedout.c **** /*	j = 0;
+ 220:colorchord/embeddedout.c **** 	for( i = 0; i < sorted_map_count; i++ )
+ 221:colorchord/embeddedout.c **** 	{
+ 222:colorchord/embeddedout.c **** 		while( porpamps[i] > 0 )
+ 223:colorchord/embeddedout.c **** 		{
+ 224:colorchord/embeddedout.c **** 			uint16_t amp = ((uint32_t)local_peak_amps2[i] * NOTE_FINAL_AMP) >> 8;
+ 225:colorchord/embeddedout.c **** 			if( amp > 255 ) amp = 255;
+ 226:colorchord/embeddedout.c **** 			uint32_t color = ECCtoHEX( local_peak_freq[i], 255, amp );
+ 227:colorchord/embeddedout.c **** 			ledOut[j*3+0] = ( color >> 0 ) & 0xff;
+ 228:colorchord/embeddedout.c **** 			ledOut[j*3+1] = ( color >> 8 ) & 0xff;
+ 229:colorchord/embeddedout.c **** 			ledOut[j*3+2] = ( color >>16 ) & 0xff;
+ 230:colorchord/embeddedout.c **** 
+ 231:colorchord/embeddedout.c **** 			j++;
+ 232:colorchord/embeddedout.c **** 			porpamps[i]--;
+ 233:colorchord/embeddedout.c **** 		}
+ 234:colorchord/embeddedout.c **** 	}*/
+ 235:colorchord/embeddedout.c **** }
+ 236:colorchord/embeddedout.c **** 
+ 237:colorchord/embeddedout.c **** 
+ 238:colorchord/embeddedout.c **** 
+ 239:colorchord/embeddedout.c **** 
+ 240:colorchord/embeddedout.c **** void UpdateAllSameLEDs()
+ 241:colorchord/embeddedout.c **** {
+ 242:colorchord/embeddedout.c **** 	int i;
+ 243:colorchord/embeddedout.c **** 	uint8_t freq = 0;
+ 244:colorchord/embeddedout.c **** 	uint16_t amp = 0;
+ 245:colorchord/embeddedout.c **** 
+ 246:colorchord/embeddedout.c **** 	for( i = 0; i < MAXNOTES; i++ )
+ 247:colorchord/embeddedout.c **** 	{
+ 248:colorchord/embeddedout.c **** 		uint16_t ist = note_peak_amps2[i];
+ 249:colorchord/embeddedout.c **** 		uint8_t ifrq = note_peak_freqs[i];
+ 250:colorchord/embeddedout.c **** 		if( ist > amp && ifrq != 255 )
+ 251:colorchord/embeddedout.c **** 		{
+ 252:colorchord/embeddedout.c **** 			freq = ifrq;
+ 253:colorchord/embeddedout.c **** 			amp = ist;
+ 254:colorchord/embeddedout.c **** 		}
+ 255:colorchord/embeddedout.c **** 	}
+ 256:colorchord/embeddedout.c **** 
+ 257:colorchord/embeddedout.c **** 	amp = (((uint32_t)(amp))*NOTE_FINAL_AMP)>>10;
+ARM GAS  /tmp/ccEJjeSr.s 			page 6
+
+
+ 258:colorchord/embeddedout.c **** 
+ 259:colorchord/embeddedout.c **** 	if( amp > 255 ) amp = 255;
+ 260:colorchord/embeddedout.c **** 	uint32_t color = ECCtoHEX( (freq+RootNoteOffset)%NOTERANGE, 255, amp );
+ 261:colorchord/embeddedout.c **** 
+ 262:colorchord/embeddedout.c **** 	for( i = 0; i < USE_NUM_LIN_LEDS; i++ )
+ 263:colorchord/embeddedout.c **** 	{
+ 264:colorchord/embeddedout.c **** 		ledOut[i*3+0] = ( color >> 0 ) & 0xff;
+ 265:colorchord/embeddedout.c **** 		ledOut[i*3+1] = ( color >> 8 ) & 0xff;
+ 266:colorchord/embeddedout.c **** 		ledOut[i*3+2] = ( color >>16 ) & 0xff;
+ 267:colorchord/embeddedout.c **** 	}
+ 268:colorchord/embeddedout.c **** }
+ 269:colorchord/embeddedout.c **** 
+ 270:colorchord/embeddedout.c **** 
+ 271:colorchord/embeddedout.c **** 
+ 272:colorchord/embeddedout.c **** 
+ 273:colorchord/embeddedout.c **** 
+ 274:colorchord/embeddedout.c **** 
+ 275:colorchord/embeddedout.c **** uint32_t ECCtoHEX( uint8_t note, uint8_t sat, uint8_t val )
+ 276:colorchord/embeddedout.c **** {
+ 277:colorchord/embeddedout.c **** 	uint16_t hue = 0;
+ 278:colorchord/embeddedout.c **** 	uint16_t third = 65535/3;
+ 279:colorchord/embeddedout.c **** 	uint16_t scalednote = note;
+ 280:colorchord/embeddedout.c **** 	uint32_t renote = ((uint32_t)note * 65536) / NOTERANGE;
+ 281:colorchord/embeddedout.c **** 
+ 282:colorchord/embeddedout.c **** 	//Note is expected to be a vale from 0..(NOTERANGE-1)
+ 283:colorchord/embeddedout.c **** 	//renote goes from 0 to the next one under 65536.
+ 284:colorchord/embeddedout.c **** 
+ 285:colorchord/embeddedout.c **** 
+ 286:colorchord/embeddedout.c **** 	if( renote < third )
+ 287:colorchord/embeddedout.c **** 	{
+ 288:colorchord/embeddedout.c **** 		//Yellow to Red.
+ 289:colorchord/embeddedout.c **** 		hue = (third - renote) >> 1;
+ 290:colorchord/embeddedout.c **** 	}
+ 291:colorchord/embeddedout.c **** 	else if( renote < (third<<1) )
+ 292:colorchord/embeddedout.c **** 	{
+ 293:colorchord/embeddedout.c **** 		//Red to Blue
+ 294:colorchord/embeddedout.c **** 		hue = (third-renote);
+ 295:colorchord/embeddedout.c **** 	}
+ 296:colorchord/embeddedout.c **** 	else
+ 297:colorchord/embeddedout.c **** 	{
+ 298:colorchord/embeddedout.c **** 		//hue = ((((65535-renote)>>8) * (uint32_t)(third>>8)) >> 1) + (third<<1);
+ 299:colorchord/embeddedout.c **** 		hue = (uint16_t)(((uint32_t)(65536-renote)<<16) / (third<<1)) + (third>>1); // ((((65535-renote)>
+ 300:colorchord/embeddedout.c **** 	}
+ 301:colorchord/embeddedout.c **** 	hue >>= 8;
+ 302:colorchord/embeddedout.c **** 
+ 303:colorchord/embeddedout.c **** 	return EHSVtoHEX( hue, sat, val );
+ 304:colorchord/embeddedout.c **** }
+ 305:colorchord/embeddedout.c **** 
+ 306:colorchord/embeddedout.c **** uint32_t EHSVtoHEX( uint8_t hue, uint8_t sat, uint8_t val )
+ 307:colorchord/embeddedout.c **** {
+  30              		.loc 1 307 1 view -0
+  31              		.cfi_startproc
+  32              		@ args = 0, pretend = 0, frame = 0
+  33              		@ frame_needed = 0, uses_anonymous_args = 0
+  34              		.loc 1 307 1 is_stmt 0 view .LVU1
+  35 0000 00B5     		push	{lr}
+  36              		.cfi_def_cfa_offset 4
+ARM GAS  /tmp/ccEJjeSr.s 			page 7
+
+
+  37              		.cfi_offset 14, -4
+ 308:colorchord/embeddedout.c **** 	#define SIXTH1 43
+ 309:colorchord/embeddedout.c **** 	#define SIXTH2 85
+ 310:colorchord/embeddedout.c **** 	#define SIXTH3 128
+ 311:colorchord/embeddedout.c **** 	#define SIXTH4 171
+ 312:colorchord/embeddedout.c **** 	#define SIXTH5 213
+ 313:colorchord/embeddedout.c **** 
+ 314:colorchord/embeddedout.c **** 	uint16_t or = 0, og = 0, ob = 0;
+  38              		.loc 1 314 2 is_stmt 1 view .LVU2
+  39              	.LVL1:
+ 315:colorchord/embeddedout.c **** 
+ 316:colorchord/embeddedout.c **** 	hue -= SIXTH1; //Off by 60 degrees.
+  40              		.loc 1 316 2 view .LVU3
+  41              		.loc 1 316 6 is_stmt 0 view .LVU4
+  42 0002 2B38     		subs	r0, r0, #43
+  43              	.LVL2:
+  44              		.loc 1 316 6 view .LVU5
+  45 0004 C0B2     		uxtb	r0, r0
+  46              	.LVL3:
+ 317:colorchord/embeddedout.c **** 
+ 318:colorchord/embeddedout.c **** 	//TODO: There are colors that overlap here, consider 
+ 319:colorchord/embeddedout.c **** 	//tweaking this to make the best use of the colorspace.
+ 320:colorchord/embeddedout.c **** 
+ 321:colorchord/embeddedout.c **** 	if( hue < SIXTH1 ) //Ok: Yellow->Red.
+  47              		.loc 1 321 2 is_stmt 1 view .LVU6
+  48              		.loc 1 321 4 is_stmt 0 view .LVU7
+  49 0006 2A28     		cmp	r0, #42
+  50 0008 3AD8     		bhi	.L2
+ 322:colorchord/embeddedout.c **** 	{
+ 323:colorchord/embeddedout.c **** 		or = 255;
+  51              		.loc 1 323 3 is_stmt 1 view .LVU8
+  52              	.LVL4:
+ 324:colorchord/embeddedout.c **** 		og = 255 - ((uint16_t)hue * 255) / (SIXTH1);
+  53              		.loc 1 324 3 view .LVU9
+  54              		.loc 1 324 29 is_stmt 0 view .LVU10
+  55 000a C0EB0020 		rsb	r0, r0, r0, lsl #8
+  56              	.LVL5:
+  57              		.loc 1 324 36 view .LVU11
+  58 000e 484B     		ldr	r3, .L10
+  59 0010 83FB003C 		smull	r3, ip, r3, r0
+  60 0014 C317     		asrs	r3, r0, #31
+  61 0016 A3EBEC03 		sub	r3, r3, ip, asr #3
+  62              		.loc 1 324 12 view .LVU12
+  63 001a 9BB2     		uxth	r3, r3
+  64              		.loc 1 324 6 view .LVU13
+  65 001c FF33     		adds	r3, r3, #255
+  66 001e 9BB2     		uxth	r3, r3
+  67              	.LVL6:
+ 314:colorchord/embeddedout.c **** 
+  68              		.loc 1 314 27 view .LVU14
+  69 0020 4FF0000E 		mov	lr, #0
+ 323:colorchord/embeddedout.c **** 		og = 255 - ((uint16_t)hue * 255) / (SIXTH1);
+  70              		.loc 1 323 6 view .LVU15
+  71 0024 4FF0FF0C 		mov	ip, #255
+  72              	.LVL7:
+  73              	.L3:
+ 325:colorchord/embeddedout.c **** 	}
+ARM GAS  /tmp/ccEJjeSr.s 			page 8
+
+
+ 326:colorchord/embeddedout.c **** 	else if( hue < SIXTH2 ) //Ok: Red->Purple
+ 327:colorchord/embeddedout.c **** 	{
+ 328:colorchord/embeddedout.c **** 		or = 255;
+ 329:colorchord/embeddedout.c **** 		ob = (uint16_t)hue*255 / SIXTH1 - 255;
+ 330:colorchord/embeddedout.c **** 	}
+ 331:colorchord/embeddedout.c **** 	else if( hue < SIXTH3 )  //Ok: Purple->Blue
+ 332:colorchord/embeddedout.c **** 	{
+ 333:colorchord/embeddedout.c **** 		ob = 255;
+ 334:colorchord/embeddedout.c **** 		or = ((SIXTH3-hue) * 255) / (SIXTH1);
+ 335:colorchord/embeddedout.c **** 	}
+ 336:colorchord/embeddedout.c **** 	else if( hue < SIXTH4 ) //Ok: Blue->Cyan
+ 337:colorchord/embeddedout.c **** 	{
+ 338:colorchord/embeddedout.c **** 		ob = 255;
+ 339:colorchord/embeddedout.c **** 		og = (hue - SIXTH3)*255 / SIXTH1;
+ 340:colorchord/embeddedout.c **** 	}
+ 341:colorchord/embeddedout.c **** 	else if( hue < SIXTH5 ) //Ok: Cyan->Green.
+ 342:colorchord/embeddedout.c **** 	{
+ 343:colorchord/embeddedout.c **** 		og = 255;
+ 344:colorchord/embeddedout.c **** 		ob = ((SIXTH5-hue)*255) / SIXTH1;
+ 345:colorchord/embeddedout.c **** 	}
+ 346:colorchord/embeddedout.c **** 	else //Green->Yellow
+ 347:colorchord/embeddedout.c **** 	{
+ 348:colorchord/embeddedout.c **** 		og = 255;
+ 349:colorchord/embeddedout.c **** 		or = (hue - SIXTH5) * 255 / SIXTH1;
+ 350:colorchord/embeddedout.c **** 	}
+ 351:colorchord/embeddedout.c **** 
+ 352:colorchord/embeddedout.c **** 	uint16_t rv = val;
+  74              		.loc 1 352 2 is_stmt 1 view .LVU16
+ 353:colorchord/embeddedout.c **** 	if( rv > 128 ) rv++;
+  75              		.loc 1 353 2 view .LVU17
+  76              		.loc 1 353 17 discriminator 1 view .LVU18
+ 354:colorchord/embeddedout.c **** 	uint16_t rs = sat;
+  77              		.loc 1 354 2 view .LVU19
+  78              		.loc 1 354 11 is_stmt 0 view .LVU20
+  79 0028 0846     		mov	r0, r1
+  80              	.LVL8:
+ 355:colorchord/embeddedout.c **** 	if( rs > 128 ) rs++;
+  81              		.loc 1 355 2 is_stmt 1 view .LVU21
+  82              		.loc 1 355 4 is_stmt 0 view .LVU22
+  83 002a 8029     		cmp	r1, #128
+  84 002c 00D9     		bls	.L8
+  85              		.loc 1 355 17 is_stmt 1 discriminator 1 view .LVU23
+  86              		.loc 1 355 19 is_stmt 0 discriminator 1 view .LVU24
+  87 002e 481C     		adds	r0, r1, #1
+  88              	.L8:
+  89              	.LVL9:
+ 356:colorchord/embeddedout.c **** 
+ 357:colorchord/embeddedout.c **** 	//or, og, ob range from 0...255 now.
+ 358:colorchord/embeddedout.c **** 	//Need to apply saturation and value.
+ 359:colorchord/embeddedout.c **** 
+ 360:colorchord/embeddedout.c **** 	or = (or * val)>>8;
+  90              		.loc 1 360 2 is_stmt 1 view .LVU25
+  91              		.loc 1 360 11 is_stmt 0 view .LVU26
+  92 0030 02FB0CF1 		mul	r1, r2, ip
+  93              	.LVL10:
+  94              		.loc 1 360 5 view .LVU27
+  95 0034 C1F30F21 		ubfx	r1, r1, #8, #16
+ARM GAS  /tmp/ccEJjeSr.s 			page 9
+
+
+  96              	.LVL11:
+ 361:colorchord/embeddedout.c **** 	og = (og * val)>>8;
+  97              		.loc 1 361 2 is_stmt 1 view .LVU28
+  98              		.loc 1 361 11 is_stmt 0 view .LVU29
+  99 0038 02FB03F3 		mul	r3, r2, r3
+ 100              	.LVL12:
+ 101              		.loc 1 361 5 view .LVU30
+ 102 003c C3F30F23 		ubfx	r3, r3, #8, #16
+ 103              	.LVL13:
+ 362:colorchord/embeddedout.c **** 	ob = (ob * val)>>8;
+ 104              		.loc 1 362 2 is_stmt 1 view .LVU31
+ 105              		.loc 1 362 11 is_stmt 0 view .LVU32
+ 106 0040 02FB0EFC 		mul	ip, r2, lr
+ 107              		.loc 1 362 5 view .LVU33
+ 108 0044 CCF30F2C 		ubfx	ip, ip, #8, #16
+ 109              	.LVL14:
+ 363:colorchord/embeddedout.c **** 
+ 364:colorchord/embeddedout.c **** 	//OR..OB == 0..65025
+ 365:colorchord/embeddedout.c **** 	or = or * rs + 255 * (256-rs);
+ 110              		.loc 1 365 2 is_stmt 1 view .LVU34
+ 111              		.loc 1 365 10 is_stmt 0 view .LVU35
+ 112 0048 10FB01F2 		smulbb	r2, r0, r1
+ 113              	.LVL15:
+ 114              		.loc 1 365 27 view .LVU36
+ 115 004c C0F58071 		rsb	r1, r0, #256
+ 116              	.LVL16:
+ 117              		.loc 1 365 15 view .LVU37
+ 118 0050 C1EB0121 		rsb	r1, r1, r1, lsl #8
+ 119 0054 89B2     		uxth	r1, r1
+ 120              		.loc 1 365 5 view .LVU38
+ 121 0056 11FA82F2 		uxtah	r2, r1, r2
+ 122              	.LVL17:
+ 366:colorchord/embeddedout.c **** 	og = og * rs + 255 * (256-rs);
+ 123              		.loc 1 366 2 is_stmt 1 view .LVU39
+ 124              		.loc 1 366 10 is_stmt 0 view .LVU40
+ 125 005a 10FB03F3 		smulbb	r3, r0, r3
+ 126              	.LVL18:
+ 127              		.loc 1 366 5 view .LVU41
+ 128 005e 11FA83F3 		uxtah	r3, r1, r3
+ 129              	.LVL19:
+ 367:colorchord/embeddedout.c **** 	ob = ob * rs + 255 * (256-rs);
+ 130              		.loc 1 367 2 is_stmt 1 view .LVU42
+ 131              		.loc 1 367 10 is_stmt 0 view .LVU43
+ 132 0062 10FB0CF0 		smulbb	r0, r0, ip
+ 133              	.LVL20:
+ 134              		.loc 1 367 5 view .LVU44
+ 135 0066 11FA80F0 		uxtah	r0, r1, r0
+ 136              	.LVL21:
+ 368:colorchord/embeddedout.c **** //printf( "__%d %d %d =-> %d\n", or, og, ob, rs );
+ 369:colorchord/embeddedout.c **** 
+ 370:colorchord/embeddedout.c **** 	or >>= 8;
+ 137              		.loc 1 370 2 is_stmt 1 view .LVU45
+ 138              		.loc 1 370 5 is_stmt 0 view .LVU46
+ 139 006a C2F30722 		ubfx	r2, r2, #8, #8
+ 140              	.LVL22:
+ 371:colorchord/embeddedout.c **** 	og >>= 8;
+ 141              		.loc 1 371 2 is_stmt 1 view .LVU47
+ARM GAS  /tmp/ccEJjeSr.s 			page 10
+
+
+ 372:colorchord/embeddedout.c **** 	ob >>= 8;
+ 142              		.loc 1 372 2 view .LVU48
+ 143              		.loc 1 372 5 is_stmt 0 view .LVU49
+ 144 006e C0F30720 		ubfx	r0, r0, #8, #8
+ 145              	.LVL23:
+ 373:colorchord/embeddedout.c **** 
+ 374:colorchord/embeddedout.c **** 	return or | (og<<8) | ((uint32_t)ob<<16);
+ 146              		.loc 1 374 2 is_stmt 1 view .LVU50
+ 147              		.loc 1 374 17 is_stmt 0 view .LVU51
+ 148 0072 03F47F43 		and	r3, r3, #65280
+ 149              	.LVL24:
+ 150              		.loc 1 374 12 view .LVU52
+ 151 0076 1343     		orrs	r3, r3, r2
+ 375:colorchord/embeddedout.c **** }
+ 152              		.loc 1 375 1 view .LVU53
+ 153 0078 43EA0040 		orr	r0, r3, r0, lsl #16
+ 154              	.LVL25:
+ 155              		.loc 1 375 1 view .LVU54
+ 156 007c 5DF804FB 		ldr	pc, [sp], #4
+ 157              	.LVL26:
+ 158              	.L2:
+ 326:colorchord/embeddedout.c **** 	{
+ 159              		.loc 1 326 7 is_stmt 1 view .LVU55
+ 326:colorchord/embeddedout.c **** 	{
+ 160              		.loc 1 326 9 is_stmt 0 view .LVU56
+ 161 0080 5428     		cmp	r0, #84
+ 162 0082 0FD8     		bhi	.L4
+ 328:colorchord/embeddedout.c **** 		ob = (uint16_t)hue*255 / SIXTH1 - 255;
+ 163              		.loc 1 328 3 is_stmt 1 view .LVU57
+ 164              	.LVL27:
+ 329:colorchord/embeddedout.c **** 	}
+ 165              		.loc 1 329 3 view .LVU58
+ 329:colorchord/embeddedout.c **** 	}
+ 166              		.loc 1 329 21 is_stmt 0 view .LVU59
+ 167 0084 C0EB0020 		rsb	r0, r0, r0, lsl #8
+ 168              	.LVL28:
+ 329:colorchord/embeddedout.c **** 	}
+ 169              		.loc 1 329 26 view .LVU60
+ 170 0088 294B     		ldr	r3, .L10
+ 171 008a 83FB003C 		smull	r3, ip, r3, r0
+ 172 008e C317     		asrs	r3, r0, #31
+ 173 0090 C3EBEC03 		rsb	r3, r3, ip, asr #3
+ 329:colorchord/embeddedout.c **** 	}
+ 174              		.loc 1 329 35 view .LVU61
+ 175 0094 9BB2     		uxth	r3, r3
+ 329:colorchord/embeddedout.c **** 	}
+ 176              		.loc 1 329 6 view .LVU62
+ 177 0096 FF3B     		subs	r3, r3, #255
+ 178 0098 1FFA83FE 		uxth	lr, r3
+ 179              	.LVL29:
+ 314:colorchord/embeddedout.c **** 
+ 180              		.loc 1 314 19 view .LVU63
+ 181 009c 0023     		movs	r3, #0
+ 328:colorchord/embeddedout.c **** 		ob = (uint16_t)hue*255 / SIXTH1 - 255;
+ 182              		.loc 1 328 6 view .LVU64
+ 183 009e 4FF0FF0C 		mov	ip, #255
+ 184 00a2 C1E7     		b	.L3
+ARM GAS  /tmp/ccEJjeSr.s 			page 11
+
+
+ 185              	.LVL30:
+ 186              	.L4:
+ 331:colorchord/embeddedout.c **** 	{
+ 187              		.loc 1 331 7 is_stmt 1 view .LVU65
+ 331:colorchord/embeddedout.c **** 	{
+ 188              		.loc 1 331 9 is_stmt 0 view .LVU66
+ 189 00a4 10F0800F 		tst	r0, #128
+ 190 00a8 0FD1     		bne	.L5
+ 333:colorchord/embeddedout.c **** 		or = ((SIXTH3-hue) * 255) / (SIXTH1);
+ 191              		.loc 1 333 3 is_stmt 1 view .LVU67
+ 192              	.LVL31:
+ 334:colorchord/embeddedout.c **** 	}
+ 193              		.loc 1 334 3 view .LVU68
+ 334:colorchord/embeddedout.c **** 	}
+ 194              		.loc 1 334 16 is_stmt 0 view .LVU69
+ 195 00aa C0F18000 		rsb	r0, r0, #128
+ 196              	.LVL32:
+ 334:colorchord/embeddedout.c **** 	}
+ 197              		.loc 1 334 22 view .LVU70
+ 198 00ae C0EB0020 		rsb	r0, r0, r0, lsl #8
+ 334:colorchord/embeddedout.c **** 	}
+ 199              		.loc 1 334 29 view .LVU71
+ 200 00b2 1F4B     		ldr	r3, .L10
+ 201 00b4 83FB00C3 		smull	ip, r3, r3, r0
+ 202 00b8 C017     		asrs	r0, r0, #31
+ 203 00ba C0EBE300 		rsb	r0, r0, r3, asr #3
+ 334:colorchord/embeddedout.c **** 	}
+ 204              		.loc 1 334 6 view .LVU72
+ 205 00be 1FFA80FC 		uxth	ip, r0
+ 206              	.LVL33:
+ 333:colorchord/embeddedout.c **** 		or = ((SIXTH3-hue) * 255) / (SIXTH1);
+ 207              		.loc 1 333 6 view .LVU73
+ 208 00c2 4FF0FF0E 		mov	lr, #255
+ 314:colorchord/embeddedout.c **** 
+ 209              		.loc 1 314 19 view .LVU74
+ 210 00c6 0023     		movs	r3, #0
+ 211 00c8 AEE7     		b	.L3
+ 212              	.LVL34:
+ 213              	.L5:
+ 336:colorchord/embeddedout.c **** 	{
+ 214              		.loc 1 336 7 is_stmt 1 view .LVU75
+ 336:colorchord/embeddedout.c **** 	{
+ 215              		.loc 1 336 9 is_stmt 0 view .LVU76
+ 216 00ca AA28     		cmp	r0, #170
+ 217 00cc 0ED8     		bhi	.L6
+ 338:colorchord/embeddedout.c **** 		og = (hue - SIXTH3)*255 / SIXTH1;
+ 218              		.loc 1 338 3 is_stmt 1 view .LVU77
+ 219              	.LVL35:
+ 339:colorchord/embeddedout.c **** 	}
+ 220              		.loc 1 339 3 view .LVU78
+ 339:colorchord/embeddedout.c **** 	}
+ 221              		.loc 1 339 13 is_stmt 0 view .LVU79
+ 222 00ce 8038     		subs	r0, r0, #128
+ 223              	.LVL36:
+ 339:colorchord/embeddedout.c **** 	}
+ 224              		.loc 1 339 22 view .LVU80
+ 225 00d0 C0EB0020 		rsb	r0, r0, r0, lsl #8
+ARM GAS  /tmp/ccEJjeSr.s 			page 12
+
+
+ 226              	.LVL37:
+ 339:colorchord/embeddedout.c **** 	}
+ 227              		.loc 1 339 27 view .LVU81
+ 228 00d4 164B     		ldr	r3, .L10
+ 229 00d6 83FB003C 		smull	r3, ip, r3, r0
+ 230 00da C317     		asrs	r3, r0, #31
+ 231 00dc C3EBEC03 		rsb	r3, r3, ip, asr #3
+ 339:colorchord/embeddedout.c **** 	}
+ 232              		.loc 1 339 6 view .LVU82
+ 233 00e0 9BB2     		uxth	r3, r3
+ 234              	.LVL38:
+ 338:colorchord/embeddedout.c **** 		og = (hue - SIXTH3)*255 / SIXTH1;
+ 235              		.loc 1 338 6 view .LVU83
+ 236 00e2 4FF0FF0E 		mov	lr, #255
+ 314:colorchord/embeddedout.c **** 
+ 237              		.loc 1 314 11 view .LVU84
+ 238 00e6 4FF0000C 		mov	ip, #0
+ 239 00ea 9DE7     		b	.L3
+ 240              	.LVL39:
+ 241              	.L6:
+ 341:colorchord/embeddedout.c **** 	{
+ 242              		.loc 1 341 7 is_stmt 1 view .LVU85
+ 341:colorchord/embeddedout.c **** 	{
+ 243              		.loc 1 341 9 is_stmt 0 view .LVU86
+ 244 00ec D428     		cmp	r0, #212
+ 245 00ee 0FD8     		bhi	.L7
+ 343:colorchord/embeddedout.c **** 		ob = ((SIXTH5-hue)*255) / SIXTH1;
+ 246              		.loc 1 343 3 is_stmt 1 view .LVU87
+ 247              	.LVL40:
+ 344:colorchord/embeddedout.c **** 	}
+ 248              		.loc 1 344 3 view .LVU88
+ 344:colorchord/embeddedout.c **** 	}
+ 249              		.loc 1 344 16 is_stmt 0 view .LVU89
+ 250 00f0 C0F1D500 		rsb	r0, r0, #213
+ 251              	.LVL41:
+ 344:colorchord/embeddedout.c **** 	}
+ 252              		.loc 1 344 21 view .LVU90
+ 253 00f4 C0EB0020 		rsb	r0, r0, r0, lsl #8
+ 344:colorchord/embeddedout.c **** 	}
+ 254              		.loc 1 344 27 view .LVU91
+ 255 00f8 0D4B     		ldr	r3, .L10
+ 256 00fa 83FB00C3 		smull	ip, r3, r3, r0
+ 257 00fe C017     		asrs	r0, r0, #31
+ 258 0100 C0EBE300 		rsb	r0, r0, r3, asr #3
+ 344:colorchord/embeddedout.c **** 	}
+ 259              		.loc 1 344 6 view .LVU92
+ 260 0104 1FFA80FE 		uxth	lr, r0
+ 261              	.LVL42:
+ 343:colorchord/embeddedout.c **** 		ob = ((SIXTH5-hue)*255) / SIXTH1;
+ 262              		.loc 1 343 6 view .LVU93
+ 263 0108 FF23     		movs	r3, #255
+ 314:colorchord/embeddedout.c **** 
+ 264              		.loc 1 314 11 view .LVU94
+ 265 010a 4FF0000C 		mov	ip, #0
+ 266 010e 8BE7     		b	.L3
+ 267              	.LVL43:
+ 268              	.L7:
+ARM GAS  /tmp/ccEJjeSr.s 			page 13
+
+
+ 348:colorchord/embeddedout.c **** 		or = (hue - SIXTH5) * 255 / SIXTH1;
+ 269              		.loc 1 348 3 is_stmt 1 view .LVU95
+ 349:colorchord/embeddedout.c **** 	}
+ 270              		.loc 1 349 3 view .LVU96
+ 349:colorchord/embeddedout.c **** 	}
+ 271              		.loc 1 349 13 is_stmt 0 view .LVU97
+ 272 0110 D538     		subs	r0, r0, #213
+ 273              	.LVL44:
+ 349:colorchord/embeddedout.c **** 	}
+ 274              		.loc 1 349 23 view .LVU98
+ 275 0112 C0EB0020 		rsb	r0, r0, r0, lsl #8
+ 276              	.LVL45:
+ 349:colorchord/embeddedout.c **** 	}
+ 277              		.loc 1 349 29 view .LVU99
+ 278 0116 064B     		ldr	r3, .L10
+ 279 0118 83FB00C3 		smull	ip, r3, r3, r0
+ 280 011c C017     		asrs	r0, r0, #31
+ 281 011e C0EBE300 		rsb	r0, r0, r3, asr #3
+ 349:colorchord/embeddedout.c **** 	}
+ 282              		.loc 1 349 6 view .LVU100
+ 283 0122 1FFA80FC 		uxth	ip, r0
+ 284              	.LVL46:
+ 314:colorchord/embeddedout.c **** 
+ 285              		.loc 1 314 27 view .LVU101
+ 286 0126 4FF0000E 		mov	lr, #0
+ 348:colorchord/embeddedout.c **** 		or = (hue - SIXTH5) * 255 / SIXTH1;
+ 287              		.loc 1 348 6 view .LVU102
+ 288 012a FF23     		movs	r3, #255
+ 289 012c 7CE7     		b	.L3
+ 290              	.L11:
+ 291 012e 00BF     		.align	2
+ 292              	.L10:
+ 293 0130 83BEA02F 		.word	799063683
+ 294              		.cfi_endproc
+ 295              	.LFE3:
+ 297              		.section	.text.ECCtoHEX,"ax",%progbits
+ 298              		.align	1
+ 299              		.global	ECCtoHEX
+ 300              		.syntax unified
+ 301              		.thumb
+ 302              		.thumb_func
+ 304              	ECCtoHEX:
+ 305              	.LVL47:
+ 306              	.LFB2:
+ 276:colorchord/embeddedout.c **** 	uint16_t hue = 0;
+ 307              		.loc 1 276 1 is_stmt 1 view -0
+ 308              		.cfi_startproc
+ 309              		@ args = 0, pretend = 0, frame = 0
+ 310              		@ frame_needed = 0, uses_anonymous_args = 0
+ 276:colorchord/embeddedout.c **** 	uint16_t hue = 0;
+ 311              		.loc 1 276 1 is_stmt 0 view .LVU104
+ 312 0000 10B5     		push	{r4, lr}
+ 313              		.cfi_def_cfa_offset 8
+ 314              		.cfi_offset 4, -8
+ 315              		.cfi_offset 14, -4
+ 277:colorchord/embeddedout.c **** 	uint16_t third = 65535/3;
+ 316              		.loc 1 277 2 is_stmt 1 view .LVU105
+ARM GAS  /tmp/ccEJjeSr.s 			page 14
+
+
+ 317              	.LVL48:
+ 278:colorchord/embeddedout.c **** 	uint16_t scalednote = note;
+ 318              		.loc 1 278 2 view .LVU106
+ 279:colorchord/embeddedout.c **** 	uint32_t renote = ((uint32_t)note * 65536) / NOTERANGE;
+ 319              		.loc 1 279 2 view .LVU107
+ 280:colorchord/embeddedout.c **** 
+ 320              		.loc 1 280 2 view .LVU108
+ 280:colorchord/embeddedout.c **** 
+ 321              		.loc 1 280 36 is_stmt 0 view .LVU109
+ 322 0002 0004     		lsls	r0, r0, #16
+ 323              	.LVL49:
+ 280:colorchord/embeddedout.c **** 
+ 324              		.loc 1 280 11 view .LVU110
+ 325 0004 124B     		ldr	r3, .L17
+ 326 0006 A3FB0043 		umull	r4, r3, r3, r0
+ 327 000a DB09     		lsrs	r3, r3, #7
+ 328              	.LVL50:
+ 286:colorchord/embeddedout.c **** 	{
+ 329              		.loc 1 286 2 is_stmt 1 view .LVU111
+ 286:colorchord/embeddedout.c **** 	{
+ 330              		.loc 1 286 4 is_stmt 0 view .LVU112
+ 331 000c 114C     		ldr	r4, .L17+4
+ 332 000e A042     		cmp	r0, r4
+ 333 0010 08D8     		bhi	.L13
+ 289:colorchord/embeddedout.c **** 	}
+ 334              		.loc 1 289 3 is_stmt 1 view .LVU113
+ 289:colorchord/embeddedout.c **** 	}
+ 335              		.loc 1 289 16 is_stmt 0 view .LVU114
+ 336 0012 C3F5AA40 		rsb	r0, r3, #21760
+ 337 0016 5530     		adds	r0, r0, #85
+ 289:colorchord/embeddedout.c **** 	}
+ 338              		.loc 1 289 7 view .LVU115
+ 339 0018 C0F34F00 		ubfx	r0, r0, #1, #16
+ 340              	.LVL51:
+ 341              	.L14:
+ 301:colorchord/embeddedout.c **** 
+ 342              		.loc 1 301 2 is_stmt 1 view .LVU116
+ 303:colorchord/embeddedout.c **** }
+ 343              		.loc 1 303 2 view .LVU117
+ 303:colorchord/embeddedout.c **** }
+ 344              		.loc 1 303 9 is_stmt 0 view .LVU118
+ 345 001c 000A     		lsrs	r0, r0, #8
+ 346              	.LVL52:
+ 303:colorchord/embeddedout.c **** }
+ 347              		.loc 1 303 9 view .LVU119
+ 348 001e FFF7FEFF 		bl	EHSVtoHEX
+ 349              	.LVL53:
+ 304:colorchord/embeddedout.c **** 
+ 350              		.loc 1 304 1 view .LVU120
+ 351 0022 10BD     		pop	{r4, pc}
+ 352              	.LVL54:
+ 353              	.L13:
+ 291:colorchord/embeddedout.c **** 	{
+ 354              		.loc 1 291 7 is_stmt 1 view .LVU121
+ 291:colorchord/embeddedout.c **** 	{
+ 355              		.loc 1 291 9 is_stmt 0 view .LVU122
+ 356 0024 0C4C     		ldr	r4, .L17+8
+ARM GAS  /tmp/ccEJjeSr.s 			page 15
+
+
+ 357 0026 A042     		cmp	r0, r4
+ 358 0028 05D8     		bhi	.L15
+ 294:colorchord/embeddedout.c **** 	}
+ 359              		.loc 1 294 3 is_stmt 1 view .LVU123
+ 294:colorchord/embeddedout.c **** 	}
+ 360              		.loc 1 294 15 is_stmt 0 view .LVU124
+ 361 002a 98B2     		uxth	r0, r3
+ 294:colorchord/embeddedout.c **** 	}
+ 362              		.loc 1 294 7 view .LVU125
+ 363 002c C0F5AA40 		rsb	r0, r0, #21760
+ 364 0030 5530     		adds	r0, r0, #85
+ 365 0032 80B2     		uxth	r0, r0
+ 366              	.LVL55:
+ 294:colorchord/embeddedout.c **** 	}
+ 367              		.loc 1 294 7 view .LVU126
+ 368 0034 F2E7     		b	.L14
+ 369              	.LVL56:
+ 370              	.L15:
+ 299:colorchord/embeddedout.c **** 	}
+ 371              		.loc 1 299 3 is_stmt 1 view .LVU127
+ 299:colorchord/embeddedout.c **** 	}
+ 372              		.loc 1 299 21 is_stmt 0 view .LVU128
+ 373 0036 C3F58030 		rsb	r0, r3, #65536
+ 299:colorchord/embeddedout.c **** 	}
+ 374              		.loc 1 299 45 view .LVU129
+ 375 003a 0004     		lsls	r0, r0, #16
+ 299:colorchord/embeddedout.c **** 	}
+ 376              		.loc 1 299 51 view .LVU130
+ 377 003c 074B     		ldr	r3, .L17+12
+ 378              	.LVL57:
+ 299:colorchord/embeddedout.c **** 	}
+ 379              		.loc 1 299 51 view .LVU131
+ 380 003e A3FB0030 		umull	r3, r0, r3, r0
+ 299:colorchord/embeddedout.c **** 	}
+ 381              		.loc 1 299 9 view .LVU132
+ 382 0042 C0F3CF30 		ubfx	r0, r0, #15, #16
+ 299:colorchord/embeddedout.c **** 	}
+ 383              		.loc 1 299 7 view .LVU133
+ 384 0046 00F52A50 		add	r0, r0, #10880
+ 385 004a 2A30     		adds	r0, r0, #42
+ 386 004c 80B2     		uxth	r0, r0
+ 387 004e E5E7     		b	.L14
+ 388              	.L18:
+ 389              		.align	2
+ 390              	.L17:
+ 391 0050 ABAAAAAA 		.word	-1431655765
+ 392 0054 BFFF3F00 		.word	4194239
+ 393 0058 7FFF7F00 		.word	8388479
+ 394 005c 01C000C0 		.word	-1073692671
+ 395              		.cfi_endproc
+ 396              	.LFE2:
+ 398              		.section	.text.UpdateLinearLEDs,"ax",%progbits
+ 399              		.align	1
+ 400              		.global	UpdateLinearLEDs
+ 401              		.syntax unified
+ 402              		.thumb
+ 403              		.thumb_func
+ARM GAS  /tmp/ccEJjeSr.s 			page 16
+
+
+ 405              	UpdateLinearLEDs:
+ 406              	.LFB0:
+  16:colorchord/embeddedout.c **** 	//Source material:
+ 407              		.loc 1 16 1 is_stmt 1 view -0
+ 408              		.cfi_startproc
+ 409              		@ args = 0, pretend = 0, frame = 120
+ 410              		@ frame_needed = 0, uses_anonymous_args = 0
+ 411 0000 70B5     		push	{r4, r5, r6, lr}
+ 412              		.cfi_def_cfa_offset 16
+ 413              		.cfi_offset 4, -16
+ 414              		.cfi_offset 5, -12
+ 415              		.cfi_offset 6, -8
+ 416              		.cfi_offset 14, -4
+ 417 0002 9EB0     		sub	sp, sp, #120
+ 418              		.cfi_def_cfa_offset 136
+  28:colorchord/embeddedout.c **** 	int8_t k;
+ 419              		.loc 1 28 2 view .LVU135
+  29:colorchord/embeddedout.c **** 	uint16_t j, l;
+ 420              		.loc 1 29 2 view .LVU136
+  30:colorchord/embeddedout.c **** 	uint32_t total_size_all_notes = 0;
+ 421              		.loc 1 30 2 view .LVU137
+  31:colorchord/embeddedout.c **** 	int32_t porpamps[MAXNOTES]; //LEDs for each corresponding note.
+ 422              		.loc 1 31 2 view .LVU138
+ 423              	.LVL58:
+  32:colorchord/embeddedout.c **** 	uint8_t sorted_note_map[MAXNOTES]; //mapping from which note into the array of notes from the rest
+ 424              		.loc 1 32 2 view .LVU139
+  33:colorchord/embeddedout.c **** 	uint8_t sorted_map_count = 0;
+ 425              		.loc 1 33 2 view .LVU140
+  34:colorchord/embeddedout.c **** 	uint32_t note_nerf_a = 0;
+ 426              		.loc 1 34 2 view .LVU141
+  35:colorchord/embeddedout.c **** 
+ 427              		.loc 1 35 2 view .LVU142
+  37:colorchord/embeddedout.c **** 	{
+ 428              		.loc 1 37 2 view .LVU143
+  35:colorchord/embeddedout.c **** 
+ 429              		.loc 1 35 11 is_stmt 0 view .LVU144
+ 430 0004 0022     		movs	r2, #0
+  37:colorchord/embeddedout.c **** 	{
+ 431              		.loc 1 37 9 view .LVU145
+ 432 0006 1346     		mov	r3, r2
+  37:colorchord/embeddedout.c **** 	{
+ 433              		.loc 1 37 2 view .LVU146
+ 434 0008 01E0     		b	.L20
+ 435              	.LVL59:
+ 436              	.L21:
+  37:colorchord/embeddedout.c **** 	{
+ 437              		.loc 1 37 29 is_stmt 1 discriminator 2 view .LVU147
+ 438 000a 0133     		adds	r3, r3, #1
+ 439              	.LVL60:
+  37:colorchord/embeddedout.c **** 	{
+ 440              		.loc 1 37 29 is_stmt 0 discriminator 2 view .LVU148
+ 441 000c DBB2     		uxtb	r3, r3
+ 442              	.LVL61:
+ 443              	.L20:
+  37:colorchord/embeddedout.c **** 	{
+ 444              		.loc 1 37 16 is_stmt 1 discriminator 1 view .LVU149
+ 445 000e 0B2B     		cmp	r3, #11
+ARM GAS  /tmp/ccEJjeSr.s 			page 17
+
+
+ 446 0010 08D8     		bhi	.L52
+  39:colorchord/embeddedout.c **** 		note_nerf_a += note_peak_amps[i];
+ 447              		.loc 1 39 3 view .LVU150
+  39:colorchord/embeddedout.c **** 		note_nerf_a += note_peak_amps[i];
+ 448              		.loc 1 39 22 is_stmt 0 view .LVU151
+ 449 0012 7749     		ldr	r1, .L56
+ 450 0014 C95C     		ldrb	r1, [r1, r3]	@ zero_extendqisi2
+  39:colorchord/embeddedout.c **** 		note_nerf_a += note_peak_amps[i];
+ 451              		.loc 1 39 5 view .LVU152
+ 452 0016 FF29     		cmp	r1, #255
+ 453 0018 F7D0     		beq	.L21
+  40:colorchord/embeddedout.c **** 	}
+ 454              		.loc 1 40 3 is_stmt 1 view .LVU153
+  40:colorchord/embeddedout.c **** 	}
+ 455              		.loc 1 40 32 is_stmt 0 view .LVU154
+ 456 001a 7649     		ldr	r1, .L56+4
+ 457 001c 31F81310 		ldrh	r1, [r1, r3, lsl #1]
+  40:colorchord/embeddedout.c **** 	}
+ 458              		.loc 1 40 15 view .LVU155
+ 459 0020 0A44     		add	r2, r2, r1
+ 460              	.LVL62:
+  40:colorchord/embeddedout.c **** 	}
+ 461              		.loc 1 40 15 view .LVU156
+ 462 0022 F2E7     		b	.L21
+ 463              	.LVL63:
+ 464              	.L52:
+  43:colorchord/embeddedout.c **** 
+ 465              		.loc 1 43 2 is_stmt 1 view .LVU157
+  43:colorchord/embeddedout.c **** 
+ 466              		.loc 1 43 30 is_stmt 0 view .LVU158
+ 467 0024 C2EB0212 		rsb	r2, r2, r2, lsl #4
+ 468              	.LVL64:
+  43:colorchord/embeddedout.c **** 
+ 469              		.loc 1 43 14 view .LVU159
+ 470 0028 140A     		lsrs	r4, r2, #8
+ 471              	.LVL65:
+  46:colorchord/embeddedout.c **** 	{
+ 472              		.loc 1 46 2 is_stmt 1 view .LVU160
+  34:colorchord/embeddedout.c **** 	uint32_t note_nerf_a = 0;
+ 473              		.loc 1 34 10 is_stmt 0 view .LVU161
+ 474 002a 0020     		movs	r0, #0
+  46:colorchord/embeddedout.c **** 	{
+ 475              		.loc 1 46 9 view .LVU162
+ 476 002c 0346     		mov	r3, r0
+  46:colorchord/embeddedout.c **** 	{
+ 477              		.loc 1 46 2 view .LVU163
+ 478 002e 01E0     		b	.L23
+ 479              	.LVL66:
+ 480              	.L24:
+  46:colorchord/embeddedout.c **** 	{
+ 481              		.loc 1 46 29 is_stmt 1 discriminator 2 view .LVU164
+ 482 0030 0133     		adds	r3, r3, #1
+ 483              	.LVL67:
+  46:colorchord/embeddedout.c **** 	{
+ 484              		.loc 1 46 29 is_stmt 0 discriminator 2 view .LVU165
+ 485 0032 DBB2     		uxtb	r3, r3
+ 486              	.LVL68:
+ARM GAS  /tmp/ccEJjeSr.s 			page 18
+
+
+ 487              	.L23:
+  46:colorchord/embeddedout.c **** 	{
+ 488              		.loc 1 46 16 is_stmt 1 discriminator 1 view .LVU166
+ 489 0034 0B2B     		cmp	r3, #11
+ 490 0036 10D8     		bhi	.L53
+ 491              	.LBB2:
+  48:colorchord/embeddedout.c **** 		uint8_t nff = note_peak_freqs[i];
+ 492              		.loc 1 48 3 view .LVU167
+  48:colorchord/embeddedout.c **** 		uint8_t nff = note_peak_freqs[i];
+ 493              		.loc 1 48 12 is_stmt 0 view .LVU168
+ 494 0038 6E4A     		ldr	r2, .L56+4
+ 495 003a 32F81310 		ldrh	r1, [r2, r3, lsl #1]
+ 496              	.LVL69:
+  49:colorchord/embeddedout.c **** 		if( nff == 255 )
+ 497              		.loc 1 49 3 is_stmt 1 view .LVU169
+  49:colorchord/embeddedout.c **** 		if( nff == 255 )
+ 498              		.loc 1 49 11 is_stmt 0 view .LVU170
+ 499 003e 6C4A     		ldr	r2, .L56
+ 500 0040 D25C     		ldrb	r2, [r2, r3]	@ zero_extendqisi2
+ 501              	.LVL70:
+  50:colorchord/embeddedout.c **** 		{
+ 502              		.loc 1 50 3 is_stmt 1 view .LVU171
+  50:colorchord/embeddedout.c **** 		{
+ 503              		.loc 1 50 5 is_stmt 0 view .LVU172
+ 504 0042 FF2A     		cmp	r2, #255
+ 505 0044 F4D0     		beq	.L24
+  54:colorchord/embeddedout.c **** 		{
+ 506              		.loc 1 54 3 is_stmt 1 view .LVU173
+  54:colorchord/embeddedout.c **** 		{
+ 507              		.loc 1 54 5 is_stmt 0 view .LVU174
+ 508 0046 A142     		cmp	r1, r4
+ 509 0048 F2D3     		bcc	.L24
+  73:colorchord/embeddedout.c **** #endif
+ 510              		.loc 1 73 3 is_stmt 1 view .LVU175
+  73:colorchord/embeddedout.c **** #endif
+ 511              		.loc 1 73 37 is_stmt 0 view .LVU176
+ 512 004a 00F17802 		add	r2, r0, #120
+ 513 004e 6A44     		add	r2, sp, r2
+ 514 0050 02F83C3C 		strb	r3, [r2, #-60]
+ 515              	.LVL71:
+  75:colorchord/embeddedout.c **** 	}
+ 516              		.loc 1 75 3 is_stmt 1 view .LVU177
+  75:colorchord/embeddedout.c **** 	}
+ 517              		.loc 1 75 19 is_stmt 0 view .LVU178
+ 518 0054 0130     		adds	r0, r0, #1
+ 519              	.LVL72:
+  75:colorchord/embeddedout.c **** 	}
+ 520              		.loc 1 75 19 view .LVU179
+ 521 0056 C0B2     		uxtb	r0, r0
+ 522              	.LVL73:
+  75:colorchord/embeddedout.c **** 	}
+ 523              		.loc 1 75 19 view .LVU180
+ 524 0058 EAE7     		b	.L24
+ 525              	.LVL74:
+ 526              	.L53:
+  75:colorchord/embeddedout.c **** 	}
+ 527              		.loc 1 75 19 view .LVU181
+ARM GAS  /tmp/ccEJjeSr.s 			page 19
+
+
+ 528              	.LBE2:
+  91:colorchord/embeddedout.c **** 	{
+ 529              		.loc 1 91 9 view .LVU182
+ 530 005a 0023     		movs	r3, #0
+ 531              	.LVL75:
+  91:colorchord/embeddedout.c **** 	{
+ 532              		.loc 1 91 9 view .LVU183
+ 533 005c 19E0     		b	.L26
+ 534              	.LVL76:
+ 535              	.L27:
+  94:colorchord/embeddedout.c **** 		local_peak_amps2[i] = note_peak_amps2[sorted_note_map[i]];
+ 536              		.loc 1 94 3 is_stmt 1 view .LVU184
+  94:colorchord/embeddedout.c **** 		local_peak_amps2[i] = note_peak_amps2[sorted_note_map[i]];
+ 537              		.loc 1 94 54 is_stmt 0 view .LVU185
+ 538 005e 03F17802 		add	r2, r3, #120
+ 539 0062 0DEB0205 		add	r5, sp, r2
+ 540 0066 15F83C2C 		ldrb	r2, [r5, #-60]	@ zero_extendqisi2
+  94:colorchord/embeddedout.c **** 		local_peak_amps2[i] = note_peak_amps2[sorted_note_map[i]];
+ 541              		.loc 1 94 38 view .LVU186
+ 542 006a 6249     		ldr	r1, .L56+4
+ 543 006c 31F81210 		ldrh	r1, [r1, r2, lsl #1]
+  94:colorchord/embeddedout.c **** 		local_peak_amps2[i] = note_peak_amps2[sorted_note_map[i]];
+ 544              		.loc 1 94 59 view .LVU187
+ 545 0070 091B     		subs	r1, r1, r4
+  94:colorchord/embeddedout.c **** 		local_peak_amps2[i] = note_peak_amps2[sorted_note_map[i]];
+ 546              		.loc 1 94 22 view .LVU188
+ 547 0072 1EAE     		add	r6, sp, #120
+ 548 0074 06EB4306 		add	r6, r6, r3, lsl #1
+ 549 0078 26F8541C 		strh	r1, [r6, #-84]	@ movhi
+  95:colorchord/embeddedout.c **** 		local_peak_freq[i] = note_peak_freqs[sorted_note_map[i]];
+ 550              		.loc 1 95 3 is_stmt 1 view .LVU189
+  95:colorchord/embeddedout.c **** 		local_peak_freq[i] = note_peak_freqs[sorted_note_map[i]];
+ 551              		.loc 1 95 40 is_stmt 0 view .LVU190
+ 552 007c 5E49     		ldr	r1, .L56+8
+ 553 007e 31F81210 		ldrh	r1, [r1, r2, lsl #1]
+  95:colorchord/embeddedout.c **** 		local_peak_freq[i] = note_peak_freqs[sorted_note_map[i]];
+ 554              		.loc 1 95 23 view .LVU191
+ 555 0082 26F86C1C 		strh	r1, [r6, #-108]	@ movhi
+  96:colorchord/embeddedout.c **** //		printf( "%5d ", local_peak_amps[i] );
+ 556              		.loc 1 96 3 is_stmt 1 view .LVU192
+  96:colorchord/embeddedout.c **** //		printf( "%5d ", local_peak_amps[i] );
+ 557              		.loc 1 96 39 is_stmt 0 view .LVU193
+ 558 0086 5A49     		ldr	r1, .L56
+ 559 0088 8A5C     		ldrb	r2, [r1, r2]	@ zero_extendqisi2
+  96:colorchord/embeddedout.c **** //		printf( "%5d ", local_peak_amps[i] );
+ 560              		.loc 1 96 22 view .LVU194
+ 561 008a 05F8782C 		strb	r2, [r5, #-120]
+  91:colorchord/embeddedout.c **** 	{
+ 562              		.loc 1 91 37 is_stmt 1 discriminator 3 view .LVU195
+ 563 008e 0133     		adds	r3, r3, #1
+ 564              	.LVL77:
+  91:colorchord/embeddedout.c **** 	{
+ 565              		.loc 1 91 37 is_stmt 0 discriminator 3 view .LVU196
+ 566 0090 DBB2     		uxtb	r3, r3
+ 567              	.LVL78:
+ 568              	.L26:
+  91:colorchord/embeddedout.c **** 	{
+ARM GAS  /tmp/ccEJjeSr.s 			page 20
+
+
+ 569              		.loc 1 91 16 is_stmt 1 discriminator 1 view .LVU197
+ 570 0092 8342     		cmp	r3, r0
+ 571 0094 E3D3     		bcc	.L27
+  31:colorchord/embeddedout.c **** 	int32_t porpamps[MAXNOTES]; //LEDs for each corresponding note.
+ 572              		.loc 1 31 11 is_stmt 0 view .LVU198
+ 573 0096 0022     		movs	r2, #0
+ 101:colorchord/embeddedout.c **** 	{
+ 574              		.loc 1 101 9 view .LVU199
+ 575 0098 1346     		mov	r3, r2
+ 576              	.LVL79:
+ 101:colorchord/embeddedout.c **** 	{
+ 577              		.loc 1 101 9 view .LVU200
+ 578 009a 0DE0     		b	.L28
+ 579              	.LVL80:
+ 580              	.L29:
+ 581              	.LBB3:
+ 103:colorchord/embeddedout.c **** 		porpamps[i] = 0;
+ 582              		.loc 1 103 3 is_stmt 1 view .LVU201
+ 104:colorchord/embeddedout.c **** 		total_size_all_notes += local_peak_amps[i];
+ 583              		.loc 1 104 3 view .LVU202
+ 104:colorchord/embeddedout.c **** 		total_size_all_notes += local_peak_amps[i];
+ 584              		.loc 1 104 15 is_stmt 0 view .LVU203
+ 585 009c 1EA9     		add	r1, sp, #120
+ 586 009e 01EB8301 		add	r1, r1, r3, lsl #2
+ 587 00a2 0024     		movs	r4, #0
+ 588 00a4 41F8304C 		str	r4, [r1, #-48]
+ 105:colorchord/embeddedout.c **** 	}
+ 589              		.loc 1 105 3 is_stmt 1 view .LVU204
+ 105:colorchord/embeddedout.c **** 	}
+ 590              		.loc 1 105 42 is_stmt 0 view .LVU205
+ 591 00a8 1EA9     		add	r1, sp, #120
+ 592 00aa 01EB4301 		add	r1, r1, r3, lsl #1
+ 593 00ae 31F8541C 		ldrh	r1, [r1, #-84]
+ 105:colorchord/embeddedout.c **** 	}
+ 594              		.loc 1 105 24 view .LVU206
+ 595 00b2 0A44     		add	r2, r2, r1
+ 596              	.LVL81:
+ 105:colorchord/embeddedout.c **** 	}
+ 597              		.loc 1 105 24 view .LVU207
+ 598              	.LBE3:
+ 101:colorchord/embeddedout.c **** 	{
+ 599              		.loc 1 101 37 is_stmt 1 discriminator 3 view .LVU208
+ 600 00b4 0133     		adds	r3, r3, #1
+ 601              	.LVL82:
+ 101:colorchord/embeddedout.c **** 	{
+ 602              		.loc 1 101 37 is_stmt 0 discriminator 3 view .LVU209
+ 603 00b6 DBB2     		uxtb	r3, r3
+ 604              	.LVL83:
+ 605              	.L28:
+ 101:colorchord/embeddedout.c **** 	{
+ 606              		.loc 1 101 16 is_stmt 1 discriminator 1 view .LVU210
+ 607 00b8 8342     		cmp	r3, r0
+ 608 00ba EFD3     		bcc	.L29
+ 108:colorchord/embeddedout.c **** 	{
+ 609              		.loc 1 108 2 view .LVU211
+ 108:colorchord/embeddedout.c **** 	{
+ 610              		.loc 1 108 4 is_stmt 0 view .LVU212
+ARM GAS  /tmp/ccEJjeSr.s 			page 21
+
+
+ 611 00bc 7AB1     		cbz	r2, .L54
+ 117:colorchord/embeddedout.c **** 
+ 612              		.loc 1 117 2 is_stmt 1 view .LVU213
+ 117:colorchord/embeddedout.c **** 
+ 613              		.loc 1 117 11 is_stmt 0 view .LVU214
+ 614 00be 4FF46025 		mov	r5, #917504
+ 615 00c2 B5FBF2F5 		udiv	r5, r5, r2
+ 616              	.LVL84:
+ 119:colorchord/embeddedout.c **** 
+ 617              		.loc 1 119 2 is_stmt 1 view .LVU215
+ 121:colorchord/embeddedout.c **** 	{
+ 618              		.loc 1 121 2 view .LVU216
+ 119:colorchord/embeddedout.c **** 
+ 619              		.loc 1 119 11 is_stmt 0 view .LVU217
+ 620 00c6 0023     		movs	r3, #0
+ 121:colorchord/embeddedout.c **** 	{
+ 621              		.loc 1 121 9 view .LVU218
+ 622 00c8 1A46     		mov	r2, r3
+ 623              	.LVL85:
+ 121:colorchord/embeddedout.c **** 	{
+ 624              		.loc 1 121 2 view .LVU219
+ 625 00ca 1BE0     		b	.L34
+ 626              	.LVL86:
+ 627              	.L32:
+ 112:colorchord/embeddedout.c **** 		}
+ 628              		.loc 1 112 4 is_stmt 1 view .LVU220
+ 112:colorchord/embeddedout.c **** 		}
+ 629              		.loc 1 112 14 is_stmt 0 view .LVU221
+ 630 00cc 4B4A     		ldr	r2, .L56+12
+ 631 00ce 0021     		movs	r1, #0
+ 632 00d0 D154     		strb	r1, [r2, r3]
+ 110:colorchord/embeddedout.c **** 		{
+ 633              		.loc 1 110 42 is_stmt 1 discriminator 3 view .LVU222
+ 634 00d2 0133     		adds	r3, r3, #1
+ 635              	.LVL87:
+ 110:colorchord/embeddedout.c **** 		{
+ 636              		.loc 1 110 42 is_stmt 0 discriminator 3 view .LVU223
+ 637 00d4 9BB2     		uxth	r3, r3
+ 638              	.LVL88:
+ 639              	.L30:
+ 110:colorchord/embeddedout.c **** 		{
+ 640              		.loc 1 110 17 is_stmt 1 discriminator 1 view .LVU224
+ 641 00d6 292B     		cmp	r3, #41
+ 642 00d8 F8D9     		bls	.L32
+ 643              	.LVL89:
+ 644              	.L19:
+ 235:colorchord/embeddedout.c **** 
+ 645              		.loc 1 235 1 is_stmt 0 view .LVU225
+ 646 00da 1EB0     		add	sp, sp, #120
+ 647              		.cfi_remember_state
+ 648              		.cfi_def_cfa_offset 16
+ 649              		@ sp needed
+ 650 00dc 70BD     		pop	{r4, r5, r6, pc}
+ 651              	.LVL90:
+ 652              	.L54:
+ 653              		.cfi_restore_state
+ 110:colorchord/embeddedout.c **** 		{
+ARM GAS  /tmp/ccEJjeSr.s 			page 22
+
+
+ 654              		.loc 1 110 10 view .LVU226
+ 655 00de 0023     		movs	r3, #0
+ 656              	.LVL91:
+ 110:colorchord/embeddedout.c **** 		{
+ 657              		.loc 1 110 10 view .LVU227
+ 658 00e0 F9E7     		b	.L30
+ 659              	.LVL92:
+ 660              	.L35:
+ 123:colorchord/embeddedout.c **** 		total_accounted_leds += porpamps[i];
+ 661              		.loc 1 123 3 is_stmt 1 view .LVU228
+ 123:colorchord/embeddedout.c **** 		total_accounted_leds += porpamps[i];
+ 662              		.loc 1 123 33 is_stmt 0 view .LVU229
+ 663 00e2 1EA9     		add	r1, sp, #120
+ 664 00e4 01EB4201 		add	r1, r1, r2, lsl #1
+ 665 00e8 31F8541C 		ldrh	r1, [r1, #-84]
+ 123:colorchord/embeddedout.c **** 		total_accounted_leds += porpamps[i];
+ 666              		.loc 1 123 37 view .LVU230
+ 667 00ec 05FB01F1 		mul	r1, r5, r1
+ 123:colorchord/embeddedout.c **** 		total_accounted_leds += porpamps[i];
+ 668              		.loc 1 123 53 view .LVU231
+ 669 00f0 090C     		lsrs	r1, r1, #16
+ 123:colorchord/embeddedout.c **** 		total_accounted_leds += porpamps[i];
+ 670              		.loc 1 123 15 view .LVU232
+ 671 00f2 1EAC     		add	r4, sp, #120
+ 672 00f4 04EB8204 		add	r4, r4, r2, lsl #2
+ 673 00f8 44F8301C 		str	r1, [r4, #-48]
+ 124:colorchord/embeddedout.c **** 	}
+ 674              		.loc 1 124 3 is_stmt 1 view .LVU233
+ 124:colorchord/embeddedout.c **** 	}
+ 675              		.loc 1 124 24 is_stmt 0 view .LVU234
+ 676 00fc 0B44     		add	r3, r3, r1
+ 677              	.LVL93:
+ 124:colorchord/embeddedout.c **** 	}
+ 678              		.loc 1 124 24 view .LVU235
+ 679 00fe 9BB2     		uxth	r3, r3
+ 680              	.LVL94:
+ 121:colorchord/embeddedout.c **** 	{
+ 681              		.loc 1 121 37 is_stmt 1 discriminator 3 view .LVU236
+ 682 0100 0132     		adds	r2, r2, #1
+ 683              	.LVL95:
+ 121:colorchord/embeddedout.c **** 	{
+ 684              		.loc 1 121 37 is_stmt 0 discriminator 3 view .LVU237
+ 685 0102 D2B2     		uxtb	r2, r2
+ 686              	.LVL96:
+ 687              	.L34:
+ 121:colorchord/embeddedout.c **** 	{
+ 688              		.loc 1 121 16 is_stmt 1 discriminator 1 view .LVU238
+ 689 0104 8242     		cmp	r2, r0
+ 690 0106 ECD3     		bcc	.L35
+ 127:colorchord/embeddedout.c **** 
+ 691              		.loc 1 127 2 view .LVU239
+ 127:colorchord/embeddedout.c **** 
+ 692              		.loc 1 127 52 is_stmt 0 view .LVU240
+ 693 0108 C3F10E03 		rsb	r3, r3, #14
+ 694              	.LVL97:
+ 127:colorchord/embeddedout.c **** 
+ 695              		.loc 1 127 10 view .LVU241
+ARM GAS  /tmp/ccEJjeSr.s 			page 23
+
+
+ 696 010c 1AB2     		sxth	r2, r3
+ 697              	.LVL98:
+ 129:colorchord/embeddedout.c **** 	do
+ 698              		.loc 1 129 2 is_stmt 1 view .LVU242
+ 699 010e 10E0     		b	.L39
+ 700              	.LVL99:
+ 701              	.L38:
+ 134:colorchord/embeddedout.c **** 			addedlast = 1;
+ 702              		.loc 1 134 4 view .LVU243
+ 134:colorchord/embeddedout.c **** 			addedlast = 1;
+ 703              		.loc 1 134 12 is_stmt 0 view .LVU244
+ 704 0110 1EA9     		add	r1, sp, #120
+ 705 0112 01EB830C 		add	ip, r1, r3, lsl #2
+ 706 0116 5CF8301C 		ldr	r1, [ip, #-48]
+ 134:colorchord/embeddedout.c **** 			addedlast = 1;
+ 707              		.loc 1 134 15 view .LVU245
+ 708 011a 0131     		adds	r1, r1, #1
+ 709 011c 4CF8301C 		str	r1, [ip, #-48]
+ 134:colorchord/embeddedout.c **** 			addedlast = 1;
+ 710              		.loc 1 134 19 is_stmt 1 view .LVU246
+ 134:colorchord/embeddedout.c **** 			addedlast = 1;
+ 711              		.loc 1 134 41 is_stmt 0 view .LVU247
+ 712 0120 013A     		subs	r2, r2, #1
+ 713              	.LVL100:
+ 134:colorchord/embeddedout.c **** 			addedlast = 1;
+ 714              		.loc 1 134 41 view .LVU248
+ 715 0122 12B2     		sxth	r2, r2
+ 716              	.LVL101:
+ 135:colorchord/embeddedout.c **** 		}
+ 717              		.loc 1 135 4 is_stmt 1 view .LVU249
+ 132:colorchord/embeddedout.c **** 		{
+ 718              		.loc 1 132 64 discriminator 4 view .LVU250
+ 719 0124 0133     		adds	r3, r3, #1
+ 720              	.LVL102:
+ 132:colorchord/embeddedout.c **** 		{
+ 721              		.loc 1 132 64 is_stmt 0 discriminator 4 view .LVU251
+ 722 0126 DBB2     		uxtb	r3, r3
+ 723              	.LVL103:
+ 724              	.L36:
+ 132:colorchord/embeddedout.c **** 		{
+ 725              		.loc 1 132 36 is_stmt 1 discriminator 1 view .LVU252
+ 726 0128 8342     		cmp	r3, r0
+ 727 012a 01D2     		bcs	.L37
+ 132:colorchord/embeddedout.c **** 		{
+ 728              		.loc 1 132 36 is_stmt 0 discriminator 3 view .LVU253
+ 729 012c 002A     		cmp	r2, #0
+ 730 012e EFD1     		bne	.L38
+ 731              	.L37:
+ 137:colorchord/embeddedout.c **** 
+ 732              		.loc 1 137 21 is_stmt 1 view .LVU254
+ 137:colorchord/embeddedout.c **** 
+ 733              		.loc 1 137 21 is_stmt 0 discriminator 1 view .LVU255
+ 734 0130 0AB1     		cbz	r2, .L55
+ 735              	.LVL104:
+ 736              	.L39:
+ 130:colorchord/embeddedout.c **** 	{
+ 737              		.loc 1 130 2 is_stmt 1 view .LVU256
+ARM GAS  /tmp/ccEJjeSr.s 			page 24
+
+
+ 132:colorchord/embeddedout.c **** 		{
+ 738              		.loc 1 132 3 view .LVU257
+ 132:colorchord/embeddedout.c **** 		{
+ 739              		.loc 1 132 10 is_stmt 0 view .LVU258
+ 740 0132 0023     		movs	r3, #0
+ 132:colorchord/embeddedout.c **** 		{
+ 741              		.loc 1 132 3 view .LVU259
+ 742 0134 F8E7     		b	.L36
+ 743              	.LVL105:
+ 744              	.L55:
+ 141:colorchord/embeddedout.c **** 	{
+ 745              		.loc 1 141 9 view .LVU260
+ 746 0136 9446     		mov	ip, r2
+ 747 0138 24E0     		b	.L40
+ 748              	.LVL106:
+ 749              	.L41:
+ 145:colorchord/embeddedout.c **** 			ledAmpOut[j] = (local_peak_amps2[i]*NOTE_FINAL_AMP)>>8;
+ 750              		.loc 1 145 4 is_stmt 1 view .LVU261
+ 145:colorchord/embeddedout.c **** 			ledAmpOut[j] = (local_peak_amps2[i]*NOTE_FINAL_AMP)>>8;
+ 751              		.loc 1 145 35 is_stmt 0 view .LVU262
+ 752 013a 0CF17803 		add	r3, ip, #120
+ 753 013e 6B44     		add	r3, sp, r3
+ 754 0140 13F8784C 		ldrb	r4, [r3, #-120]	@ zero_extendqisi2
+ 145:colorchord/embeddedout.c **** 			ledAmpOut[j] = (local_peak_amps2[i]*NOTE_FINAL_AMP)>>8;
+ 755              		.loc 1 145 18 view .LVU263
+ 756 0144 2E4B     		ldr	r3, .L56+16
+ 757 0146 9C54     		strb	r4, [r3, r2]
+ 146:colorchord/embeddedout.c **** 			j++;
+ 758              		.loc 1 146 4 is_stmt 1 view .LVU264
+ 146:colorchord/embeddedout.c **** 			j++;
+ 759              		.loc 1 146 36 is_stmt 0 view .LVU265
+ 760 0148 1EAB     		add	r3, sp, #120
+ 761 014a 03EB4C03 		add	r3, r3, ip, lsl #1
+ 762 014e 33F86C3C 		ldrh	r3, [r3, #-108]
+ 146:colorchord/embeddedout.c **** 			j++;
+ 763              		.loc 1 146 39 view .LVU266
+ 764 0152 03EB4303 		add	r3, r3, r3, lsl #1
+ 146:colorchord/embeddedout.c **** 			j++;
+ 765              		.loc 1 146 55 view .LVU267
+ 766 0156 9B09     		lsrs	r3, r3, #6
+ 146:colorchord/embeddedout.c **** 			j++;
+ 767              		.loc 1 146 17 view .LVU268
+ 768 0158 2A4C     		ldr	r4, .L56+20
+ 769 015a 24F81230 		strh	r3, [r4, r2, lsl #1]	@ movhi
+ 147:colorchord/embeddedout.c **** 			porpamps[i]--;
+ 770              		.loc 1 147 4 is_stmt 1 view .LVU269
+ 147:colorchord/embeddedout.c **** 			porpamps[i]--;
+ 771              		.loc 1 147 5 is_stmt 0 view .LVU270
+ 772 015e 0132     		adds	r2, r2, #1
+ 773              	.LVL107:
+ 147:colorchord/embeddedout.c **** 			porpamps[i]--;
+ 774              		.loc 1 147 5 view .LVU271
+ 775 0160 92B2     		uxth	r2, r2
+ 776              	.LVL108:
+ 148:colorchord/embeddedout.c **** 		}
+ 777              		.loc 1 148 4 is_stmt 1 view .LVU272
+ 148:colorchord/embeddedout.c **** 		}
+ARM GAS  /tmp/ccEJjeSr.s 			page 25
+
+
+ 778              		.loc 1 148 15 is_stmt 0 view .LVU273
+ 779 0162 1EAB     		add	r3, sp, #120
+ 780 0164 03EB8C03 		add	r3, r3, ip, lsl #2
+ 781 0168 0139     		subs	r1, r1, #1
+ 782 016a 43F8301C 		str	r1, [r3, #-48]
+ 783              	.L42:
+ 143:colorchord/embeddedout.c **** 		{
+ 784              		.loc 1 143 22 is_stmt 1 view .LVU274
+ 143:colorchord/embeddedout.c **** 		{
+ 785              		.loc 1 143 18 is_stmt 0 view .LVU275
+ 786 016e 1EAB     		add	r3, sp, #120
+ 787 0170 03EB8C03 		add	r3, r3, ip, lsl #2
+ 788 0174 53F8301C 		ldr	r1, [r3, #-48]
+ 143:colorchord/embeddedout.c **** 		{
+ 789              		.loc 1 143 22 view .LVU276
+ 790 0178 0029     		cmp	r1, #0
+ 791 017a DEDC     		bgt	.L41
+ 141:colorchord/embeddedout.c **** 	{
+ 792              		.loc 1 141 37 is_stmt 1 discriminator 2 view .LVU277
+ 793 017c 0CF1010C 		add	ip, ip, #1
+ 794              	.LVL109:
+ 141:colorchord/embeddedout.c **** 	{
+ 795              		.loc 1 141 37 is_stmt 0 discriminator 2 view .LVU278
+ 796 0180 5FFA8CFC 		uxtb	ip, ip
+ 797              	.LVL110:
+ 798              	.L40:
+ 141:colorchord/embeddedout.c **** 	{
+ 799              		.loc 1 141 16 is_stmt 1 discriminator 1 view .LVU279
+ 800 0184 8445     		cmp	ip, r0
+ 801 0186 F2D3     		bcc	.L42
+ 184:colorchord/embeddedout.c **** #endif
+ 802              		.loc 1 184 2 view .LVU280
+ 184:colorchord/embeddedout.c **** #endif
+ 803              		.loc 1 184 10 is_stmt 0 view .LVU281
+ 804 0188 0025     		movs	r5, #0
+ 805              	.LVL111:
+ 184:colorchord/embeddedout.c **** #endif
+ 806              		.loc 1 184 10 view .LVU282
+ 807 018a 1F4B     		ldr	r3, .L56+24
+ 808 018c 1D80     		strh	r5, [r3]	@ movhi
+ 187:colorchord/embeddedout.c **** 	for( l = 0; l < USE_NUM_LIN_LEDS; l++, j++ )
+ 809              		.loc 1 187 2 is_stmt 1 view .LVU283
+ 810              	.LVL112:
+ 188:colorchord/embeddedout.c **** 	{
+ 811              		.loc 1 188 2 view .LVU284
+ 188:colorchord/embeddedout.c **** 	{
+ 812              		.loc 1 188 9 is_stmt 0 view .LVU285
+ 813 018e 2E46     		mov	r6, r5
+ 188:colorchord/embeddedout.c **** 	{
+ 814              		.loc 1 188 2 view .LVU286
+ 815 0190 1DE0     		b	.L43
+ 816              	.LVL113:
+ 817              	.L45:
+ 818              	.LBB4:
+ 195:colorchord/embeddedout.c **** 		ledOut[l*3+0] = ( color >> 0 ) & 0xff;
+ 819              		.loc 1 195 3 is_stmt 1 view .LVU287
+ 195:colorchord/embeddedout.c **** 		ledOut[l*3+0] = ( color >> 0 ) & 0xff;
+ARM GAS  /tmp/ccEJjeSr.s 			page 26
+
+
+ 820              		.loc 1 195 44 is_stmt 0 view .LVU288
+ 821 0192 1E4B     		ldr	r3, .L56+28
+ 822 0194 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 823 0196 0B44     		add	r3, r3, r1
+ 195:colorchord/embeddedout.c **** 		ledOut[l*3+0] = ( color >> 0 ) & 0xff;
+ 824              		.loc 1 195 60 view .LVU289
+ 825 0198 1D48     		ldr	r0, .L56+32
+ 826 019a 80FB0310 		smull	r1, r0, r0, r3
+ 827 019e 4011     		asrs	r0, r0, #5
+ 828 01a0 00EB4000 		add	r0, r0, r0, lsl #1
+ 829 01a4 A3EB8010 		sub	r0, r3, r0, lsl #6
+ 195:colorchord/embeddedout.c **** 		ledOut[l*3+0] = ( color >> 0 ) & 0xff;
+ 830              		.loc 1 195 20 view .LVU290
+ 831 01a8 D2B2     		uxtb	r2, r2
+ 832              	.LVL114:
+ 195:colorchord/embeddedout.c **** 		ledOut[l*3+0] = ( color >> 0 ) & 0xff;
+ 833              		.loc 1 195 20 view .LVU291
+ 834 01aa FF21     		movs	r1, #255
+ 835 01ac C0B2     		uxtb	r0, r0
+ 836 01ae FFF7FEFF 		bl	ECCtoHEX
+ 837              	.LVL115:
+ 196:colorchord/embeddedout.c **** 		ledOut[l*3+1] = ( color >> 8 ) & 0xff;
+ 838              		.loc 1 196 3 is_stmt 1 view .LVU292
+ 196:colorchord/embeddedout.c **** 		ledOut[l*3+1] = ( color >> 8 ) & 0xff;
+ 839              		.loc 1 196 13 is_stmt 0 view .LVU293
+ 840 01b2 04EB4403 		add	r3, r4, r4, lsl #1
+ 196:colorchord/embeddedout.c **** 		ledOut[l*3+1] = ( color >> 8 ) & 0xff;
+ 841              		.loc 1 196 17 view .LVU294
+ 842 01b6 114A     		ldr	r2, .L56+12
+ 843 01b8 D054     		strb	r0, [r2, r3]
+ 197:colorchord/embeddedout.c **** 		ledOut[l*3+2] = ( color >>16 ) & 0xff;
+ 844              		.loc 1 197 3 is_stmt 1 view .LVU295
+ 197:colorchord/embeddedout.c **** 		ledOut[l*3+2] = ( color >>16 ) & 0xff;
+ 845              		.loc 1 197 27 is_stmt 0 view .LVU296
+ 846 01ba 040A     		lsrs	r4, r0, #8
+ 197:colorchord/embeddedout.c **** 		ledOut[l*3+2] = ( color >>16 ) & 0xff;
+ 847              		.loc 1 197 13 view .LVU297
+ 848 01bc 591C     		adds	r1, r3, #1
+ 197:colorchord/embeddedout.c **** 		ledOut[l*3+2] = ( color >>16 ) & 0xff;
+ 849              		.loc 1 197 17 view .LVU298
+ 850 01be 5454     		strb	r4, [r2, r1]
+ 198:colorchord/embeddedout.c **** 	}
+ 851              		.loc 1 198 3 is_stmt 1 view .LVU299
+ 198:colorchord/embeddedout.c **** 	}
+ 852              		.loc 1 198 27 is_stmt 0 view .LVU300
+ 853 01c0 000C     		lsrs	r0, r0, #16
+ 854              	.LVL116:
+ 198:colorchord/embeddedout.c **** 	}
+ 855              		.loc 1 198 13 view .LVU301
+ 856 01c2 0233     		adds	r3, r3, #2
+ 198:colorchord/embeddedout.c **** 	}
+ 857              		.loc 1 198 17 view .LVU302
+ 858 01c4 D054     		strb	r0, [r2, r3]
+ 859              	.LBE4:
+ 188:colorchord/embeddedout.c **** 	{
+ 860              		.loc 1 188 39 is_stmt 1 discriminator 2 view .LVU303
+ 188:colorchord/embeddedout.c **** 	{
+ARM GAS  /tmp/ccEJjeSr.s 			page 27
+
+
+ 861              		.loc 1 188 37 is_stmt 0 discriminator 2 view .LVU304
+ 862 01c6 0136     		adds	r6, r6, #1
+ 863              	.LVL117:
+ 188:colorchord/embeddedout.c **** 	{
+ 864              		.loc 1 188 37 discriminator 2 view .LVU305
+ 865 01c8 B6B2     		uxth	r6, r6
+ 866              	.LVL118:
+ 188:colorchord/embeddedout.c **** 	{
+ 867              		.loc 1 188 42 discriminator 2 view .LVU306
+ 868 01ca 0135     		adds	r5, r5, #1
+ 869              	.LVL119:
+ 188:colorchord/embeddedout.c **** 	{
+ 870              		.loc 1 188 42 discriminator 2 view .LVU307
+ 871 01cc ADB2     		uxth	r5, r5
+ 872              	.LVL120:
+ 873              	.L43:
+ 188:colorchord/embeddedout.c **** 	{
+ 874              		.loc 1 188 16 is_stmt 1 discriminator 1 view .LVU308
+ 875 01ce 0D2E     		cmp	r6, #13
+ 876 01d0 83D8     		bhi	.L19
+ 877              	.LBB5:
+ 190:colorchord/embeddedout.c **** 		ledFreqOutOld[l] = ledFreqOut[j];
+ 878              		.loc 1 190 3 view .LVU309
+ 190:colorchord/embeddedout.c **** 		ledFreqOutOld[l] = ledFreqOut[j];
+ 879              		.loc 1 190 5 is_stmt 0 view .LVU310
+ 880 01d2 0D2D     		cmp	r5, #13
+ 881 01d4 00D9     		bls	.L44
+ 190:colorchord/embeddedout.c **** 		ledFreqOutOld[l] = ledFreqOut[j];
+ 882              		.loc 1 190 33 discriminator 1 view .LVU311
+ 883 01d6 0025     		movs	r5, #0
+ 884              	.LVL121:
+ 885              	.L44:
+ 191:colorchord/embeddedout.c **** 
+ 886              		.loc 1 191 3 is_stmt 1 view .LVU312
+ 191:colorchord/embeddedout.c **** 
+ 887              		.loc 1 191 16 is_stmt 0 view .LVU313
+ 888 01d8 3446     		mov	r4, r6
+ 191:colorchord/embeddedout.c **** 
+ 889              		.loc 1 191 32 view .LVU314
+ 890 01da 094B     		ldr	r3, .L56+16
+ 891 01dc 595D     		ldrb	r1, [r3, r5]	@ zero_extendqisi2
+ 191:colorchord/embeddedout.c **** 
+ 892              		.loc 1 191 20 view .LVU315
+ 893 01de 0D4B     		ldr	r3, .L56+36
+ 894 01e0 9955     		strb	r1, [r3, r6]
+ 193:colorchord/embeddedout.c **** 		if( amp > 255 ) amp = 255;
+ 895              		.loc 1 193 3 is_stmt 1 view .LVU316
+ 193:colorchord/embeddedout.c **** 		if( amp > 255 ) amp = 255;
+ 896              		.loc 1 193 12 is_stmt 0 view .LVU317
+ 897 01e2 084B     		ldr	r3, .L56+20
+ 898 01e4 33F81520 		ldrh	r2, [r3, r5, lsl #1]
+ 899              	.LVL122:
+ 194:colorchord/embeddedout.c **** 		uint32_t color = ECCtoHEX( (ledFreqOut[j]+RootNoteOffset)%NOTERANGE, 255, amp );
+ 900              		.loc 1 194 3 is_stmt 1 view .LVU318
+ 194:colorchord/embeddedout.c **** 		uint32_t color = ECCtoHEX( (ledFreqOut[j]+RootNoteOffset)%NOTERANGE, 255, amp );
+ 901              		.loc 1 194 5 is_stmt 0 view .LVU319
+ 902 01e8 FF2A     		cmp	r2, #255
+ARM GAS  /tmp/ccEJjeSr.s 			page 28
+
+
+ 903 01ea D2D9     		bls	.L45
+ 194:colorchord/embeddedout.c **** 		uint32_t color = ECCtoHEX( (ledFreqOut[j]+RootNoteOffset)%NOTERANGE, 255, amp );
+ 904              		.loc 1 194 23 discriminator 1 view .LVU320
+ 905 01ec FF22     		movs	r2, #255
+ 906              	.LVL123:
+ 194:colorchord/embeddedout.c **** 		uint32_t color = ECCtoHEX( (ledFreqOut[j]+RootNoteOffset)%NOTERANGE, 255, amp );
+ 907              		.loc 1 194 23 discriminator 1 view .LVU321
+ 908 01ee D0E7     		b	.L45
+ 909              	.L57:
+ 910              		.align	2
+ 911              	.L56:
+ 912 01f0 00000000 		.word	note_peak_freqs
+ 913 01f4 00000000 		.word	note_peak_amps
+ 914 01f8 00000000 		.word	note_peak_amps2
+ 915 01fc 00000000 		.word	ledOut
+ 916 0200 00000000 		.word	ledFreqOut
+ 917 0204 00000000 		.word	ledAmpOut
+ 918 0208 00000000 		.word	ledSpin
+ 919 020c 00000000 		.word	RootNoteOffset
+ 920 0210 ABAAAA2A 		.word	715827883
+ 921 0214 00000000 		.word	ledFreqOutOld
+ 922              	.LBE5:
+ 923              		.cfi_endproc
+ 924              	.LFE0:
+ 926              		.section	.text.UpdateAllSameLEDs,"ax",%progbits
+ 927              		.align	1
+ 928              		.global	UpdateAllSameLEDs
+ 929              		.syntax unified
+ 930              		.thumb
+ 931              		.thumb_func
+ 933              	UpdateAllSameLEDs:
+ 934              	.LFB1:
+ 241:colorchord/embeddedout.c **** 	int i;
+ 935              		.loc 1 241 1 is_stmt 1 view -0
+ 936              		.cfi_startproc
+ 937              		@ args = 0, pretend = 0, frame = 0
+ 938              		@ frame_needed = 0, uses_anonymous_args = 0
+ 939 0000 08B5     		push	{r3, lr}
+ 940              		.cfi_def_cfa_offset 8
+ 941              		.cfi_offset 3, -8
+ 942              		.cfi_offset 14, -4
+ 242:colorchord/embeddedout.c **** 	uint8_t freq = 0;
+ 943              		.loc 1 242 2 view .LVU323
+ 243:colorchord/embeddedout.c **** 	uint16_t amp = 0;
+ 944              		.loc 1 243 2 view .LVU324
+ 945              	.LVL124:
+ 244:colorchord/embeddedout.c **** 
+ 946              		.loc 1 244 2 view .LVU325
+ 246:colorchord/embeddedout.c **** 	{
+ 947              		.loc 1 246 2 view .LVU326
+ 244:colorchord/embeddedout.c **** 
+ 948              		.loc 1 244 11 is_stmt 0 view .LVU327
+ 949 0002 0022     		movs	r2, #0
+ 243:colorchord/embeddedout.c **** 	uint16_t amp = 0;
+ 950              		.loc 1 243 10 view .LVU328
+ 951 0004 9446     		mov	ip, r2
+ 246:colorchord/embeddedout.c **** 	{
+ARM GAS  /tmp/ccEJjeSr.s 			page 29
+
+
+ 952              		.loc 1 246 9 view .LVU329
+ 953 0006 1346     		mov	r3, r2
+ 246:colorchord/embeddedout.c **** 	{
+ 954              		.loc 1 246 2 view .LVU330
+ 955 0008 00E0     		b	.L59
+ 956              	.LVL125:
+ 957              	.L60:
+ 246:colorchord/embeddedout.c **** 	{
+ 958              		.loc 1 246 29 is_stmt 1 discriminator 2 view .LVU331
+ 959 000a 0133     		adds	r3, r3, #1
+ 960              	.LVL126:
+ 961              	.L59:
+ 246:colorchord/embeddedout.c **** 	{
+ 962              		.loc 1 246 16 discriminator 1 view .LVU332
+ 963 000c 0B2B     		cmp	r3, #11
+ 964 000e 0BDC     		bgt	.L68
+ 965              	.LBB6:
+ 248:colorchord/embeddedout.c **** 		uint8_t ifrq = note_peak_freqs[i];
+ 966              		.loc 1 248 3 view .LVU333
+ 248:colorchord/embeddedout.c **** 		uint8_t ifrq = note_peak_freqs[i];
+ 967              		.loc 1 248 12 is_stmt 0 view .LVU334
+ 968 0010 1C49     		ldr	r1, .L69
+ 969 0012 31F81310 		ldrh	r1, [r1, r3, lsl #1]
+ 970              	.LVL127:
+ 249:colorchord/embeddedout.c **** 		if( ist > amp && ifrq != 255 )
+ 971              		.loc 1 249 3 is_stmt 1 view .LVU335
+ 249:colorchord/embeddedout.c **** 		if( ist > amp && ifrq != 255 )
+ 972              		.loc 1 249 11 is_stmt 0 view .LVU336
+ 973 0016 1C48     		ldr	r0, .L69+4
+ 974 0018 C05C     		ldrb	r0, [r0, r3]	@ zero_extendqisi2
+ 975              	.LVL128:
+ 250:colorchord/embeddedout.c **** 		{
+ 976              		.loc 1 250 3 is_stmt 1 view .LVU337
+ 250:colorchord/embeddedout.c **** 		{
+ 977              		.loc 1 250 5 is_stmt 0 view .LVU338
+ 978 001a 8A42     		cmp	r2, r1
+ 979 001c F5D2     		bcs	.L60
+ 250:colorchord/embeddedout.c **** 		{
+ 980              		.loc 1 250 17 discriminator 1 view .LVU339
+ 981 001e FF28     		cmp	r0, #255
+ 982 0020 F3D0     		beq	.L60
+ 253:colorchord/embeddedout.c **** 		}
+ 983              		.loc 1 253 8 view .LVU340
+ 984 0022 0A46     		mov	r2, r1
+ 985              	.LVL129:
+ 252:colorchord/embeddedout.c **** 			amp = ist;
+ 986              		.loc 1 252 9 view .LVU341
+ 987 0024 8446     		mov	ip, r0
+ 988              	.LVL130:
+ 252:colorchord/embeddedout.c **** 			amp = ist;
+ 989              		.loc 1 252 9 view .LVU342
+ 990 0026 F0E7     		b	.L60
+ 991              	.LVL131:
+ 992              	.L68:
+ 252:colorchord/embeddedout.c **** 			amp = ist;
+ 993              		.loc 1 252 9 view .LVU343
+ 994              	.LBE6:
+ARM GAS  /tmp/ccEJjeSr.s 			page 30
+
+
+ 257:colorchord/embeddedout.c **** 
+ 995              		.loc 1 257 2 is_stmt 1 view .LVU344
+ 257:colorchord/embeddedout.c **** 
+ 996              		.loc 1 257 26 is_stmt 0 view .LVU345
+ 997 0028 02EB4202 		add	r2, r2, r2, lsl #1
+ 998              	.LVL132:
+ 257:colorchord/embeddedout.c **** 
+ 999              		.loc 1 257 6 view .LVU346
+ 1000 002c C2F30F22 		ubfx	r2, r2, #8, #16
+ 1001              	.LVL133:
+ 259:colorchord/embeddedout.c **** 	uint32_t color = ECCtoHEX( (freq+RootNoteOffset)%NOTERANGE, 255, amp );
+ 1002              		.loc 1 259 2 is_stmt 1 view .LVU347
+ 259:colorchord/embeddedout.c **** 	uint32_t color = ECCtoHEX( (freq+RootNoteOffset)%NOTERANGE, 255, amp );
+ 1003              		.loc 1 259 4 is_stmt 0 view .LVU348
+ 1004 0030 FF2A     		cmp	r2, #255
+ 1005 0032 00D9     		bls	.L62
+ 259:colorchord/embeddedout.c **** 	uint32_t color = ECCtoHEX( (freq+RootNoteOffset)%NOTERANGE, 255, amp );
+ 1006              		.loc 1 259 22 discriminator 1 view .LVU349
+ 1007 0034 FF22     		movs	r2, #255
+ 1008              	.LVL134:
+ 1009              	.L62:
+ 260:colorchord/embeddedout.c **** 
+ 1010              		.loc 1 260 2 is_stmt 1 view .LVU350
+ 260:colorchord/embeddedout.c **** 
+ 1011              		.loc 1 260 34 is_stmt 0 view .LVU351
+ 1012 0036 154B     		ldr	r3, .L69+8
+ 1013              	.LVL135:
+ 260:colorchord/embeddedout.c **** 
+ 1014              		.loc 1 260 34 view .LVU352
+ 1015 0038 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 1016 003a 6344     		add	r3, r3, ip
+ 260:colorchord/embeddedout.c **** 
+ 1017              		.loc 1 260 50 view .LVU353
+ 1018 003c 1449     		ldr	r1, .L69+12
+ 1019 003e 81FB0301 		smull	r0, r1, r1, r3
+ 1020 0042 D817     		asrs	r0, r3, #31
+ 1021 0044 C0EB6110 		rsb	r0, r0, r1, asr #5
+ 1022 0048 00EB4000 		add	r0, r0, r0, lsl #1
+ 1023 004c A3EB8010 		sub	r0, r3, r0, lsl #6
+ 260:colorchord/embeddedout.c **** 
+ 1024              		.loc 1 260 19 view .LVU354
+ 1025 0050 D2B2     		uxtb	r2, r2
+ 1026              	.LVL136:
+ 260:colorchord/embeddedout.c **** 
+ 1027              		.loc 1 260 19 view .LVU355
+ 1028 0052 FF21     		movs	r1, #255
+ 1029 0054 C0B2     		uxtb	r0, r0
+ 1030 0056 FFF7FEFF 		bl	ECCtoHEX
+ 1031              	.LVL137:
+ 262:colorchord/embeddedout.c **** 	{
+ 1032              		.loc 1 262 2 is_stmt 1 view .LVU356
+ 262:colorchord/embeddedout.c **** 	{
+ 1033              		.loc 1 262 9 is_stmt 0 view .LVU357
+ 1034 005a 0022     		movs	r2, #0
+ 262:colorchord/embeddedout.c **** 	{
+ 1035              		.loc 1 262 2 view .LVU358
+ 1036 005c 0FE0     		b	.L63
+ARM GAS  /tmp/ccEJjeSr.s 			page 31
+
+
+ 1037              	.LVL138:
+ 1038              	.L64:
+ 264:colorchord/embeddedout.c **** 		ledOut[i*3+1] = ( color >> 8 ) & 0xff;
+ 1039              		.loc 1 264 3 is_stmt 1 view .LVU359
+ 264:colorchord/embeddedout.c **** 		ledOut[i*3+1] = ( color >> 8 ) & 0xff;
+ 1040              		.loc 1 264 13 is_stmt 0 view .LVU360
+ 1041 005e 02EB4203 		add	r3, r2, r2, lsl #1
+ 264:colorchord/embeddedout.c **** 		ledOut[i*3+1] = ( color >> 8 ) & 0xff;
+ 1042              		.loc 1 264 17 view .LVU361
+ 1043 0062 0C49     		ldr	r1, .L69+16
+ 1044 0064 C854     		strb	r0, [r1, r3]
+ 265:colorchord/embeddedout.c **** 		ledOut[i*3+2] = ( color >>16 ) & 0xff;
+ 1045              		.loc 1 265 3 is_stmt 1 view .LVU362
+ 265:colorchord/embeddedout.c **** 		ledOut[i*3+2] = ( color >>16 ) & 0xff;
+ 1046              		.loc 1 265 27 is_stmt 0 view .LVU363
+ 1047 0066 4FEA102C 		lsr	ip, r0, #8
+ 265:colorchord/embeddedout.c **** 		ledOut[i*3+2] = ( color >>16 ) & 0xff;
+ 1048              		.loc 1 265 13 view .LVU364
+ 1049 006a 03F1010E 		add	lr, r3, #1
+ 265:colorchord/embeddedout.c **** 		ledOut[i*3+2] = ( color >>16 ) & 0xff;
+ 1050              		.loc 1 265 17 view .LVU365
+ 1051 006e 01F80EC0 		strb	ip, [r1, lr]
+ 266:colorchord/embeddedout.c **** 	}
+ 1052              		.loc 1 266 3 is_stmt 1 view .LVU366
+ 266:colorchord/embeddedout.c **** 	}
+ 1053              		.loc 1 266 27 is_stmt 0 view .LVU367
+ 1054 0072 4FEA104C 		lsr	ip, r0, #16
+ 266:colorchord/embeddedout.c **** 	}
+ 1055              		.loc 1 266 13 view .LVU368
+ 1056 0076 0233     		adds	r3, r3, #2
+ 266:colorchord/embeddedout.c **** 	}
+ 1057              		.loc 1 266 17 view .LVU369
+ 1058 0078 01F803C0 		strb	ip, [r1, r3]
+ 262:colorchord/embeddedout.c **** 	{
+ 1059              		.loc 1 262 37 is_stmt 1 discriminator 3 view .LVU370
+ 1060 007c 0132     		adds	r2, r2, #1
+ 1061              	.LVL139:
+ 1062              	.L63:
+ 262:colorchord/embeddedout.c **** 	{
+ 1063              		.loc 1 262 16 discriminator 1 view .LVU371
+ 1064 007e 0D2A     		cmp	r2, #13
+ 1065 0080 EDDD     		ble	.L64
+ 268:colorchord/embeddedout.c **** 
+ 1066              		.loc 1 268 1 is_stmt 0 view .LVU372
+ 1067 0082 08BD     		pop	{r3, pc}
+ 1068              	.L70:
+ 1069              		.align	2
+ 1070              	.L69:
+ 1071 0084 00000000 		.word	note_peak_amps2
+ 1072 0088 00000000 		.word	note_peak_freqs
+ 1073 008c 00000000 		.word	RootNoteOffset
+ 1074 0090 ABAAAA2A 		.word	715827883
+ 1075 0094 00000000 		.word	ledOut
+ 1076              		.cfi_endproc
+ 1077              	.LFE1:
+ 1079              		.global	RootNoteOffset
+ 1080              		.section	.bss.RootNoteOffset,"aw",%nobits
+ARM GAS  /tmp/ccEJjeSr.s 			page 32
+
+
+ 1083              	RootNoteOffset:
+ 1084 0000 00       		.space	1
+ 1085              		.global	ledFreqOutOld
+ 1086              		.section	.bss.ledFreqOutOld,"aw",%nobits
+ 1087              		.align	2
+ 1090              	ledFreqOutOld:
+ 1091 0000 00000000 		.space	14
+ 1091      00000000 
+ 1091      00000000 
+ 1091      0000
+ 1092              		.global	ledFreqOut
+ 1093              		.section	.bss.ledFreqOut,"aw",%nobits
+ 1094              		.align	2
+ 1097              	ledFreqOut:
+ 1098 0000 00000000 		.space	14
+ 1098      00000000 
+ 1098      00000000 
+ 1098      0000
+ 1099              		.global	ledAmpOut
+ 1100              		.section	.bss.ledAmpOut,"aw",%nobits
+ 1101              		.align	2
+ 1104              	ledAmpOut:
+ 1105 0000 00000000 		.space	28
+ 1105      00000000 
+ 1105      00000000 
+ 1105      00000000 
+ 1105      00000000 
+ 1106              		.global	ledSpin
+ 1107              		.section	.bss.ledSpin,"aw",%nobits
+ 1108              		.align	1
+ 1111              	ledSpin:
+ 1112 0000 0000     		.space	2
+ 1113              		.global	ledOut
+ 1114              		.section	.bss.ledOut,"aw",%nobits
+ 1115              		.align	2
+ 1118              	ledOut:
+ 1119 0000 00000000 		.space	42
+ 1119      00000000 
+ 1119      00000000 
+ 1119      00000000 
+ 1119      00000000 
+ 1120              		.text
+ 1121              	.Letext0:
+ 1122              		.file 2 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 1123              		.file 3 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 1124              		.file 4 "colorchord/embeddednf.h"
+ 1125              		.file 5 "colorchord/embeddedout.h"
+ARM GAS  /tmp/ccEJjeSr.s 			page 33
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 embeddedout.c
+     /tmp/ccEJjeSr.s:21     .text.EHSVtoHEX:00000000 $t
+     /tmp/ccEJjeSr.s:27     .text.EHSVtoHEX:00000000 EHSVtoHEX
+     /tmp/ccEJjeSr.s:293    .text.EHSVtoHEX:00000130 $d
+     /tmp/ccEJjeSr.s:298    .text.ECCtoHEX:00000000 $t
+     /tmp/ccEJjeSr.s:304    .text.ECCtoHEX:00000000 ECCtoHEX
+     /tmp/ccEJjeSr.s:391    .text.ECCtoHEX:00000050 $d
+     /tmp/ccEJjeSr.s:399    .text.UpdateLinearLEDs:00000000 $t
+     /tmp/ccEJjeSr.s:405    .text.UpdateLinearLEDs:00000000 UpdateLinearLEDs
+     /tmp/ccEJjeSr.s:912    .text.UpdateLinearLEDs:000001f0 $d
+     /tmp/ccEJjeSr.s:1118   .bss.ledOut:00000000 ledOut
+     /tmp/ccEJjeSr.s:1097   .bss.ledFreqOut:00000000 ledFreqOut
+     /tmp/ccEJjeSr.s:1104   .bss.ledAmpOut:00000000 ledAmpOut
+     /tmp/ccEJjeSr.s:1111   .bss.ledSpin:00000000 ledSpin
+     /tmp/ccEJjeSr.s:1083   .bss.RootNoteOffset:00000000 RootNoteOffset
+     /tmp/ccEJjeSr.s:1090   .bss.ledFreqOutOld:00000000 ledFreqOutOld
+     /tmp/ccEJjeSr.s:927    .text.UpdateAllSameLEDs:00000000 $t
+     /tmp/ccEJjeSr.s:933    .text.UpdateAllSameLEDs:00000000 UpdateAllSameLEDs
+     /tmp/ccEJjeSr.s:1071   .text.UpdateAllSameLEDs:00000084 $d
+     /tmp/ccEJjeSr.s:1084   .bss.RootNoteOffset:00000000 $d
+     /tmp/ccEJjeSr.s:1087   .bss.ledFreqOutOld:00000000 $d
+     /tmp/ccEJjeSr.s:1094   .bss.ledFreqOut:00000000 $d
+     /tmp/ccEJjeSr.s:1101   .bss.ledAmpOut:00000000 $d
+     /tmp/ccEJjeSr.s:1108   .bss.ledSpin:00000000 $d
+     /tmp/ccEJjeSr.s:1115   .bss.ledOut:00000000 $d
+
+UNDEFINED SYMBOLS
+note_peak_freqs
+note_peak_amps
+note_peak_amps2

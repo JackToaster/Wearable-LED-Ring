@@ -1,0 +1,618 @@
+ARM GAS  /tmp/ccOQWelA.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"pdm.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Core/Src/pdm.c"
+  20              		.section	.text.countones_byte,"ax",%progbits
+  21              		.align	1
+  22              		.global	countones_byte
+  23              		.syntax unified
+  24              		.thumb
+  25              		.thumb_func
+  27              	countones_byte:
+  28              	.LVL0:
+  29              	.LFB288:
+   1:Core/Src/pdm.c **** #include "pdm.h"
+   2:Core/Src/pdm.c **** 
+   3:Core/Src/pdm.c **** #define DECIMATION_BYTES (DECIMATION / 8)
+   4:Core/Src/pdm.c **** 
+   5:Core/Src/pdm.c **** extern DMA_HandleTypeDef hdma_spi1_rx;
+   6:Core/Src/pdm.c **** extern SPI_HandleTypeDef hspi1;
+   7:Core/Src/pdm.c **** 
+   8:Core/Src/pdm.c **** uint8_t spi_buffer[SPI_BUFFER_SIZE];
+   9:Core/Src/pdm.c **** uint8_t buffer_half = 0;
+  10:Core/Src/pdm.c **** uint32_t sample_counter = 0;
+  11:Core/Src/pdm.c **** 
+  12:Core/Src/pdm.c **** 
+  13:Core/Src/pdm.c **** volatile uint32_t err_counter = 0;
+  14:Core/Src/pdm.c **** float filtered_value = 0.0;
+  15:Core/Src/pdm.c **** 
+  16:Core/Src/pdm.c **** uint8_t ones_table[256];
+  17:Core/Src/pdm.c **** uint8_t countones_byte(uint8_t i) {
+  30              		.loc 1 17 35 view -0
+  31              		.cfi_startproc
+  32              		@ args = 0, pretend = 0, frame = 0
+  33              		@ frame_needed = 0, uses_anonymous_args = 0
+  34              		@ link register save eliminated.
+  18:Core/Src/pdm.c ****     return ones_table[i];
+  35              		.loc 1 18 5 view .LVU1
+  19:Core/Src/pdm.c **** }
+  36              		.loc 1 19 1 is_stmt 0 view .LVU2
+  37 0000 014B     		ldr	r3, .L2
+  38 0002 185C     		ldrb	r0, [r3, r0]	@ zero_extendqisi2
+  39              	.LVL1:
+ARM GAS  /tmp/ccOQWelA.s 			page 2
+
+
+  40              		.loc 1 19 1 view .LVU3
+  41 0004 7047     		bx	lr
+  42              	.L3:
+  43 0006 00BF     		.align	2
+  44              	.L2:
+  45 0008 00000000 		.word	ones_table
+  46              		.cfi_endproc
+  47              	.LFE288:
+  49              		.section	.text.pdm_decode,"ax",%progbits
+  50              		.align	1
+  51              		.global	pdm_decode
+  52              		.syntax unified
+  53              		.thumb
+  54              		.thumb_func
+  56              	pdm_decode:
+  57              	.LVL2:
+  58              	.LFB289:
+  20:Core/Src/pdm.c **** 
+  21:Core/Src/pdm.c **** void pdm_decode(uint8_t* buffer, uint32_t n_samples) {
+  59              		.loc 1 21 54 is_stmt 1 view -0
+  60              		.cfi_startproc
+  61              		@ args = 0, pretend = 0, frame = 0
+  62              		@ frame_needed = 0, uses_anonymous_args = 0
+  63              		.loc 1 21 54 is_stmt 0 view .LVU5
+  64 0000 2DE9F041 		push	{r4, r5, r6, r7, r8, lr}
+  65              		.cfi_def_cfa_offset 24
+  66              		.cfi_offset 4, -24
+  67              		.cfi_offset 5, -20
+  68              		.cfi_offset 6, -16
+  69              		.cfi_offset 7, -12
+  70              		.cfi_offset 8, -8
+  71              		.cfi_offset 14, -4
+  72 0004 0646     		mov	r6, r0
+  73 0006 0F46     		mov	r7, r1
+  22:Core/Src/pdm.c ****     for(uint32_t sample_n = 0; sample_n < n_samples; sample_n += DECIMATION_BYTES) {
+  74              		.loc 1 22 5 is_stmt 1 view .LVU6
+  75              	.LBB2:
+  76              		.loc 1 22 9 view .LVU7
+  77              	.LVL3:
+  78              		.loc 1 22 18 is_stmt 0 view .LVU8
+  79 0008 0025     		movs	r5, #0
+  80              		.loc 1 22 5 view .LVU9
+  81 000a 4CE0     		b	.L5
+  82              	.LVL4:
+  83              	.L6:
+  84              	.LBB3:
+  85              	.LBB4:
+  86              	.LBB5:
+  23:Core/Src/pdm.c ****         int16_t sample = 0;
+  24:Core/Src/pdm.c ****         for(uint32_t buff_byte = 0; buff_byte < DECIMATION_BYTES; buff_byte++) {
+  25:Core/Src/pdm.c ****             uint8_t buff_value = buffer[sample_n + buff_byte];
+  87              		.loc 1 25 13 is_stmt 1 view .LVU10
+  88              		.loc 1 25 50 is_stmt 0 view .LVU11
+  89 000c 05EB0803 		add	r3, r5, r8
+  90              	.LVL5:
+  26:Core/Src/pdm.c ****             sample += (int16_t) countones_byte(buff_value);
+  91              		.loc 1 26 13 is_stmt 1 view .LVU12
+ARM GAS  /tmp/ccOQWelA.s 			page 3
+
+
+  92              		.loc 1 26 33 is_stmt 0 view .LVU13
+  93 0010 F05C     		ldrb	r0, [r6, r3]	@ zero_extendqisi2
+  94 0012 FFF7FEFF 		bl	countones_byte
+  95              	.LVL6:
+  96              		.loc 1 26 20 discriminator 1 view .LVU14
+  97 0016 0444     		add	r4, r4, r0
+  98              	.LVL7:
+  99              		.loc 1 26 20 discriminator 1 view .LVU15
+ 100 0018 24B2     		sxth	r4, r4
+ 101              	.LVL8:
+ 102              		.loc 1 26 20 discriminator 1 view .LVU16
+ 103              	.LBE5:
+  24:Core/Src/pdm.c ****             uint8_t buff_value = buffer[sample_n + buff_byte];
+ 104              		.loc 1 24 76 is_stmt 1 discriminator 3 view .LVU17
+ 105 001a 08F10108 		add	r8, r8, #1
+ 106              	.LVL9:
+ 107              	.L11:
+  24:Core/Src/pdm.c ****             uint8_t buff_value = buffer[sample_n + buff_byte];
+ 108              		.loc 1 24 47 discriminator 1 view .LVU18
+ 109 001e B8F1070F 		cmp	r8, #7
+ 110 0022 F3D9     		bls	.L6
+ 111              	.LBE4:
+  27:Core/Src/pdm.c ****         }
+  28:Core/Src/pdm.c ****         // remove DC bias (center around 0)
+  29:Core/Src/pdm.c ****         sample -= (DECIMATION / 2);
+ 112              		.loc 1 29 9 view .LVU19
+ 113              		.loc 1 29 16 is_stmt 0 view .LVU20
+ 114 0024 203C     		subs	r4, r4, #32
+ 115              	.LVL10:
+ 116              		.loc 1 29 16 view .LVU21
+ 117 0026 A4B2     		uxth	r4, r4
+ 118              	.LVL11:
+  30:Core/Src/pdm.c ****         sample *= PDM_VALUE_SCALE;
+ 119              		.loc 1 30 9 is_stmt 1 view .LVU22
+ 120              		.loc 1 30 16 is_stmt 0 view .LVU23
+ 121 0028 C4EB4413 		rsb	r3, r4, r4, lsl #5
+ 122 002c 04EB8304 		add	r4, r4, r3, lsl #2
+ 123              	.LVL12:
+ 124              		.loc 1 30 16 view .LVU24
+ 125 0030 04EB8404 		add	r4, r4, r4, lsl #2
+ 126 0034 6401     		lsls	r4, r4, #5
+ 127 0036 23B2     		sxth	r3, r4
+ 128 0038 07EE903A 		vmov	s15, r3	@ int
+ 129              	.LVL13:
+  31:Core/Src/pdm.c ****         
+  32:Core/Src/pdm.c ****         filtered_value = ((float) sample + (filtered_value * (float) PDM_IIR)) / (float)(PDM_IIR + 
+ 130              		.loc 1 32 9 is_stmt 1 view .LVU25
+ 131              		.loc 1 32 27 is_stmt 0 view .LVU26
+ 132 003c F8EEE77A 		vcvt.f32.s32	s15, s15
+ 133              	.LVL14:
+ 134              		.loc 1 32 60 view .LVU27
+ 135 0040 1D4B     		ldr	r3, .L17
+ 136              	.LVL15:
+ 137              		.loc 1 32 60 view .LVU28
+ 138 0042 93ED007A 		vldr.32	s14, [r3]
+ 139 0046 F3EE0F6A 		vmov.f32	s13, #3.1e+1
+ 140 004a 27EE267A 		vmul.f32	s14, s14, s13
+ARM GAS  /tmp/ccOQWelA.s 			page 4
+
+
+ 141              		.loc 1 32 42 view .LVU29
+ 142 004e 77EE877A 		vadd.f32	s15, s15, s14
+ 143              		.loc 1 32 80 view .LVU30
+ 144 0052 9FED1A7A 		vldr.32	s14, .L17+4
+ 145 0056 67EE877A 		vmul.f32	s15, s15, s14
+ 146              		.loc 1 32 24 view .LVU31
+ 147 005a C3ED007A 		vstr.32	s15, [r3]
+  33:Core/Src/pdm.c **** 
+  34:Core/Src/pdm.c ****         if(filtered_value > 4095.0) { filtered_value = 4095.0; }
+ 148              		.loc 1 34 9 is_stmt 1 view .LVU32
+ 149              		.loc 1 34 11 is_stmt 0 view .LVU33
+ 150 005e 9FED187A 		vldr.32	s14, .L17+8
+ 151 0062 F4EEC77A 		vcmpe.f32	s15, s14
+ 152 0066 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 153 006a 01DD     		ble	.L7
+ 154              		.loc 1 34 39 is_stmt 1 discriminator 1 view .LVU34
+ 155              		.loc 1 34 54 is_stmt 0 discriminator 1 view .LVU35
+ 156 006c 83ED007A 		vstr.32	s14, [r3]
+ 157              	.L7:
+  35:Core/Src/pdm.c ****         if(filtered_value < -4095.0) { filtered_value = -4095.0; }
+ 158              		.loc 1 35 9 is_stmt 1 view .LVU36
+ 159              		.loc 1 35 27 is_stmt 0 view .LVU37
+ 160 0070 114B     		ldr	r3, .L17
+ 161 0072 93ED007A 		vldr.32	s14, [r3]
+ 162              		.loc 1 35 11 view .LVU38
+ 163 0076 DFED137A 		vldr.32	s15, .L17+12
+ 164 007a B4EEE77A 		vcmpe.f32	s14, s15
+ 165 007e F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 166 0082 01D5     		bpl	.L9
+ 167              		.loc 1 35 40 is_stmt 1 discriminator 1 view .LVU39
+ 168              		.loc 1 35 55 is_stmt 0 discriminator 1 view .LVU40
+ 169 0084 C3ED007A 		vstr.32	s15, [r3]
+ 170              	.L9:
+  36:Core/Src/pdm.c **** 
+  37:Core/Src/pdm.c ****         GotSample((int16_t) filtered_value);
+ 171              		.loc 1 37 9 is_stmt 1 view .LVU41
+ 172 0088 0B4B     		ldr	r3, .L17
+ 173 008a D3ED007A 		vldr.32	s15, [r3]
+ 174 008e FDEEE77A 		vcvt.s32.f32	s15, s15
+ 175 0092 17EE903A 		vmov	r3, s15	@ int
+ 176 0096 18B2     		sxth	r0, r3
+ 177 0098 FFF7FEFF 		bl	GotSample
+ 178              	.LVL16:
+  38:Core/Src/pdm.c ****         sample_counter++;
+ 179              		.loc 1 38 9 view .LVU42
+ 180              		.loc 1 38 23 is_stmt 0 view .LVU43
+ 181 009c 0A4A     		ldr	r2, .L17+16
+ 182 009e 1368     		ldr	r3, [r2]
+ 183 00a0 0133     		adds	r3, r3, #1
+ 184 00a2 1360     		str	r3, [r2]
+ 185              	.LBE3:
+  22:Core/Src/pdm.c ****         int16_t sample = 0;
+ 186              		.loc 1 22 63 is_stmt 1 discriminator 2 view .LVU44
+ 187 00a4 0835     		adds	r5, r5, #8
+ 188              	.LVL17:
+ 189              	.L5:
+  22:Core/Src/pdm.c ****         int16_t sample = 0;
+ARM GAS  /tmp/ccOQWelA.s 			page 5
+
+
+ 190              		.loc 1 22 41 discriminator 1 view .LVU45
+ 191 00a6 BD42     		cmp	r5, r7
+ 192 00a8 03D2     		bcs	.L16
+ 193              	.LBB7:
+ 194              	.LBB6:
+  24:Core/Src/pdm.c ****             uint8_t buff_value = buffer[sample_n + buff_byte];
+ 195              		.loc 1 24 22 is_stmt 0 view .LVU46
+ 196 00aa 4FF00008 		mov	r8, #0
+ 197              	.LBE6:
+  23:Core/Src/pdm.c ****         for(uint32_t buff_byte = 0; buff_byte < DECIMATION_BYTES; buff_byte++) {
+ 198              		.loc 1 23 17 view .LVU47
+ 199 00ae 4446     		mov	r4, r8
+ 200 00b0 B5E7     		b	.L11
+ 201              	.L16:
+ 202              	.LBE7:
+ 203              	.LBE2:
+  39:Core/Src/pdm.c ****         // TODO Any kind of filtering
+  40:Core/Src/pdm.c ****     }
+  41:Core/Src/pdm.c **** }
+ 204              		.loc 1 41 1 view .LVU48
+ 205 00b2 BDE8F081 		pop	{r4, r5, r6, r7, r8, pc}
+ 206              	.LVL18:
+ 207              	.L18:
+ 208              		.loc 1 41 1 view .LVU49
+ 209 00b6 00BF     		.align	2
+ 210              	.L17:
+ 211 00b8 00000000 		.word	filtered_value
+ 212 00bc 0000003D 		.word	1023410176
+ 213 00c0 00F07F45 		.word	1166012416
+ 214 00c4 00F07FC5 		.word	-981471232
+ 215 00c8 00000000 		.word	sample_counter
+ 216              		.cfi_endproc
+ 217              	.LFE289:
+ 219              		.section	.text.rx_lower,"ax",%progbits
+ 220              		.align	1
+ 221              		.global	rx_lower
+ 222              		.syntax unified
+ 223              		.thumb
+ 224              		.thumb_func
+ 226              	rx_lower:
+ 227              	.LVL19:
+ 228              	.LFB290:
+  42:Core/Src/pdm.c **** 
+  43:Core/Src/pdm.c **** 
+  44:Core/Src/pdm.c **** void rx_lower(SPI_HandleTypeDef *h) {
+ 229              		.loc 1 44 37 is_stmt 1 view -0
+ 230              		.cfi_startproc
+ 231              		@ args = 0, pretend = 0, frame = 0
+ 232              		@ frame_needed = 0, uses_anonymous_args = 0
+ 233              		.loc 1 44 37 is_stmt 0 view .LVU51
+ 234 0000 08B5     		push	{r3, lr}
+ 235              		.cfi_def_cfa_offset 8
+ 236              		.cfi_offset 3, -8
+ 237              		.cfi_offset 14, -4
+  45:Core/Src/pdm.c ****     pdm_decode(&spi_buffer[0], SPI_BUFFER_SIZE / 2);
+ 238              		.loc 1 45 5 is_stmt 1 view .LVU52
+ 239 0002 4FF40071 		mov	r1, #512
+ARM GAS  /tmp/ccOQWelA.s 			page 6
+
+
+ 240 0006 0248     		ldr	r0, .L21
+ 241              	.LVL20:
+ 242              		.loc 1 45 5 is_stmt 0 view .LVU53
+ 243 0008 FFF7FEFF 		bl	pdm_decode
+ 244              	.LVL21:
+  46:Core/Src/pdm.c **** }
+ 245              		.loc 1 46 1 view .LVU54
+ 246 000c 08BD     		pop	{r3, pc}
+ 247              	.L22:
+ 248 000e 00BF     		.align	2
+ 249              	.L21:
+ 250 0010 00000000 		.word	spi_buffer
+ 251              		.cfi_endproc
+ 252              	.LFE290:
+ 254              		.section	.text.rx_upper,"ax",%progbits
+ 255              		.align	1
+ 256              		.global	rx_upper
+ 257              		.syntax unified
+ 258              		.thumb
+ 259              		.thumb_func
+ 261              	rx_upper:
+ 262              	.LVL22:
+ 263              	.LFB291:
+  47:Core/Src/pdm.c **** 
+  48:Core/Src/pdm.c **** void rx_upper(SPI_HandleTypeDef *h) {
+ 264              		.loc 1 48 37 is_stmt 1 view -0
+ 265              		.cfi_startproc
+ 266              		@ args = 0, pretend = 0, frame = 0
+ 267              		@ frame_needed = 0, uses_anonymous_args = 0
+ 268              		.loc 1 48 37 is_stmt 0 view .LVU56
+ 269 0000 08B5     		push	{r3, lr}
+ 270              		.cfi_def_cfa_offset 8
+ 271              		.cfi_offset 3, -8
+ 272              		.cfi_offset 14, -4
+  49:Core/Src/pdm.c ****     pdm_decode(&spi_buffer[SPI_BUFFER_SIZE / 2], SPI_BUFFER_SIZE / 2);
+ 273              		.loc 1 49 5 is_stmt 1 view .LVU57
+ 274 0002 4FF40071 		mov	r1, #512
+ 275 0006 0248     		ldr	r0, .L25
+ 276              	.LVL23:
+ 277              		.loc 1 49 5 is_stmt 0 view .LVU58
+ 278 0008 FFF7FEFF 		bl	pdm_decode
+ 279              	.LVL24:
+  50:Core/Src/pdm.c **** }
+ 280              		.loc 1 50 1 view .LVU59
+ 281 000c 08BD     		pop	{r3, pc}
+ 282              	.L26:
+ 283 000e 00BF     		.align	2
+ 284              	.L25:
+ 285 0010 00020000 		.word	spi_buffer+512
+ 286              		.cfi_endproc
+ 287              	.LFE291:
+ 289              		.section	.text.pdm_start,"ax",%progbits
+ 290              		.align	1
+ 291              		.global	pdm_start
+ 292              		.syntax unified
+ 293              		.thumb
+ 294              		.thumb_func
+ARM GAS  /tmp/ccOQWelA.s 			page 7
+
+
+ 296              	pdm_start:
+ 297              	.LFB292:
+  51:Core/Src/pdm.c **** 
+  52:Core/Src/pdm.c **** 
+  53:Core/Src/pdm.c **** void pdm_start(void) {
+ 298              		.loc 1 53 22 is_stmt 1 view -0
+ 299              		.cfi_startproc
+ 300              		@ args = 0, pretend = 0, frame = 0
+ 301              		@ frame_needed = 0, uses_anonymous_args = 0
+ 302 0000 08B5     		push	{r3, lr}
+ 303              		.cfi_def_cfa_offset 8
+ 304              		.cfi_offset 3, -8
+ 305              		.cfi_offset 14, -4
+  54:Core/Src/pdm.c ****     // fill ones table
+  55:Core/Src/pdm.c **** 
+  56:Core/Src/pdm.c ****     for(uint32_t i = 0; i < 256; ++i) {
+ 306              		.loc 1 56 5 view .LVU61
+ 307              	.LBB8:
+ 308              		.loc 1 56 9 view .LVU62
+ 309              	.LVL25:
+ 310              		.loc 1 56 18 is_stmt 0 view .LVU63
+ 311 0002 0021     		movs	r1, #0
+ 312              		.loc 1 56 5 view .LVU64
+ 313 0004 0DE0     		b	.L28
+ 314              	.LVL26:
+ 315              	.L29:
+ 316              	.LBB9:
+  57:Core/Src/pdm.c ****         for(uint8_t bit = 0; bit < 8; ++bit){
+ 317              		.loc 1 57 39 is_stmt 1 discriminator 2 view .LVU65
+ 318 0006 0133     		adds	r3, r3, #1
+ 319              	.LVL27:
+ 320              		.loc 1 57 39 is_stmt 0 discriminator 2 view .LVU66
+ 321 0008 DBB2     		uxtb	r3, r3
+ 322              	.LVL28:
+ 323              	.L31:
+ 324              		.loc 1 57 34 is_stmt 1 discriminator 1 view .LVU67
+ 325 000a 072B     		cmp	r3, #7
+ 326 000c 08D8     		bhi	.L37
+  58:Core/Src/pdm.c ****             if(i & (1 << bit)) {
+ 327              		.loc 1 58 13 view .LVU68
+ 328              		.loc 1 58 23 is_stmt 0 view .LVU69
+ 329 000e 0122     		movs	r2, #1
+ 330 0010 9A40     		lsls	r2, r2, r3
+ 331              		.loc 1 58 15 view .LVU70
+ 332 0012 0A42     		tst	r2, r1
+ 333 0014 F7D0     		beq	.L29
+  59:Core/Src/pdm.c ****                 ones_table[i]++;
+ 334              		.loc 1 59 17 is_stmt 1 view .LVU71
+ 335              		.loc 1 59 27 is_stmt 0 view .LVU72
+ 336 0016 1548     		ldr	r0, .L39
+ 337 0018 425C     		ldrb	r2, [r0, r1]	@ zero_extendqisi2
+ 338              		.loc 1 59 30 view .LVU73
+ 339 001a 0132     		adds	r2, r2, #1
+ 340 001c 4254     		strb	r2, [r0, r1]
+ 341 001e F2E7     		b	.L29
+ 342              	.L37:
+ 343              		.loc 1 59 30 view .LVU74
+ARM GAS  /tmp/ccOQWelA.s 			page 8
+
+
+ 344              	.LBE9:
+  56:Core/Src/pdm.c ****         for(uint8_t bit = 0; bit < 8; ++bit){
+ 345              		.loc 1 56 34 is_stmt 1 discriminator 2 view .LVU75
+ 346 0020 0131     		adds	r1, r1, #1
+ 347              	.LVL29:
+ 348              	.L28:
+  56:Core/Src/pdm.c ****         for(uint8_t bit = 0; bit < 8; ++bit){
+ 349              		.loc 1 56 27 discriminator 1 view .LVU76
+ 350 0022 FF29     		cmp	r1, #255
+ 351 0024 01D8     		bhi	.L38
+ 352              	.LBB10:
+  57:Core/Src/pdm.c ****             if(i & (1 << bit)) {
+ 353              		.loc 1 57 21 is_stmt 0 view .LVU77
+ 354 0026 0023     		movs	r3, #0
+ 355 0028 EFE7     		b	.L31
+ 356              	.L38:
+ 357              	.LBE10:
+ 358              	.LBE8:
+  60:Core/Src/pdm.c ****             }
+  61:Core/Src/pdm.c ****         }
+  62:Core/Src/pdm.c ****     }
+  63:Core/Src/pdm.c **** 
+  64:Core/Src/pdm.c ****     HAL_StatusTypeDef stat = HAL_SPI_RegisterCallback(&hspi1, HAL_SPI_RX_HALF_COMPLETE_CB_ID, rx_lo
+ 359              		.loc 1 64 5 is_stmt 1 view .LVU78
+ 360              		.loc 1 64 30 is_stmt 0 view .LVU79
+ 361 002a 114A     		ldr	r2, .L39+4
+ 362 002c 0421     		movs	r1, #4
+ 363              	.LVL30:
+ 364              		.loc 1 64 30 view .LVU80
+ 365 002e 1148     		ldr	r0, .L39+8
+ 366 0030 FFF7FEFF 		bl	HAL_SPI_RegisterCallback
+ 367              	.LVL31:
+  65:Core/Src/pdm.c ****     if(stat != HAL_OK) {
+ 368              		.loc 1 65 5 is_stmt 1 view .LVU81
+ 369              		.loc 1 65 7 is_stmt 0 view .LVU82
+ 370 0034 18B1     		cbz	r0, .L32
+  66:Core/Src/pdm.c ****         err_counter++;
+ 371              		.loc 1 66 9 is_stmt 1 view .LVU83
+ 372              		.loc 1 66 20 is_stmt 0 view .LVU84
+ 373 0036 104A     		ldr	r2, .L39+12
+ 374 0038 1368     		ldr	r3, [r2]
+ 375 003a 0133     		adds	r3, r3, #1
+ 376 003c 1360     		str	r3, [r2]
+ 377              	.L32:
+  67:Core/Src/pdm.c ****     }
+  68:Core/Src/pdm.c ****     stat = HAL_SPI_RegisterCallback(&hspi1, HAL_SPI_RX_COMPLETE_CB_ID, rx_upper);
+ 378              		.loc 1 68 5 is_stmt 1 view .LVU85
+ 379              		.loc 1 68 12 is_stmt 0 view .LVU86
+ 380 003e 0F4A     		ldr	r2, .L39+16
+ 381 0040 0121     		movs	r1, #1
+ 382 0042 0C48     		ldr	r0, .L39+8
+ 383              	.LVL32:
+ 384              		.loc 1 68 12 view .LVU87
+ 385 0044 FFF7FEFF 		bl	HAL_SPI_RegisterCallback
+ 386              	.LVL33:
+  69:Core/Src/pdm.c ****     if(stat != HAL_OK) {
+ 387              		.loc 1 69 5 is_stmt 1 view .LVU88
+ARM GAS  /tmp/ccOQWelA.s 			page 9
+
+
+ 388              		.loc 1 69 7 is_stmt 0 view .LVU89
+ 389 0048 18B1     		cbz	r0, .L33
+  70:Core/Src/pdm.c ****         err_counter++;
+ 390              		.loc 1 70 9 is_stmt 1 view .LVU90
+ 391              		.loc 1 70 20 is_stmt 0 view .LVU91
+ 392 004a 0B4A     		ldr	r2, .L39+12
+ 393 004c 1368     		ldr	r3, [r2]
+ 394 004e 0133     		adds	r3, r3, #1
+ 395 0050 1360     		str	r3, [r2]
+ 396              	.L33:
+  71:Core/Src/pdm.c ****     }
+  72:Core/Src/pdm.c ****     stat = HAL_SPI_Receive_DMA(&hspi1, spi_buffer, SPI_BUFFER_SIZE);
+ 397              		.loc 1 72 5 is_stmt 1 view .LVU92
+ 398              		.loc 1 72 12 is_stmt 0 view .LVU93
+ 399 0052 4FF48062 		mov	r2, #1024
+ 400 0056 0A49     		ldr	r1, .L39+20
+ 401 0058 0648     		ldr	r0, .L39+8
+ 402              	.LVL34:
+ 403              		.loc 1 72 12 view .LVU94
+ 404 005a FFF7FEFF 		bl	HAL_SPI_Receive_DMA
+ 405              	.LVL35:
+  73:Core/Src/pdm.c ****     if(stat != HAL_OK) {
+ 406              		.loc 1 73 5 is_stmt 1 view .LVU95
+ 407              		.loc 1 73 7 is_stmt 0 view .LVU96
+ 408 005e 18B1     		cbz	r0, .L27
+  74:Core/Src/pdm.c ****         err_counter++;
+ 409              		.loc 1 74 9 is_stmt 1 view .LVU97
+ 410              		.loc 1 74 20 is_stmt 0 view .LVU98
+ 411 0060 054A     		ldr	r2, .L39+12
+ 412 0062 1368     		ldr	r3, [r2]
+ 413 0064 0133     		adds	r3, r3, #1
+ 414 0066 1360     		str	r3, [r2]
+ 415              	.L27:
+  75:Core/Src/pdm.c ****     }
+  76:Core/Src/pdm.c **** }...
+ 416              		.loc 1 76 1 view .LVU99
+ 417 0068 08BD     		pop	{r3, pc}
+ 418              	.L40:
+ 419 006a 00BF     		.align	2
+ 420              	.L39:
+ 421 006c 00000000 		.word	ones_table
+ 422 0070 00000000 		.word	rx_lower
+ 423 0074 00000000 		.word	hspi1
+ 424 0078 00000000 		.word	err_counter
+ 425 007c 00000000 		.word	rx_upper
+ 426 0080 00000000 		.word	spi_buffer
+ 427              		.cfi_endproc
+ 428              	.LFE292:
+ 430              		.global	ones_table
+ 431              		.section	.bss.ones_table,"aw",%nobits
+ 432              		.align	2
+ 435              	ones_table:
+ 436 0000 00000000 		.space	256
+ 436      00000000 
+ 436      00000000 
+ 436      00000000 
+ 436      00000000 
+ARM GAS  /tmp/ccOQWelA.s 			page 10
+
+
+ 437              		.global	filtered_value
+ 438              		.section	.bss.filtered_value,"aw",%nobits
+ 439              		.align	2
+ 442              	filtered_value:
+ 443 0000 00000000 		.space	4
+ 444              		.global	err_counter
+ 445              		.section	.bss.err_counter,"aw",%nobits
+ 446              		.align	2
+ 449              	err_counter:
+ 450 0000 00000000 		.space	4
+ 451              		.global	sample_counter
+ 452              		.section	.bss.sample_counter,"aw",%nobits
+ 453              		.align	2
+ 456              	sample_counter:
+ 457 0000 00000000 		.space	4
+ 458              		.global	buffer_half
+ 459              		.section	.bss.buffer_half,"aw",%nobits
+ 462              	buffer_half:
+ 463 0000 00       		.space	1
+ 464              		.global	spi_buffer
+ 465              		.section	.bss.spi_buffer,"aw",%nobits
+ 466              		.align	2
+ 469              	spi_buffer:
+ 470 0000 00000000 		.space	1024
+ 470      00000000 
+ 470      00000000 
+ 470      00000000 
+ 470      00000000 
+ 471              		.text
+ 472              	.Letext0:
+ 473              		.file 2 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 474              		.file 3 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 475              		.file 4 "Drivers/CMSIS/Device/ST/STM32L4xx/Include/stm32l431xx.h"
+ 476              		.file 5 "Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_def.h"
+ 477              		.file 6 "Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_dma.h"
+ 478              		.file 7 "Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_spi.h"
+ 479              		.file 8 "Core/Inc/main.h"
+ARM GAS  /tmp/ccOQWelA.s 			page 11
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 pdm.c
+     /tmp/ccOQWelA.s:21     .text.countones_byte:00000000 $t
+     /tmp/ccOQWelA.s:27     .text.countones_byte:00000000 countones_byte
+     /tmp/ccOQWelA.s:45     .text.countones_byte:00000008 $d
+     /tmp/ccOQWelA.s:435    .bss.ones_table:00000000 ones_table
+     /tmp/ccOQWelA.s:50     .text.pdm_decode:00000000 $t
+     /tmp/ccOQWelA.s:56     .text.pdm_decode:00000000 pdm_decode
+     /tmp/ccOQWelA.s:211    .text.pdm_decode:000000b8 $d
+     /tmp/ccOQWelA.s:442    .bss.filtered_value:00000000 filtered_value
+     /tmp/ccOQWelA.s:456    .bss.sample_counter:00000000 sample_counter
+     /tmp/ccOQWelA.s:220    .text.rx_lower:00000000 $t
+     /tmp/ccOQWelA.s:226    .text.rx_lower:00000000 rx_lower
+     /tmp/ccOQWelA.s:250    .text.rx_lower:00000010 $d
+     /tmp/ccOQWelA.s:469    .bss.spi_buffer:00000000 spi_buffer
+     /tmp/ccOQWelA.s:255    .text.rx_upper:00000000 $t
+     /tmp/ccOQWelA.s:261    .text.rx_upper:00000000 rx_upper
+     /tmp/ccOQWelA.s:285    .text.rx_upper:00000010 $d
+     /tmp/ccOQWelA.s:290    .text.pdm_start:00000000 $t
+     /tmp/ccOQWelA.s:296    .text.pdm_start:00000000 pdm_start
+     /tmp/ccOQWelA.s:421    .text.pdm_start:0000006c $d
+     /tmp/ccOQWelA.s:449    .bss.err_counter:00000000 err_counter
+     /tmp/ccOQWelA.s:432    .bss.ones_table:00000000 $d
+     /tmp/ccOQWelA.s:439    .bss.filtered_value:00000000 $d
+     /tmp/ccOQWelA.s:446    .bss.err_counter:00000000 $d
+     /tmp/ccOQWelA.s:453    .bss.sample_counter:00000000 $d
+     /tmp/ccOQWelA.s:462    .bss.buffer_half:00000000 buffer_half
+     /tmp/ccOQWelA.s:463    .bss.buffer_half:00000000 $d
+     /tmp/ccOQWelA.s:466    .bss.spi_buffer:00000000 $d
+
+UNDEFINED SYMBOLS
+GotSample
+HAL_SPI_RegisterCallback
+HAL_SPI_Receive_DMA
+hspi1

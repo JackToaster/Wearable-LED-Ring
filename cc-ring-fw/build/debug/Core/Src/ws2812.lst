@@ -1,0 +1,960 @@
+ARM GAS  /tmp/ccilG4Yi.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"ws2812.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Core/Src/ws2812.c"
+  20              		.section	.text.delay_0H,"ax",%progbits
+  21              		.align	1
+  22              		.p2align 2,,3
+  23              		.global	delay_0H
+  24              		.syntax unified
+  25              		.thumb
+  26              		.thumb_func
+  28              	delay_0H:
+  29              	.LFB288:
+   1:Core/Src/ws2812.c **** #include "ws2812.h"
+   2:Core/Src/ws2812.c **** #include "embeddedout.h"
+   3:Core/Src/ws2812.c **** 
+   4:Core/Src/ws2812.c **** #define T0H 14
+   5:Core/Src/ws2812.c **** #define T0L 20
+   6:Core/Src/ws2812.c **** #define T1H 10
+   7:Core/Src/ws2812.c **** #define T1L 12
+   8:Core/Src/ws2812.c **** 
+   9:Core/Src/ws2812.c **** void __attribute__((optimize("O0"))) delay_0H(void) {
+  30              		.loc 1 9 53 view -0
+  31              		.cfi_startproc
+  32              		@ args = 0, pretend = 0, frame = 0
+  33              		@ frame_needed = 1, uses_anonymous_args = 0
+  34              		@ link register save eliminated.
+  35 0000 80B4     		push	{r7}
+  36              		.cfi_def_cfa_offset 4
+  37              		.cfi_offset 7, -4
+  38 0002 00AF     		add	r7, sp, #0
+  39              		.cfi_def_cfa_register 7
+  10:Core/Src/ws2812.c ****     __ASM volatile (
+  40              		.loc 1 10 5 view .LVU1
+  41              		.syntax unified
+  42              	@ 10 "Core/Src/ws2812.c" 1
+  43 0004 0046     		mov     r0, r0
+  44 0006 0046     		mov     r0, r0
+  45 0008 0046     		mov     r0, r0
+  46 000a 0046     		mov     r0, r0
+  47 000c 0046     		mov     r0, r0
+  48 000e 0046     		mov     r0, r0
+ARM GAS  /tmp/ccilG4Yi.s 			page 2
+
+
+  49 0010 0046     		mov     r0, r0
+  50              	@ 0 "" 2
+  11:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  12:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  13:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  14:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  15:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  16:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  17:Core/Src/ws2812.c ****         "mov     r0, r0"
+  18:Core/Src/ws2812.c ****     );
+  19:Core/Src/ws2812.c **** }
+  51              		.loc 1 19 1 view .LVU2
+  52              		.thumb
+  53              		.syntax unified
+  54 0012 00BF     		nop
+  55 0014 BD46     		mov	sp, r7
+  56              		.cfi_def_cfa_register 13
+  57              		@ sp needed
+  58 0016 5DF8047B 		ldr	r7, [sp], #4
+  59              		.cfi_restore 7
+  60              		.cfi_def_cfa_offset 0
+  61 001a 7047     		bx	lr
+  62              		.cfi_endproc
+  63              	.LFE288:
+  65              		.section	.text.delay_L,"ax",%progbits
+  66              		.align	1
+  67              		.p2align 2,,3
+  68              		.global	delay_L
+  69              		.syntax unified
+  70              		.thumb
+  71              		.thumb_func
+  73              	delay_L:
+  74              	.LFB289:
+  20:Core/Src/ws2812.c **** 
+  21:Core/Src/ws2812.c **** void __attribute__((optimize("O0"))) delay_L(void) {
+  75              		.loc 1 21 52 view -0
+  76              		.cfi_startproc
+  77              		@ args = 0, pretend = 0, frame = 0
+  78              		@ frame_needed = 1, uses_anonymous_args = 0
+  79              		@ link register save eliminated.
+  80 0000 80B4     		push	{r7}
+  81              		.cfi_def_cfa_offset 4
+  82              		.cfi_offset 7, -4
+  83 0002 00AF     		add	r7, sp, #0
+  84              		.cfi_def_cfa_register 7
+  22:Core/Src/ws2812.c ****     
+  23:Core/Src/ws2812.c ****     __ASM volatile (
+  85              		.loc 1 23 5 view .LVU4
+  86              		.syntax unified
+  87              	@ 23 "Core/Src/ws2812.c" 1
+  88 0004 0046     		mov     r0, r0
+  89 0006 0046     		mov     r0, r0
+  90 0008 0046     		mov     r0, r0
+  91 000a 0046     		mov     r0, r0
+  92 000c 0046     		mov     r0, r0
+  93 000e 0046     		mov     r0, r0
+  94 0010 0046     		mov     r0, r0
+ARM GAS  /tmp/ccilG4Yi.s 			page 3
+
+
+  95 0012 0046     		mov     r0, r0
+  96 0014 0046     		mov     r0, r0
+  97 0016 0046     		mov     r0, r0
+  98 0018 0046     		mov     r0, r0
+  99 001a 0046     		mov     r0, r0
+ 100 001c 0046     		mov     r0, r0
+ 101 001e 0046     		mov     r0, r0
+ 102 0020 0046     		mov     r0, r0
+ 103 0022 0046     		mov     r0, r0
+ 104 0024 0046     		mov     r0, r0
+ 105 0026 0046     		mov     r0, r0
+ 106 0028 0046     		mov     r0, r0
+ 107 002a 0046     		mov     r0, r0
+ 108 002c 0046     		mov     r0, r0
+ 109 002e 0046     		mov     r0, r0
+ 110 0030 0046     		mov     r0, r0
+ 111 0032 0046     		mov     r0, r0
+ 112 0034 0046     		mov     r0, r0
+ 113 0036 0046     		mov     r0, r0
+ 114 0038 0046     		mov     r0, r0
+ 115 003a 0046     		mov     r0, r0
+ 116 003c 0046     		mov     r0, r0
+ 117 003e 0046     		mov     r0, r0
+ 118 0040 0046     		mov     r0, r0
+ 119 0042 0046     		mov     r0, r0
+ 120 0044 0046     		mov     r0, r0
+ 121 0046 0046     		mov     r0, r0
+ 122 0048 0046     		mov     r0, r0
+ 123 004a 0046     		mov     r0, r0
+ 124 004c 0046     		mov     r0, r0
+ 125 004e 0046     		mov     r0, r0
+ 126 0050 0046     		mov     r0, r0
+ 127 0052 0046     		mov     r0, r0
+ 128 0054 0046     		mov     r0, r0
+ 129 0056 0046     		mov     r0, r0
+ 130 0058 0046     		mov     r0, r0
+ 131 005a 0046     		mov     r0, r0
+ 132              	@ 0 "" 2
+  24:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  25:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  26:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  27:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  28:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  29:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  30:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  31:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  32:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  33:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  34:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  35:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  36:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  37:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  38:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  39:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  40:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  41:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  42:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+ARM GAS  /tmp/ccilG4Yi.s 			page 4
+
+
+  43:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  44:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  45:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  46:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  47:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  48:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  49:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  50:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  51:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  52:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  53:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  54:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  55:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  56:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  57:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  58:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  59:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  60:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  61:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  62:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  63:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  64:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  65:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  66:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  67:Core/Src/ws2812.c ****         "mov     r0, r0"
+  68:Core/Src/ws2812.c ****     );
+  69:Core/Src/ws2812.c **** }
+ 133              		.loc 1 69 1 view .LVU5
+ 134              		.thumb
+ 135              		.syntax unified
+ 136 005c 00BF     		nop
+ 137 005e BD46     		mov	sp, r7
+ 138              		.cfi_def_cfa_register 13
+ 139              		@ sp needed
+ 140 0060 5DF8047B 		ldr	r7, [sp], #4
+ 141              		.cfi_restore 7
+ 142              		.cfi_def_cfa_offset 0
+ 143 0064 7047     		bx	lr
+ 144              		.cfi_endproc
+ 145              	.LFE289:
+ 147 0066 00BF     		.section	.text.delay_1H,"ax",%progbits
+ 148              		.align	1
+ 149              		.p2align 2,,3
+ 150              		.global	delay_1H
+ 151              		.syntax unified
+ 152              		.thumb
+ 153              		.thumb_func
+ 155              	delay_1H:
+ 156              	.LFB290:
+  70:Core/Src/ws2812.c **** 
+  71:Core/Src/ws2812.c **** void __attribute__((optimize("O0"))) delay_1H(void) {
+ 157              		.loc 1 71 53 view -0
+ 158              		.cfi_startproc
+ 159              		@ args = 0, pretend = 0, frame = 0
+ 160              		@ frame_needed = 1, uses_anonymous_args = 0
+ 161              		@ link register save eliminated.
+ 162 0000 80B4     		push	{r7}
+ARM GAS  /tmp/ccilG4Yi.s 			page 5
+
+
+ 163              		.cfi_def_cfa_offset 4
+ 164              		.cfi_offset 7, -4
+ 165 0002 00AF     		add	r7, sp, #0
+ 166              		.cfi_def_cfa_register 7
+  72:Core/Src/ws2812.c ****     __ASM volatile (
+ 167              		.loc 1 72 5 view .LVU7
+ 168              		.syntax unified
+ 169              	@ 72 "Core/Src/ws2812.c" 1
+ 170 0004 0046     		mov     r0, r0
+ 171 0006 0046     		mov     r0, r0
+ 172 0008 0046     		mov     r0, r0
+ 173 000a 0046     		mov     r0, r0
+ 174 000c 0046     		mov     r0, r0
+ 175 000e 0046     		mov     r0, r0
+ 176 0010 0046     		mov     r0, r0
+ 177 0012 0046     		mov     r0, r0
+ 178 0014 0046     		mov     r0, r0
+ 179 0016 0046     		mov     r0, r0
+ 180 0018 0046     		mov     r0, r0
+ 181 001a 0046     		mov     r0, r0
+ 182 001c 0046     		mov     r0, r0
+ 183 001e 0046     		mov     r0, r0
+ 184 0020 0046     		mov     r0, r0
+ 185 0022 0046     		mov     r0, r0
+ 186 0024 0046     		mov     r0, r0
+ 187 0026 0046     		mov     r0, r0
+ 188 0028 0046     		mov     r0, r0
+ 189 002a 0046     		mov     r0, r0
+ 190 002c 0046     		mov     r0, r0
+ 191 002e 0046     		mov     r0, r0
+ 192 0030 0046     		mov     r0, r0
+ 193 0032 0046     		mov     r0, r0
+ 194 0034 0046     		mov     r0, r0
+ 195 0036 0046     		mov     r0, r0
+ 196 0038 0046     		mov     r0, r0
+ 197 003a 0046     		mov     r0, r0
+ 198 003c 0046     		mov     r0, r0
+ 199 003e 0046     		mov     r0, r0
+ 200 0040 0046     		mov     r0, r0
+ 201              	@ 0 "" 2
+  73:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  74:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  75:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  76:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  77:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  78:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  79:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  80:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  81:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  82:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  83:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  84:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  85:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  86:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  87:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  88:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  89:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+ARM GAS  /tmp/ccilG4Yi.s 			page 6
+
+
+  90:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  91:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  92:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  93:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  94:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  95:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  96:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  97:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  98:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+  99:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+ 100:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+ 101:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+ 102:Core/Src/ws2812.c ****         "mov     r0, r0\n\t"
+ 103:Core/Src/ws2812.c ****         "mov     r0, r0"
+ 104:Core/Src/ws2812.c ****     );
+ 105:Core/Src/ws2812.c **** }
+ 202              		.loc 1 105 1 view .LVU8
+ 203              		.thumb
+ 204              		.syntax unified
+ 205 0042 00BF     		nop
+ 206 0044 BD46     		mov	sp, r7
+ 207              		.cfi_def_cfa_register 13
+ 208              		@ sp needed
+ 209 0046 5DF8047B 		ldr	r7, [sp], #4
+ 210              		.cfi_restore 7
+ 211              		.cfi_def_cfa_offset 0
+ 212 004a 7047     		bx	lr
+ 213              		.cfi_endproc
+ 214              	.LFE290:
+ 216              		.section	.text.InitWS2812,"ax",%progbits
+ 217              		.align	1
+ 218              		.p2align 2,,3
+ 219              		.global	InitWS2812
+ 220              		.syntax unified
+ 221              		.thumb
+ 222              		.thumb_func
+ 224              	InitWS2812:
+ 225              	.LFB291:
+ 106:Core/Src/ws2812.c **** 
+ 107:Core/Src/ws2812.c **** uint16_t dither_value = 0;
+ 108:Core/Src/ws2812.c **** 
+ 109:Core/Src/ws2812.c **** void InitWS2812(void) {
+ 226              		.loc 1 109 23 view -0
+ 227              		.cfi_startproc
+ 228              		@ args = 0, pretend = 0, frame = 0
+ 229              		@ frame_needed = 0, uses_anonymous_args = 0
+ 230 0000 08B5     		push	{r3, lr}
+ 231              		.cfi_def_cfa_offset 8
+ 232              		.cfi_offset 3, -8
+ 233              		.cfi_offset 14, -4
+ 110:Core/Src/ws2812.c ****     HAL_GPIO_WritePin(led_dat_GPIO_Port, led_dat_Pin, 0);
+ 234              		.loc 1 110 5 view .LVU10
+ 235 0002 0022     		movs	r2, #0
+ 236 0004 0121     		movs	r1, #1
+ 237 0006 0248     		ldr	r0, .L6
+ 238 0008 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 239              	.LVL0:
+ARM GAS  /tmp/ccilG4Yi.s 			page 7
+
+
+ 111:Core/Src/ws2812.c **** }
+ 240              		.loc 1 111 1 is_stmt 0 view .LVU11
+ 241 000c 08BD     		pop	{r3, pc}
+ 242              	.L7:
+ 243 000e 00BF     		.align	2
+ 244              	.L6:
+ 245 0010 00040048 		.word	1207960576
+ 246              		.cfi_endproc
+ 247              	.LFE291:
+ 249              		.section	.text.SendWS2812,"ax",%progbits
+ 250              		.align	1
+ 251              		.p2align 2,,3
+ 252              		.global	SendWS2812
+ 253              		.syntax unified
+ 254              		.thumb
+ 255              		.thumb_func
+ 257              	SendWS2812:
+ 258              	.LVL1:
+ 259              	.LFB292:
+ 112:Core/Src/ws2812.c **** 
+ 113:Core/Src/ws2812.c **** // bit-banged WS2812 protocol
+ 114:Core/Src/ws2812.c **** void __attribute__((optimize("O3"))) SendWS2812(uint8_t* lightarray) {
+ 260              		.loc 1 114 70 is_stmt 1 view -0
+ 261              		.cfi_startproc
+ 262              		@ args = 0, pretend = 0, frame = 8
+ 263              		@ frame_needed = 0, uses_anonymous_args = 0
+ 115:Core/Src/ws2812.c ****     dither_value = (dither_value + (DIMMING / 2) + 1) % DIMMING;
+ 264              		.loc 1 115 5 view .LVU13
+ 114:Core/Src/ws2812.c ****     dither_value = (dither_value + (DIMMING / 2) + 1) % DIMMING;
+ 265              		.loc 1 114 70 is_stmt 0 view .LVU14
+ 266 0000 2DE9704F 		push	{r4, r5, r6, r8, r9, r10, fp, lr}
+ 267              		.cfi_def_cfa_offset 32
+ 268              		.cfi_offset 4, -32
+ 269              		.cfi_offset 5, -28
+ 270              		.cfi_offset 6, -24
+ 271              		.cfi_offset 8, -20
+ 272              		.cfi_offset 9, -16
+ 273              		.cfi_offset 10, -12
+ 274              		.cfi_offset 11, -8
+ 275              		.cfi_offset 14, -4
+ 276              		.loc 1 115 18 view .LVU15
+ 277 0004 DFF89CA0 		ldr	r10, .L21+4
+ 278              	.LBB11:
+ 279              	.LBB12:
+ 280              	.LBB13:
+ 281              	.LBB14:
+ 282              	.LBB15:
+ 116:Core/Src/ws2812.c **** 
+ 117:Core/Src/ws2812.c ****     for(uint8_t i = 0; i < NUM_LIN_LEDS; ++i) {
+ 118:Core/Src/ws2812.c **** 
+ 119:Core/Src/ws2812.c ****         uint8_t* color_base = &lightarray[i*3];
+ 120:Core/Src/ws2812.c ****         
+ 121:Core/Src/ws2812.c ****         uint32_t set_bitmask = led_dat_Pin;
+ 122:Core/Src/ws2812.c ****         uint32_t reset_bitmask = (uint32_t)led_dat_Pin << 16;
+ 123:Core/Src/ws2812.c ****         __disable_irq();
+ 124:Core/Src/ws2812.c ****         delay_1H();
+ 125:Core/Src/ws2812.c ****         delay_0H();
+ARM GAS  /tmp/ccilG4Yi.s 			page 8
+
+
+ 126:Core/Src/ws2812.c ****         delay_L();
+ 127:Core/Src/ws2812.c ****         for(uint8_t color = 0; color < 3; ++color) {
+ 128:Core/Src/ws2812.c ****             uint8_t color_channel = ((uint16_t)color_base[color] + dither_value) / DIMMING;
+ 129:Core/Src/ws2812.c ****             for(uint8_t bit = 0; bit < 8; ++bit) {
+ 130:Core/Src/ws2812.c ****                 led_dat_GPIO_Port->BSRR = set_bitmask;
+ 283              		.loc 1 130 41 view .LVU16
+ 284 0008 254C     		ldr	r4, .L21
+ 285              	.LBE15:
+ 286              	.LBE14:
+ 287              	.LBE13:
+ 288              	.LBE12:
+ 289              	.LBE11:
+ 115:Core/Src/ws2812.c **** 
+ 290              		.loc 1 115 50 view .LVU17
+ 291 000a BAF80030 		ldrh	r3, [r10]
+ 292 000e 0933     		adds	r3, r3, #9
+ 114:Core/Src/ws2812.c ****     dither_value = (dither_value + (DIMMING / 2) + 1) % DIMMING;
+ 293              		.loc 1 114 70 view .LVU18
+ 294 0010 82B0     		sub	sp, sp, #8
+ 295              		.cfi_def_cfa_offset 40
+ 115:Core/Src/ws2812.c **** 
+ 296              		.loc 1 115 55 view .LVU19
+ 297 0012 03F00F03 		and	r3, r3, #15
+ 115:Core/Src/ws2812.c **** 
+ 298              		.loc 1 115 18 view .LVU20
+ 299 0016 AAF80030 		strh	r3, [r10]	@ movhi
+ 117:Core/Src/ws2812.c **** 
+ 300              		.loc 1 117 5 is_stmt 1 view .LVU21
+ 301              	.LBB27:
+ 117:Core/Src/ws2812.c **** 
+ 302              		.loc 1 117 9 view .LVU22
+ 303              	.LVL2:
+ 117:Core/Src/ws2812.c **** 
+ 304              		.loc 1 117 26 discriminator 1 view .LVU23
+ 305 001a 00F12D03 		add	r3, r0, #45
+ 306 001e 00F10309 		add	r9, r0, #3
+ 307 0022 0193     		str	r3, [sp, #4]
+ 308              	.LBB26:
+ 309              	.LBB20:
+ 310              	.LBB18:
+ 311              	.LBB16:
+ 312              		.loc 1 130 41 is_stmt 0 view .LVU24
+ 313 0024 0126     		movs	r6, #1
+ 314              	.LVL3:
+ 315              	.L13:
+ 316              		.loc 1 130 41 view .LVU25
+ 317              	.LBE16:
+ 318              	.LBE18:
+ 319              	.LBE20:
+ 119:Core/Src/ws2812.c ****         
+ 320              		.loc 1 119 9 is_stmt 1 view .LVU26
+ 121:Core/Src/ws2812.c ****         uint32_t reset_bitmask = (uint32_t)led_dat_Pin << 16;
+ 321              		.loc 1 121 9 view .LVU27
+ 122:Core/Src/ws2812.c ****         __disable_irq();
+ 322              		.loc 1 122 9 view .LVU28
+ 123:Core/Src/ws2812.c ****         delay_1H();
+ 323              		.loc 1 123 9 view .LVU29
+ARM GAS  /tmp/ccilG4Yi.s 			page 9
+
+
+ 324              	.LBB21:
+ 325              	.LBI21:
+ 326              		.file 2 "Drivers/CMSIS/Include/cmsis_gcc.h"
+   1:Drivers/CMSIS/Include/cmsis_gcc.h **** /**************************************************************************//**
+   2:Drivers/CMSIS/Include/cmsis_gcc.h ****  * @file     cmsis_gcc.h
+   3:Drivers/CMSIS/Include/cmsis_gcc.h ****  * @brief    CMSIS compiler GCC header file
+   4:Drivers/CMSIS/Include/cmsis_gcc.h ****  * @version  V5.2.0
+   5:Drivers/CMSIS/Include/cmsis_gcc.h ****  * @date     08. May 2019
+   6:Drivers/CMSIS/Include/cmsis_gcc.h ****  ******************************************************************************/
+   7:Drivers/CMSIS/Include/cmsis_gcc.h **** /*
+   8:Drivers/CMSIS/Include/cmsis_gcc.h ****  * Copyright (c) 2009-2019 Arm Limited. All rights reserved.
+   9:Drivers/CMSIS/Include/cmsis_gcc.h ****  *
+  10:Drivers/CMSIS/Include/cmsis_gcc.h ****  * SPDX-License-Identifier: Apache-2.0
+  11:Drivers/CMSIS/Include/cmsis_gcc.h ****  *
+  12:Drivers/CMSIS/Include/cmsis_gcc.h ****  * Licensed under the Apache License, Version 2.0 (the License); you may
+  13:Drivers/CMSIS/Include/cmsis_gcc.h ****  * not use this file except in compliance with the License.
+  14:Drivers/CMSIS/Include/cmsis_gcc.h ****  * You may obtain a copy of the License at
+  15:Drivers/CMSIS/Include/cmsis_gcc.h ****  *
+  16:Drivers/CMSIS/Include/cmsis_gcc.h ****  * www.apache.org/licenses/LICENSE-2.0
+  17:Drivers/CMSIS/Include/cmsis_gcc.h ****  *
+  18:Drivers/CMSIS/Include/cmsis_gcc.h ****  * Unless required by applicable law or agreed to in writing, software
+  19:Drivers/CMSIS/Include/cmsis_gcc.h ****  * distributed under the License is distributed on an AS IS BASIS, WITHOUT
+  20:Drivers/CMSIS/Include/cmsis_gcc.h ****  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  21:Drivers/CMSIS/Include/cmsis_gcc.h ****  * See the License for the specific language governing permissions and
+  22:Drivers/CMSIS/Include/cmsis_gcc.h ****  * limitations under the License.
+  23:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
+  24:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  25:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef __CMSIS_GCC_H
+  26:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __CMSIS_GCC_H
+  27:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  28:Drivers/CMSIS/Include/cmsis_gcc.h **** /* ignore some GCC warnings */
+  29:Drivers/CMSIS/Include/cmsis_gcc.h **** #pragma GCC diagnostic push
+  30:Drivers/CMSIS/Include/cmsis_gcc.h **** #pragma GCC diagnostic ignored "-Wsign-conversion"
+  31:Drivers/CMSIS/Include/cmsis_gcc.h **** #pragma GCC diagnostic ignored "-Wconversion"
+  32:Drivers/CMSIS/Include/cmsis_gcc.h **** #pragma GCC diagnostic ignored "-Wunused-parameter"
+  33:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  34:Drivers/CMSIS/Include/cmsis_gcc.h **** /* Fallback for __has_builtin */
+  35:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef __has_builtin
+  36:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __has_builtin(x) (0)
+  37:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  38:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  39:Drivers/CMSIS/Include/cmsis_gcc.h **** /* CMSIS compiler specific defines */
+  40:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __ASM
+  41:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __ASM                                  __asm
+  42:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  43:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __INLINE
+  44:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __INLINE                               inline
+  45:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  46:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __STATIC_INLINE
+  47:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __STATIC_INLINE                        static inline
+  48:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  49:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __STATIC_FORCEINLINE                 
+  50:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __STATIC_FORCEINLINE                   __attribute__((always_inline)) static inline
+  51:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif                                           
+  52:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __NO_RETURN
+  53:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __NO_RETURN                            __attribute__((__noreturn__))
+  54:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ARM GAS  /tmp/ccilG4Yi.s 			page 10
+
+
+  55:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __USED
+  56:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __USED                                 __attribute__((used))
+  57:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  58:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __WEAK
+  59:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __WEAK                                 __attribute__((weak))
+  60:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  61:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __PACKED
+  62:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __PACKED                               __attribute__((packed, aligned(1)))
+  63:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  64:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __PACKED_STRUCT
+  65:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __PACKED_STRUCT                        struct __attribute__((packed, aligned(1)))
+  66:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  67:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __PACKED_UNION
+  68:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __PACKED_UNION                         union __attribute__((packed, aligned(1)))
+  69:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  70:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __UNALIGNED_UINT32        /* deprecated */
+  71:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic push
+  72:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic ignored "-Wpacked"
+  73:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic ignored "-Wattributes"
+  74:Drivers/CMSIS/Include/cmsis_gcc.h ****   struct __attribute__((packed)) T_UINT32 { uint32_t v; };
+  75:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic pop
+  76:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __UNALIGNED_UINT32(x)                  (((struct T_UINT32 *)(x))->v)
+  77:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  78:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __UNALIGNED_UINT16_WRITE
+  79:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic push
+  80:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic ignored "-Wpacked"
+  81:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic ignored "-Wattributes"
+  82:Drivers/CMSIS/Include/cmsis_gcc.h ****   __PACKED_STRUCT T_UINT16_WRITE { uint16_t v; };
+  83:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic pop
+  84:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __UNALIGNED_UINT16_WRITE(addr, val)    (void)((((struct T_UINT16_WRITE *)(void *)(addr))-
+  85:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  86:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __UNALIGNED_UINT16_READ
+  87:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic push
+  88:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic ignored "-Wpacked"
+  89:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic ignored "-Wattributes"
+  90:Drivers/CMSIS/Include/cmsis_gcc.h ****   __PACKED_STRUCT T_UINT16_READ { uint16_t v; };
+  91:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic pop
+  92:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __UNALIGNED_UINT16_READ(addr)          (((const struct T_UINT16_READ *)(const void *)(add
+  93:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  94:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __UNALIGNED_UINT32_WRITE
+  95:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic push
+  96:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic ignored "-Wpacked"
+  97:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic ignored "-Wattributes"
+  98:Drivers/CMSIS/Include/cmsis_gcc.h ****   __PACKED_STRUCT T_UINT32_WRITE { uint32_t v; };
+  99:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic pop
+ 100:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __UNALIGNED_UINT32_WRITE(addr, val)    (void)((((struct T_UINT32_WRITE *)(void *)(addr))-
+ 101:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 102:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __UNALIGNED_UINT32_READ
+ 103:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic push
+ 104:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic ignored "-Wpacked"
+ 105:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic ignored "-Wattributes"
+ 106:Drivers/CMSIS/Include/cmsis_gcc.h ****   __PACKED_STRUCT T_UINT32_READ { uint32_t v; };
+ 107:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic pop
+ 108:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __UNALIGNED_UINT32_READ(addr)          (((const struct T_UINT32_READ *)(const void *)(add
+ 109:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 110:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __ALIGNED
+ 111:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __ALIGNED(x)                           __attribute__((aligned(x)))
+ARM GAS  /tmp/ccilG4Yi.s 			page 11
+
+
+ 112:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 113:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __RESTRICT
+ 114:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __RESTRICT                             __restrict
+ 115:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 116:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __COMPILER_BARRIER
+ 117:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __COMPILER_BARRIER()                   __ASM volatile("":::"memory")
+ 118:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 119:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 120:Drivers/CMSIS/Include/cmsis_gcc.h **** /* #########################  Startup and Lowlevel Init  ######################## */
+ 121:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 122:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef __PROGRAM_START
+ 123:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 124:Drivers/CMSIS/Include/cmsis_gcc.h **** /**
+ 125:Drivers/CMSIS/Include/cmsis_gcc.h ****   \brief   Initializes data and bss sections
+ 126:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details This default implementations initialized all data and additional bss
+ 127:Drivers/CMSIS/Include/cmsis_gcc.h ****            sections relying on .copy.table and .zero.table specified properly
+ 128:Drivers/CMSIS/Include/cmsis_gcc.h ****            in the used linker script.
+ 129:Drivers/CMSIS/Include/cmsis_gcc.h ****   
+ 130:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
+ 131:Drivers/CMSIS/Include/cmsis_gcc.h **** __STATIC_FORCEINLINE __NO_RETURN void __cmsis_start(void)
+ 132:Drivers/CMSIS/Include/cmsis_gcc.h **** {
+ 133:Drivers/CMSIS/Include/cmsis_gcc.h ****   extern void _start(void) __NO_RETURN;
+ 134:Drivers/CMSIS/Include/cmsis_gcc.h ****   
+ 135:Drivers/CMSIS/Include/cmsis_gcc.h ****   typedef struct {
+ 136:Drivers/CMSIS/Include/cmsis_gcc.h ****     uint32_t const* src;
+ 137:Drivers/CMSIS/Include/cmsis_gcc.h ****     uint32_t* dest;
+ 138:Drivers/CMSIS/Include/cmsis_gcc.h ****     uint32_t  wlen;
+ 139:Drivers/CMSIS/Include/cmsis_gcc.h ****   } __copy_table_t;
+ 140:Drivers/CMSIS/Include/cmsis_gcc.h ****   
+ 141:Drivers/CMSIS/Include/cmsis_gcc.h ****   typedef struct {
+ 142:Drivers/CMSIS/Include/cmsis_gcc.h ****     uint32_t* dest;
+ 143:Drivers/CMSIS/Include/cmsis_gcc.h ****     uint32_t  wlen;
+ 144:Drivers/CMSIS/Include/cmsis_gcc.h ****   } __zero_table_t;
+ 145:Drivers/CMSIS/Include/cmsis_gcc.h ****   
+ 146:Drivers/CMSIS/Include/cmsis_gcc.h ****   extern const __copy_table_t __copy_table_start__;
+ 147:Drivers/CMSIS/Include/cmsis_gcc.h ****   extern const __copy_table_t __copy_table_end__;
+ 148:Drivers/CMSIS/Include/cmsis_gcc.h ****   extern const __zero_table_t __zero_table_start__;
+ 149:Drivers/CMSIS/Include/cmsis_gcc.h ****   extern const __zero_table_t __zero_table_end__;
+ 150:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 151:Drivers/CMSIS/Include/cmsis_gcc.h ****   for (__copy_table_t const* pTable = &__copy_table_start__; pTable < &__copy_table_end__; ++pTable
+ 152:Drivers/CMSIS/Include/cmsis_gcc.h ****     for(uint32_t i=0u; i<pTable->wlen; ++i) {
+ 153:Drivers/CMSIS/Include/cmsis_gcc.h ****       pTable->dest[i] = pTable->src[i];
+ 154:Drivers/CMSIS/Include/cmsis_gcc.h ****     }
+ 155:Drivers/CMSIS/Include/cmsis_gcc.h ****   }
+ 156:Drivers/CMSIS/Include/cmsis_gcc.h ****  
+ 157:Drivers/CMSIS/Include/cmsis_gcc.h ****   for (__zero_table_t const* pTable = &__zero_table_start__; pTable < &__zero_table_end__; ++pTable
+ 158:Drivers/CMSIS/Include/cmsis_gcc.h ****     for(uint32_t i=0u; i<pTable->wlen; ++i) {
+ 159:Drivers/CMSIS/Include/cmsis_gcc.h ****       pTable->dest[i] = 0u;
+ 160:Drivers/CMSIS/Include/cmsis_gcc.h ****     }
+ 161:Drivers/CMSIS/Include/cmsis_gcc.h ****   }
+ 162:Drivers/CMSIS/Include/cmsis_gcc.h ****  
+ 163:Drivers/CMSIS/Include/cmsis_gcc.h ****   _start();
+ 164:Drivers/CMSIS/Include/cmsis_gcc.h **** }
+ 165:Drivers/CMSIS/Include/cmsis_gcc.h ****   
+ 166:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __PROGRAM_START           __cmsis_start
+ 167:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 168:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ARM GAS  /tmp/ccilG4Yi.s 			page 12
+
+
+ 169:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef __INITIAL_SP
+ 170:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __INITIAL_SP              __StackTop
+ 171:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 172:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 173:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef __STACK_LIMIT
+ 174:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __STACK_LIMIT             __StackLimit
+ 175:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 176:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 177:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef __VECTOR_TABLE
+ 178:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __VECTOR_TABLE            __Vectors
+ 179:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 180:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 181:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef __VECTOR_TABLE_ATTRIBUTE
+ 182:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __VECTOR_TABLE_ATTRIBUTE  __attribute((used, section(".vectors")))
+ 183:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 184:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 185:Drivers/CMSIS/Include/cmsis_gcc.h **** /* ###########################  Core Function Access  ########################### */
+ 186:Drivers/CMSIS/Include/cmsis_gcc.h **** /** \ingroup  CMSIS_Core_FunctionInterface
+ 187:Drivers/CMSIS/Include/cmsis_gcc.h ****     \defgroup CMSIS_Core_RegAccFunctions CMSIS Core Register Access Functions
+ 188:Drivers/CMSIS/Include/cmsis_gcc.h ****   @{
+ 189:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
+ 190:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 191:Drivers/CMSIS/Include/cmsis_gcc.h **** /**
+ 192:Drivers/CMSIS/Include/cmsis_gcc.h ****   \brief   Enable IRQ Interrupts
+ 193:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details Enables IRQ interrupts by clearing the I-bit in the CPSR.
+ 194:Drivers/CMSIS/Include/cmsis_gcc.h ****            Can only be executed in Privileged modes.
+ 195:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
+ 196:Drivers/CMSIS/Include/cmsis_gcc.h **** __STATIC_FORCEINLINE void __enable_irq(void)
+ 197:Drivers/CMSIS/Include/cmsis_gcc.h **** {
+ 198:Drivers/CMSIS/Include/cmsis_gcc.h ****   __ASM volatile ("cpsie i" : : : "memory");
+ 199:Drivers/CMSIS/Include/cmsis_gcc.h **** }
+ 200:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 201:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 202:Drivers/CMSIS/Include/cmsis_gcc.h **** /**
+ 203:Drivers/CMSIS/Include/cmsis_gcc.h ****   \brief   Disable IRQ Interrupts
+ 204:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details Disables IRQ interrupts by setting the I-bit in the CPSR.
+ 205:Drivers/CMSIS/Include/cmsis_gcc.h ****            Can only be executed in Privileged modes.
+ 206:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
+ 207:Drivers/CMSIS/Include/cmsis_gcc.h **** __STATIC_FORCEINLINE void __disable_irq(void)
+ 327              		.loc 2 207 27 view .LVU30
+ 328              	.LBB22:
+ 208:Drivers/CMSIS/Include/cmsis_gcc.h **** {
+ 209:Drivers/CMSIS/Include/cmsis_gcc.h ****   __ASM volatile ("cpsid i" : : : "memory");
+ 329              		.loc 2 209 3 view .LVU31
+ 330              		.syntax unified
+ 331              	@ 209 "Drivers/CMSIS/Include/cmsis_gcc.h" 1
+ 332 0026 72B6     		cpsid i
+ 333              	@ 0 "" 2
+ 334              		.thumb
+ 335              		.syntax unified
+ 336              	.LBE22:
+ 337              	.LBE21:
+ 124:Core/Src/ws2812.c ****         delay_0H();
+ 338              		.loc 1 124 9 view .LVU32
+ 339 0028 FFF7FEFF 		bl	delay_1H
+ 340              	.LVL4:
+ 125:Core/Src/ws2812.c ****         delay_L();
+ARM GAS  /tmp/ccilG4Yi.s 			page 13
+
+
+ 341              		.loc 1 125 9 view .LVU33
+ 342 002c FFF7FEFF 		bl	delay_0H
+ 343              	.LVL5:
+ 126:Core/Src/ws2812.c ****         for(uint8_t color = 0; color < 3; ++color) {
+ 344              		.loc 1 126 9 view .LVU34
+ 345 0030 FFF7FEFF 		bl	delay_L
+ 346              	.LVL6:
+ 127:Core/Src/ws2812.c ****             uint8_t color_channel = ((uint16_t)color_base[color] + dither_value) / DIMMING;
+ 347              		.loc 1 127 9 view .LVU35
+ 348              	.LBB23:
+ 127:Core/Src/ws2812.c ****             uint8_t color_channel = ((uint16_t)color_base[color] + dither_value) / DIMMING;
+ 349              		.loc 1 127 13 view .LVU36
+ 127:Core/Src/ws2812.c ****             uint8_t color_channel = ((uint16_t)color_base[color] + dither_value) / DIMMING;
+ 350              		.loc 1 127 38 discriminator 1 view .LVU37
+ 351 0034 A9F10308 		sub	r8, r9, #3
+ 352              	.LVL7:
+ 353              	.L12:
+ 354              	.LBB19:
+ 128:Core/Src/ws2812.c ****             for(uint8_t bit = 0; bit < 8; ++bit) {
+ 355              		.loc 1 128 13 view .LVU38
+ 128:Core/Src/ws2812.c ****             for(uint8_t bit = 0; bit < 8; ++bit) {
+ 356              		.loc 1 128 58 is_stmt 0 view .LVU39
+ 357 0038 18F8012B 		ldrb	r2, [r8], #1	@ zero_extendqisi2
+ 358              	.LVL8:
+ 128:Core/Src/ws2812.c ****             for(uint8_t bit = 0; bit < 8; ++bit) {
+ 359              		.loc 1 128 66 view .LVU40
+ 360 003c BAF80050 		ldrh	r5, [r10]
+ 361 0040 1544     		add	r5, r5, r2
+ 128:Core/Src/ws2812.c ****             for(uint8_t bit = 0; bit < 8; ++bit) {
+ 362              		.loc 1 128 82 view .LVU41
+ 363 0042 4FF0000B 		mov	fp, #0
+ 364 0046 2D11     		asrs	r5, r5, #4
+ 365              	.LVL9:
+ 129:Core/Src/ws2812.c ****                 led_dat_GPIO_Port->BSRR = set_bitmask;
+ 366              		.loc 1 129 13 is_stmt 1 view .LVU42
+ 367              	.LBB17:
+ 129:Core/Src/ws2812.c ****                 led_dat_GPIO_Port->BSRR = set_bitmask;
+ 368              		.loc 1 129 17 view .LVU43
+ 129:Core/Src/ws2812.c ****                 led_dat_GPIO_Port->BSRR = set_bitmask;
+ 369              		.loc 1 129 38 discriminator 1 view .LVU44
+ 370 0048 0BE0     		b	.L11
+ 371              	.LVL10:
+ 372              	.L20:
+ 131:Core/Src/ws2812.c ****                 if(color_channel & (0b10000000 >> bit)) {
+ 132:Core/Src/ws2812.c ****                     delay_1H();
+ 373              		.loc 1 132 21 is_stmt 0 view .LVU45
+ 374 004a FFF7FEFF 		bl	delay_1H
+ 375              	.LVL11:
+ 133:Core/Src/ws2812.c ****                     led_dat_GPIO_Port->BSRR = reset_bitmask;
+ 376              		.loc 1 133 21 is_stmt 1 view .LVU46
+ 377              		.loc 1 133 45 is_stmt 0 view .LVU47
+ 378 004e 4FF48032 		mov	r2, #65536
+ 379 0052 A261     		str	r2, [r4, #24]
+ 134:Core/Src/ws2812.c ****                     delay_L();
+ 380              		.loc 1 134 21 is_stmt 1 view .LVU48
+ 129:Core/Src/ws2812.c ****                 led_dat_GPIO_Port->BSRR = set_bitmask;
+ 381              		.loc 1 129 38 is_stmt 0 discriminator 1 view .LVU49
+ARM GAS  /tmp/ccilG4Yi.s 			page 14
+
+
+ 382 0054 0BF1010B 		add	fp, fp, #1
+ 383              	.LVL12:
+ 384              		.loc 1 134 21 view .LVU50
+ 385 0058 FFF7FEFF 		bl	delay_L
+ 386              	.LVL13:
+ 129:Core/Src/ws2812.c ****                 led_dat_GPIO_Port->BSRR = set_bitmask;
+ 387              		.loc 1 129 43 is_stmt 1 discriminator 2 view .LVU51
+ 129:Core/Src/ws2812.c ****                 led_dat_GPIO_Port->BSRR = set_bitmask;
+ 388              		.loc 1 129 38 discriminator 1 view .LVU52
+ 389 005c BBF1080F 		cmp	fp, #8
+ 390 0060 12D0     		beq	.L19
+ 391              	.L11:
+ 392              	.LVL14:
+ 130:Core/Src/ws2812.c ****                 if(color_channel & (0b10000000 >> bit)) {
+ 393              		.loc 1 130 17 view .LVU53
+ 132:Core/Src/ws2812.c ****                     led_dat_GPIO_Port->BSRR = reset_bitmask;
+ 394              		.loc 1 132 21 view .LVU54
+ 135:Core/Src/ws2812.c ****                 } else {
+ 136:Core/Src/ws2812.c ****                     led_dat_GPIO_Port->BSRR = set_bitmask;
+ 395              		.loc 1 136 21 view .LVU55
+ 131:Core/Src/ws2812.c ****                     delay_1H();
+ 396              		.loc 1 131 48 is_stmt 0 view .LVU56
+ 397 0062 8022     		movs	r2, #128
+ 398 0064 42FA0BF2 		asr	r2, r2, fp
+ 131:Core/Src/ws2812.c ****                     delay_1H();
+ 399              		.loc 1 131 19 view .LVU57
+ 400 0068 2A42     		tst	r2, r5
+ 130:Core/Src/ws2812.c ****                 if(color_channel & (0b10000000 >> bit)) {
+ 401              		.loc 1 130 41 view .LVU58
+ 402 006a A661     		str	r6, [r4, #24]
+ 131:Core/Src/ws2812.c ****                     delay_1H();
+ 403              		.loc 1 131 17 is_stmt 1 view .LVU59
+ 131:Core/Src/ws2812.c ****                     delay_1H();
+ 404              		.loc 1 131 19 is_stmt 0 view .LVU60
+ 405 006c EDD1     		bne	.L20
+ 406              		.loc 1 136 45 view .LVU61
+ 407 006e A661     		str	r6, [r4, #24]
+ 137:Core/Src/ws2812.c ****                     delay_0H();
+ 408              		.loc 1 137 21 is_stmt 1 view .LVU62
+ 409 0070 FFF7FEFF 		bl	delay_0H
+ 410              	.LVL15:
+ 138:Core/Src/ws2812.c ****                     led_dat_GPIO_Port->BSRR = reset_bitmask;
+ 411              		.loc 1 138 21 view .LVU63
+ 412              		.loc 1 138 45 is_stmt 0 view .LVU64
+ 413 0074 4FF48032 		mov	r2, #65536
+ 414 0078 A261     		str	r2, [r4, #24]
+ 139:Core/Src/ws2812.c ****                     delay_L();
+ 415              		.loc 1 139 21 is_stmt 1 view .LVU65
+ 129:Core/Src/ws2812.c ****                 led_dat_GPIO_Port->BSRR = set_bitmask;
+ 416              		.loc 1 129 38 is_stmt 0 discriminator 1 view .LVU66
+ 417 007a 0BF1010B 		add	fp, fp, #1
+ 418              	.LVL16:
+ 419              		.loc 1 139 21 view .LVU67
+ 420 007e FFF7FEFF 		bl	delay_L
+ 421              	.LVL17:
+ 129:Core/Src/ws2812.c ****                 led_dat_GPIO_Port->BSRR = set_bitmask;
+ 422              		.loc 1 129 43 is_stmt 1 discriminator 2 view .LVU68
+ARM GAS  /tmp/ccilG4Yi.s 			page 15
+
+
+ 129:Core/Src/ws2812.c ****                 led_dat_GPIO_Port->BSRR = set_bitmask;
+ 423              		.loc 1 129 38 discriminator 1 view .LVU69
+ 424 0082 BBF1080F 		cmp	fp, #8
+ 425 0086 ECD1     		bne	.L11
+ 426              	.L19:
+ 427              	.LBE17:
+ 428              	.LBE19:
+ 127:Core/Src/ws2812.c ****             uint8_t color_channel = ((uint16_t)color_base[color] + dither_value) / DIMMING;
+ 429              		.loc 1 127 43 discriminator 2 view .LVU70
+ 430              	.LVL18:
+ 127:Core/Src/ws2812.c ****             uint8_t color_channel = ((uint16_t)color_base[color] + dither_value) / DIMMING;
+ 431              		.loc 1 127 38 discriminator 1 view .LVU71
+ 432 0088 C145     		cmp	r9, r8
+ 433 008a D5D1     		bne	.L12
+ 434              	.LBE23:
+ 140:Core/Src/ws2812.c ****                 }
+ 141:Core/Src/ws2812.c ****             }
+ 142:Core/Src/ws2812.c ****         }
+ 143:Core/Src/ws2812.c ****         // required for four-byte per pixel LED's 
+ 144:Core/Src/ws2812.c ****         // volatile uint8_t zero = 0;
+ 145:Core/Src/ws2812.c ****         // for(uint8_t bit = 0; bit < 8; ++bit) {
+ 146:Core/Src/ws2812.c ****         //     led_dat_GPIO_Port->BSRR = set_bitmask;
+ 147:Core/Src/ws2812.c ****         //     if(zero & bit) {
+ 148:Core/Src/ws2812.c ****         //         delay_1H();
+ 149:Core/Src/ws2812.c ****         //         led_dat_GPIO_Port->BSRR = reset_bitmask;
+ 150:Core/Src/ws2812.c ****         //         delay_L();
+ 151:Core/Src/ws2812.c ****         //     } else {
+ 152:Core/Src/ws2812.c ****         //         led_dat_GPIO_Port->BSRR = set_bitmask;
+ 153:Core/Src/ws2812.c ****         //         delay_0H();
+ 154:Core/Src/ws2812.c ****         //         led_dat_GPIO_Port->BSRR = reset_bitmask;
+ 155:Core/Src/ws2812.c ****         //         delay_L();
+ 156:Core/Src/ws2812.c ****         //     }
+ 157:Core/Src/ws2812.c ****         // }
+ 158:Core/Src/ws2812.c ****         __enable_irq();
+ 435              		.loc 1 158 9 view .LVU72
+ 436              	.LBB24:
+ 437              	.LBI24:
+ 196:Drivers/CMSIS/Include/cmsis_gcc.h **** {
+ 438              		.loc 2 196 27 view .LVU73
+ 439              	.LBB25:
+ 198:Drivers/CMSIS/Include/cmsis_gcc.h **** }
+ 440              		.loc 2 198 3 view .LVU74
+ 441              		.syntax unified
+ 442              	@ 198 "Drivers/CMSIS/Include/cmsis_gcc.h" 1
+ 443 008c 62B6     		cpsie i
+ 444              	@ 0 "" 2
+ 445              		.thumb
+ 446              		.syntax unified
+ 447              	.LBE25:
+ 448              	.LBE24:
+ 449              	.LBE26:
+ 117:Core/Src/ws2812.c **** 
+ 450              		.loc 1 117 42 discriminator 2 view .LVU75
+ 451              	.LVL19:
+ 117:Core/Src/ws2812.c **** 
+ 452              		.loc 1 117 26 discriminator 1 view .LVU76
+ 453 008e 019B     		ldr	r3, [sp, #4]
+ARM GAS  /tmp/ccilG4Yi.s 			page 16
+
+
+ 454 0090 09F10309 		add	r9, r9, #3
+ 455              	.LVL20:
+ 117:Core/Src/ws2812.c **** 
+ 456              		.loc 1 117 26 is_stmt 0 discriminator 1 view .LVU77
+ 457 0094 9945     		cmp	r9, r3
+ 458 0096 C6D1     		bne	.L13
+ 459              	.LBE27:
+ 159:Core/Src/ws2812.c ****     }
+ 160:Core/Src/ws2812.c **** 
+ 161:Core/Src/ws2812.c **** }
+ 460              		.loc 1 161 1 view .LVU78
+ 461 0098 02B0     		add	sp, sp, #8
+ 462              		.cfi_def_cfa_offset 32
+ 463              		@ sp needed
+ 464 009a BDE8708F 		pop	{r4, r5, r6, r8, r9, r10, fp, pc}
+ 465              	.LVL21:
+ 466              	.L22:
+ 467              		.loc 1 161 1 view .LVU79
+ 468 009e 00BF     		.align	2
+ 469              	.L21:
+ 470 00a0 00040048 		.word	1207960576
+ 471 00a4 00000000 		.word	dither_value
+ 472              		.cfi_endproc
+ 473              	.LFE292:
+ 475              		.global	dither_value
+ 476              		.section	.bss.dither_value,"aw",%nobits
+ 477              		.align	1
+ 480              	dither_value:
+ 481 0000 0000     		.space	2
+ 482              		.text
+ 483              	.Letext0:
+ 484              		.file 3 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 485              		.file 4 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 486              		.file 5 "Drivers/CMSIS/Device/ST/STM32L4xx/Include/stm32l431xx.h"
+ 487              		.file 6 "Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_gpio.h"
+ARM GAS  /tmp/ccilG4Yi.s 			page 17
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 ws2812.c
+     /tmp/ccilG4Yi.s:21     .text.delay_0H:00000000 $t
+     /tmp/ccilG4Yi.s:28     .text.delay_0H:00000000 delay_0H
+     /tmp/ccilG4Yi.s:66     .text.delay_L:00000000 $t
+     /tmp/ccilG4Yi.s:73     .text.delay_L:00000000 delay_L
+     /tmp/ccilG4Yi.s:148    .text.delay_1H:00000000 $t
+     /tmp/ccilG4Yi.s:155    .text.delay_1H:00000000 delay_1H
+     /tmp/ccilG4Yi.s:217    .text.InitWS2812:00000000 $t
+     /tmp/ccilG4Yi.s:224    .text.InitWS2812:00000000 InitWS2812
+     /tmp/ccilG4Yi.s:245    .text.InitWS2812:00000010 $d
+     /tmp/ccilG4Yi.s:250    .text.SendWS2812:00000000 $t
+     /tmp/ccilG4Yi.s:257    .text.SendWS2812:00000000 SendWS2812
+     /tmp/ccilG4Yi.s:470    .text.SendWS2812:000000a0 $d
+     /tmp/ccilG4Yi.s:480    .bss.dither_value:00000000 dither_value
+     /tmp/ccilG4Yi.s:477    .bss.dither_value:00000000 $d
+
+UNDEFINED SYMBOLS
+HAL_GPIO_WritePin

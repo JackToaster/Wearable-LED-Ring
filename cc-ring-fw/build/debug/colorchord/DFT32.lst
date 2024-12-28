@@ -1,0 +1,1414 @@
+ARM GAS  /tmp/ccVDEtR1.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"DFT32.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "colorchord/DFT32.c"
+  20              		.section	.text.HandleInt,"ax",%progbits
+  21              		.align	1
+  22              		.syntax unified
+  23              		.thumb
+  24              		.thumb_func
+  26              	HandleInt:
+  27              	.LVL0:
+  28              	.LFB1:
+   1:colorchord/DFT32.c **** //Copyright 2015 <>< Charles Lohr under the ColorChord License.
+   2:colorchord/DFT32.c **** 
+   3:colorchord/DFT32.c **** #include "DFT32.h"
+   4:colorchord/DFT32.c **** #include <string.h>
+   5:colorchord/DFT32.c **** 
+   6:colorchord/DFT32.c **** #ifndef CCEMBEDDED
+   7:colorchord/DFT32.c **** #include <stdlib.h>
+   8:colorchord/DFT32.c **** #include <stdio.h>
+   9:colorchord/DFT32.c **** #include <math.h>
+  10:colorchord/DFT32.c **** static float * goutbins;
+  11:colorchord/DFT32.c **** #endif
+  12:colorchord/DFT32.c **** 
+  13:colorchord/DFT32.c **** uint16_t embeddedbins32[FIXBINS]; 
+  14:colorchord/DFT32.c **** 
+  15:colorchord/DFT32.c **** //NOTES to self:
+  16:colorchord/DFT32.c **** //
+  17:colorchord/DFT32.c **** // Let's say we want to try this on an AVR.
+  18:colorchord/DFT32.c **** //  24 bins, 5 octaves = 120 bins.
+  19:colorchord/DFT32.c **** // 20 MHz clock / 4.8k sps = 4096 IPS = 34 clocks per bin = :(
+  20:colorchord/DFT32.c **** //  We can do two at the same time, this frees us up some 
+  21:colorchord/DFT32.c **** 
+  22:colorchord/DFT32.c **** static uint8_t Sdonefirstrun;
+  23:colorchord/DFT32.c **** 
+  24:colorchord/DFT32.c **** //A table of precomputed sin() values.  Ranging -1500 to +1500
+  25:colorchord/DFT32.c **** //If we increase this, it may cause overflows elsewhere in code.
+  26:colorchord/DFT32.c **** const int16_t Ssinonlytable[256] = {
+  27:colorchord/DFT32.c ****              0,    36,    73,   110,   147,   183,   220,   256,
+  28:colorchord/DFT32.c ****            292,   328,   364,   400,   435,   470,   505,   539,
+  29:colorchord/DFT32.c ****            574,   607,   641,   674,   707,   739,   771,   802,
+  30:colorchord/DFT32.c ****            833,   863,   893,   922,   951,   979,  1007,  1034,
+ARM GAS  /tmp/ccVDEtR1.s 			page 2
+
+
+  31:colorchord/DFT32.c ****           1060,  1086,  1111,  1135,  1159,  1182,  1204,  1226,
+  32:colorchord/DFT32.c ****           1247,  1267,  1286,  1305,  1322,  1339,  1355,  1371,
+  33:colorchord/DFT32.c ****           1385,  1399,  1412,  1424,  1435,  1445,  1455,  1463,
+  34:colorchord/DFT32.c ****           1471,  1477,  1483,  1488,  1492,  1495,  1498,  1499,
+  35:colorchord/DFT32.c ****           1500,  1499,  1498,  1495,  1492,  1488,  1483,  1477,
+  36:colorchord/DFT32.c ****           1471,  1463,  1455,  1445,  1435,  1424,  1412,  1399,
+  37:colorchord/DFT32.c ****           1385,  1371,  1356,  1339,  1322,  1305,  1286,  1267,
+  38:colorchord/DFT32.c ****           1247,  1226,  1204,  1182,  1159,  1135,  1111,  1086,
+  39:colorchord/DFT32.c ****           1060,  1034,  1007,   979,   951,   922,   893,   863,
+  40:colorchord/DFT32.c ****            833,   802,   771,   739,   707,   674,   641,   607,
+  41:colorchord/DFT32.c ****            574,   539,   505,   470,   435,   400,   364,   328,
+  42:colorchord/DFT32.c ****            292,   256,   220,   183,   147,   110,    73,    36,
+  43:colorchord/DFT32.c ****              0,   -36,   -73,  -110,  -146,  -183,  -219,  -256,
+  44:colorchord/DFT32.c ****           -292,  -328,  -364,  -399,  -435,  -470,  -505,  -539,
+  45:colorchord/DFT32.c ****           -573,  -607,  -641,  -674,  -706,  -739,  -771,  -802,
+  46:colorchord/DFT32.c ****           -833,  -863,  -893,  -922,  -951,  -979, -1007, -1034,
+  47:colorchord/DFT32.c ****          -1060, -1086, -1111, -1135, -1159, -1182, -1204, -1226,
+  48:colorchord/DFT32.c ****          -1247, -1267, -1286, -1305, -1322, -1339, -1355, -1371,
+  49:colorchord/DFT32.c ****          -1385, -1399, -1412, -1424, -1435, -1445, -1454, -1463,
+  50:colorchord/DFT32.c ****          -1471, -1477, -1483, -1488, -1492, -1495, -1498, -1499,
+  51:colorchord/DFT32.c ****          -1500, -1499, -1498, -1495, -1492, -1488, -1483, -1477,
+  52:colorchord/DFT32.c ****          -1471, -1463, -1455, -1445, -1435, -1424, -1412, -1399,
+  53:colorchord/DFT32.c ****          -1385, -1371, -1356, -1339, -1322, -1305, -1286, -1267,
+  54:colorchord/DFT32.c ****          -1247, -1226, -1204, -1182, -1159, -1135, -1111, -1086,
+  55:colorchord/DFT32.c ****          -1060, -1034, -1007,  -979,  -951,  -923,  -893,  -863,
+  56:colorchord/DFT32.c ****           -833,  -802,  -771,  -739,  -707,  -674,  -641,  -608,
+  57:colorchord/DFT32.c ****           -574,  -540,  -505,  -470,  -435,  -400,  -364,  -328,
+  58:colorchord/DFT32.c ****           -292,  -256,  -220,  -183,  -147,  -110,   -73,   -37,};
+  59:colorchord/DFT32.c **** 
+  60:colorchord/DFT32.c **** 
+  61:colorchord/DFT32.c **** /** The above table was created using the following code:
+  62:colorchord/DFT32.c **** #include <math.h>
+  63:colorchord/DFT32.c **** #include <stdio.h>
+  64:colorchord/DFT32.c **** #include <stdint.h>
+  65:colorchord/DFT32.c **** 
+  66:colorchord/DFT32.c **** int16_t Ssintable[256]; //Actually, just [sin].
+  67:colorchord/DFT32.c **** 
+  68:colorchord/DFT32.c **** int main()
+  69:colorchord/DFT32.c **** {
+  70:colorchord/DFT32.c **** 	int i;
+  71:colorchord/DFT32.c **** 	for( i = 0; i < 256; i++ )
+  72:colorchord/DFT32.c **** 	{
+  73:colorchord/DFT32.c **** 		Ssintable[i] = (int16_t)((sinf( i / 256.0 * 6.283 ) * 1500.0));
+  74:colorchord/DFT32.c **** 	}
+  75:colorchord/DFT32.c **** 
+  76:colorchord/DFT32.c **** 	printf( "const int16_t Ssinonlytable[256] = {" );
+  77:colorchord/DFT32.c **** 	for( i = 0; i < 256; i++ )
+  78:colorchord/DFT32.c **** 	{
+  79:colorchord/DFT32.c **** 		if( !(i & 0x7 ) )
+  80:colorchord/DFT32.c **** 		{
+  81:colorchord/DFT32.c **** 			printf( "\n\t" );
+  82:colorchord/DFT32.c **** 		}
+  83:colorchord/DFT32.c **** 		printf( "%6d," ,Ssintable[i] );
+  84:colorchord/DFT32.c **** 	}
+  85:colorchord/DFT32.c **** 	printf( "};\n" );
+  86:colorchord/DFT32.c **** } */
+  87:colorchord/DFT32.c **** 
+ARM GAS  /tmp/ccVDEtR1.s 			page 3
+
+
+  88:colorchord/DFT32.c **** 
+  89:colorchord/DFT32.c **** 
+  90:colorchord/DFT32.c **** uint16_t Sdatspace32A[FIXBINS*2];  //(advances,places) full revolution is 256. 8bits integer part 8
+  91:colorchord/DFT32.c **** int32_t Sdatspace32B[FIXBINS*2];  //(isses,icses)
+  92:colorchord/DFT32.c **** 
+  93:colorchord/DFT32.c **** //This is updated every time the DFT hits the octavecount, or 1 out of (1<<OCTAVES) times which is 
+  94:colorchord/DFT32.c **** int32_t Sdatspace32BOut[FIXBINS*2];  //(isses,icses)
+  95:colorchord/DFT32.c **** 
+  96:colorchord/DFT32.c **** //Sdo_this_octave is a scheduling state for the running SIN/COS states for
+  97:colorchord/DFT32.c **** //each bin.  We have to execute the highest octave every time, however, we can
+  98:colorchord/DFT32.c **** //get away with updating the next octave down every-other-time, then the next
+  99:colorchord/DFT32.c **** //one down yet, every-other-time from that one.  That way, no matter how many
+ 100:colorchord/DFT32.c **** //octaves we have, we only need to update FIXBPERO*2 DFT bins.
+ 101:colorchord/DFT32.c **** static uint8_t Sdo_this_octave[BINCYCLE];
+ 102:colorchord/DFT32.c **** 
+ 103:colorchord/DFT32.c **** static int32_t Saccum_octavebins[OCTAVES];
+ 104:colorchord/DFT32.c **** static uint8_t Swhichoctaveplace;
+ 105:colorchord/DFT32.c **** 
+ 106:colorchord/DFT32.c **** //
+ 107:colorchord/DFT32.c **** uint16_t embeddedbins[FIXBINS]; 
+ 108:colorchord/DFT32.c **** 
+ 109:colorchord/DFT32.c **** //From: http://stackoverflow.com/questions/1100090/looking-for-an-efficient-integer-square-root-alg
+ 110:colorchord/DFT32.c **** //  for sqrt approx but also suggestion for quick norm approximation that would work in this DFT
+ 111:colorchord/DFT32.c **** 
+ 112:colorchord/DFT32.c **** #if APPROXNORM != 1
+ 113:colorchord/DFT32.c **** /**
+ 114:colorchord/DFT32.c ****  * \brief    Fast Square root algorithm, with rounding
+ 115:colorchord/DFT32.c ****  *
+ 116:colorchord/DFT32.c ****  * This does arithmetic rounding of the result. That is, if the real answer
+ 117:colorchord/DFT32.c ****  * would have a fractional part of 0.5 or greater, the result is rounded up to
+ 118:colorchord/DFT32.c ****  * the next integer.
+ 119:colorchord/DFT32.c ****  *      - SquareRootRounded(2) --> 1
+ 120:colorchord/DFT32.c ****  *      - SquareRootRounded(3) --> 2
+ 121:colorchord/DFT32.c ****  *      - SquareRootRounded(4) --> 2
+ 122:colorchord/DFT32.c ****  *      - SquareRootRounded(6) --> 2
+ 123:colorchord/DFT32.c ****  *      - SquareRootRounded(7) --> 3
+ 124:colorchord/DFT32.c ****  *      - SquareRootRounded(8) --> 3
+ 125:colorchord/DFT32.c ****  *      - SquareRootRounded(9) --> 3
+ 126:colorchord/DFT32.c ****  *
+ 127:colorchord/DFT32.c ****  * \param[in] a_nInput - unsigned integer for which to find the square root
+ 128:colorchord/DFT32.c ****  *
+ 129:colorchord/DFT32.c ****  * \return Integer square root of the input value.
+ 130:colorchord/DFT32.c ****  */
+ 131:colorchord/DFT32.c **** static uint16_t SquareRootRounded(uint32_t a_nInput)
+ 132:colorchord/DFT32.c **** {
+ 133:colorchord/DFT32.c ****     uint32_t op  = a_nInput;
+ 134:colorchord/DFT32.c ****     uint32_t res = 0;
+ 135:colorchord/DFT32.c ****     uint32_t one = 1uL << 30; // The second-to-top bit is set: use 1u << 14 for uint16_t type; use 
+ 136:colorchord/DFT32.c **** 
+ 137:colorchord/DFT32.c **** 
+ 138:colorchord/DFT32.c ****     // "one" starts at the highest power of four <= than the argument.
+ 139:colorchord/DFT32.c ****     while (one > op)
+ 140:colorchord/DFT32.c ****     {
+ 141:colorchord/DFT32.c ****         one >>= 2;
+ 142:colorchord/DFT32.c ****     }
+ 143:colorchord/DFT32.c **** 
+ 144:colorchord/DFT32.c ****     while (one != 0)
+ARM GAS  /tmp/ccVDEtR1.s 			page 4
+
+
+ 145:colorchord/DFT32.c ****     {
+ 146:colorchord/DFT32.c ****         if (op >= res + one)
+ 147:colorchord/DFT32.c ****         {
+ 148:colorchord/DFT32.c ****             op = op - (res + one);
+ 149:colorchord/DFT32.c ****             res = res +  2 * one;
+ 150:colorchord/DFT32.c ****         }
+ 151:colorchord/DFT32.c ****         res >>= 1;
+ 152:colorchord/DFT32.c ****         one >>= 2;
+ 153:colorchord/DFT32.c ****     }
+ 154:colorchord/DFT32.c **** 
+ 155:colorchord/DFT32.c ****     /* Do arithmetic rounding to nearest integer */
+ 156:colorchord/DFT32.c ****     if (op > res)
+ 157:colorchord/DFT32.c ****     {
+ 158:colorchord/DFT32.c ****         res++;
+ 159:colorchord/DFT32.c ****     }
+ 160:colorchord/DFT32.c **** 
+ 161:colorchord/DFT32.c ****     return res;
+ 162:colorchord/DFT32.c **** }
+ 163:colorchord/DFT32.c **** #endif
+ 164:colorchord/DFT32.c **** 
+ 165:colorchord/DFT32.c **** void UpdateOutputBins32()
+ 166:colorchord/DFT32.c **** {
+ 167:colorchord/DFT32.c **** 	int i;
+ 168:colorchord/DFT32.c **** 	int32_t * ipt = &Sdatspace32BOut[0];
+ 169:colorchord/DFT32.c **** 	for( i = 0; i < FIXBINS; i++ )
+ 170:colorchord/DFT32.c **** 	{
+ 171:colorchord/DFT32.c **** 		int32_t isps = *(ipt++); //keep 32 bits
+ 172:colorchord/DFT32.c **** 		int32_t ispc = *(ipt++);
+ 173:colorchord/DFT32.c **** 		// take absolute values
+ 174:colorchord/DFT32.c **** 		isps = isps<0? -isps : isps;
+ 175:colorchord/DFT32.c **** 		ispc = ispc<0? -ispc : ispc;
+ 176:colorchord/DFT32.c **** 		int octave = i / FIXBPERO;
+ 177:colorchord/DFT32.c **** 
+ 178:colorchord/DFT32.c **** 		//If we are running DFT32 on regular ColorChord, then we will need to
+ 179:colorchord/DFT32.c **** 		//also update goutbins[]... But if we're on embedded systems, we only
+ 180:colorchord/DFT32.c **** 		//update embeddedbins32.
+ 181:colorchord/DFT32.c **** #ifndef CCEMBEDDED
+ 182:colorchord/DFT32.c **** 		// convert 32 bit precision isps and ispc to floating point
+ 183:colorchord/DFT32.c **** 		float mux = ( (float)isps * (float)isps) + ((float)ispc * (float)ispc);
+ 184:colorchord/DFT32.c **** 		goutbins[i] = sqrtf(mux)/65536.0; // scale by 2^16
+ 185:colorchord/DFT32.c **** 		//reasonable (but arbitrary attenuation)
+ 186:colorchord/DFT32.c **** 		goutbins[i] /= (78<<DFTIIR)*(1<<octave); 
+ 187:colorchord/DFT32.c **** #endif
+ 188:colorchord/DFT32.c **** 
+ 189:colorchord/DFT32.c **** #if APPROXNORM == 1
+ 190:colorchord/DFT32.c **** 		// using full 32 bit precision for isps and ispc
+ 191:colorchord/DFT32.c **** 		uint32_t rmux = isps>ispc? isps + (ispc>>1) : ispc + (isps>>1);
+ 192:colorchord/DFT32.c **** 		rmux = rmux>>16; // keep most significant 16 bits
+ 193:colorchord/DFT32.c **** #else
+ 194:colorchord/DFT32.c **** 		// use the most significant 16 bits of isps and ispc when squaring
+ 195:colorchord/DFT32.c **** 		// since isps and ispc are non-negative right bit shifing is well defined
+ 196:colorchord/DFT32.c **** 		uint32_t rmux = ( (isps>>16) * (isps>>16)) + ((ispc>16) * (ispc>>16));
+ 197:colorchord/DFT32.c **** 		rmux = SquareRootRounded( rmux );
+ 198:colorchord/DFT32.c **** #endif
+ 199:colorchord/DFT32.c **** 
+ 200:colorchord/DFT32.c **** 		//bump up all outputs here, so when we nerf it by bit shifting by
+ 201:colorchord/DFT32.c **** 		//octave we don't lose a lot of detail.
+ARM GAS  /tmp/ccVDEtR1.s 			page 5
+
+
+ 202:colorchord/DFT32.c **** 		rmux = rmux << 1;
+ 203:colorchord/DFT32.c **** 
+ 204:colorchord/DFT32.c **** 		embeddedbins32[i] = rmux >> octave;
+ 205:colorchord/DFT32.c **** 	}
+ 206:colorchord/DFT32.c **** }
+ 207:colorchord/DFT32.c **** 
+ 208:colorchord/DFT32.c **** static void HandleInt( int16_t sample )
+ 209:colorchord/DFT32.c **** {
+  29              		.loc 1 209 1 view -0
+  30              		.cfi_startproc
+  31              		@ args = 0, pretend = 0, frame = 0
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  33              		.loc 1 209 1 is_stmt 0 view .LVU1
+  34 0000 30B5     		push	{r4, r5, lr}
+  35              		.cfi_def_cfa_offset 12
+  36              		.cfi_offset 4, -12
+  37              		.cfi_offset 5, -8
+  38              		.cfi_offset 14, -4
+ 210:colorchord/DFT32.c **** 	int i;
+  39              		.loc 1 210 2 is_stmt 1 view .LVU2
+ 211:colorchord/DFT32.c **** 	uint16_t adv;
+  40              		.loc 1 211 2 view .LVU3
+ 212:colorchord/DFT32.c **** 	uint8_t localipl;
+  41              		.loc 1 212 2 view .LVU4
+ 213:colorchord/DFT32.c **** 	int16_t filteredsample;
+  42              		.loc 1 213 2 view .LVU5
+ 214:colorchord/DFT32.c **** 
+ 215:colorchord/DFT32.c **** 	uint8_t oct = Sdo_this_octave[Swhichoctaveplace];
+  43              		.loc 1 215 2 view .LVU6
+  44              		.loc 1 215 31 is_stmt 0 view .LVU7
+  45 0002 304A     		ldr	r2, .L14
+  46 0004 1378     		ldrb	r3, [r2]	@ zero_extendqisi2
+  47              		.loc 1 215 10 view .LVU8
+  48 0006 3049     		ldr	r1, .L14+4
+  49 0008 CC5C     		ldrb	r4, [r1, r3]	@ zero_extendqisi2
+  50              	.LVL1:
+ 216:colorchord/DFT32.c **** 	Swhichoctaveplace ++;
+  51              		.loc 1 216 2 is_stmt 1 view .LVU9
+  52              		.loc 1 216 20 is_stmt 0 view .LVU10
+  53 000a 0133     		adds	r3, r3, #1
+  54 000c DBB2     		uxtb	r3, r3
+  55 000e 1370     		strb	r3, [r2]
+ 217:colorchord/DFT32.c **** 	Swhichoctaveplace &= BINCYCLE-1;
+  56              		.loc 1 217 2 is_stmt 1 view .LVU11
+  57              		.loc 1 217 20 is_stmt 0 view .LVU12
+  58 0010 03F01F03 		and	r3, r3, #31
+  59 0014 1370     		strb	r3, [r2]
+ 218:colorchord/DFT32.c **** 
+ 219:colorchord/DFT32.c **** 	for( i = 0; i < OCTAVES;i++ )
+  60              		.loc 1 219 2 is_stmt 1 view .LVU13
+  61              	.LVL2:
+  62              		.loc 1 219 9 is_stmt 0 view .LVU14
+  63 0016 0023     		movs	r3, #0
+  64              		.loc 1 219 2 view .LVU15
+  65 0018 06E0     		b	.L2
+  66              	.LVL3:
+  67              	.L3:
+ARM GAS  /tmp/ccVDEtR1.s 			page 6
+
+
+ 220:colorchord/DFT32.c **** 	{
+ 221:colorchord/DFT32.c **** 		Saccum_octavebins[i] += sample;
+  68              		.loc 1 221 3 is_stmt 1 view .LVU16
+  69              		.loc 1 221 20 is_stmt 0 view .LVU17
+  70 001a 2C49     		ldr	r1, .L14+8
+  71 001c 51F82320 		ldr	r2, [r1, r3, lsl #2]
+  72              		.loc 1 221 24 view .LVU18
+  73 0020 0244     		add	r2, r2, r0
+  74 0022 41F82320 		str	r2, [r1, r3, lsl #2]
+ 219:colorchord/DFT32.c **** 	{
+  75              		.loc 1 219 27 is_stmt 1 discriminator 3 view .LVU19
+  76 0026 0133     		adds	r3, r3, #1
+  77              	.LVL4:
+  78              	.L2:
+ 219:colorchord/DFT32.c **** 	{
+  79              		.loc 1 219 16 discriminator 1 view .LVU20
+  80 0028 042B     		cmp	r3, #4
+  81 002a F6DD     		ble	.L3
+ 222:colorchord/DFT32.c **** 	}
+ 223:colorchord/DFT32.c **** 
+ 224:colorchord/DFT32.c **** 	if( oct > 128 )
+  82              		.loc 1 224 2 view .LVU21
+  83              		.loc 1 224 4 is_stmt 0 view .LVU22
+  84 002c 802C     		cmp	r4, #128
+  85 002e 26D8     		bhi	.L13
+ 225:colorchord/DFT32.c **** 	{
+ 226:colorchord/DFT32.c **** 		//Special: This is when we can update everything.
+ 227:colorchord/DFT32.c **** 		//This gets run once out of every (1<<OCTAVES) times.
+ 228:colorchord/DFT32.c **** 		// which is half as many samples
+ 229:colorchord/DFT32.c **** 		//It handles updating part of the DFT.
+ 230:colorchord/DFT32.c **** 		//It should happen at the very first call to HandleInit
+ 231:colorchord/DFT32.c **** 		int32_t * bins = &Sdatspace32B[0];
+ 232:colorchord/DFT32.c **** 		int32_t * binsOut = &Sdatspace32BOut[0];
+ 233:colorchord/DFT32.c **** 
+ 234:colorchord/DFT32.c **** 		for( i = 0; i < FIXBINS; i++ )
+ 235:colorchord/DFT32.c **** 		{
+ 236:colorchord/DFT32.c **** 			//First for the SIN then the COS.
+ 237:colorchord/DFT32.c **** 			int32_t val = *(bins);
+ 238:colorchord/DFT32.c **** 			*(binsOut++) = val;
+ 239:colorchord/DFT32.c **** 			*(bins++) -= val>>DFTIIR;
+ 240:colorchord/DFT32.c **** 
+ 241:colorchord/DFT32.c **** 			val = *(bins);
+ 242:colorchord/DFT32.c **** 			*(binsOut++) = val;
+ 243:colorchord/DFT32.c **** 			*(bins++) -= val>>DFTIIR;
+ 244:colorchord/DFT32.c **** 		}
+ 245:colorchord/DFT32.c **** 		return;
+ 246:colorchord/DFT32.c **** 	}
+ 247:colorchord/DFT32.c **** 
+ 248:colorchord/DFT32.c **** 	// process a filtered sample for one of the octaves
+ 249:colorchord/DFT32.c **** 	uint16_t * dsA = &Sdatspace32A[oct*FIXBPERO*2];
+  86              		.loc 1 249 2 is_stmt 1 view .LVU23
+  87              		.loc 1 249 45 is_stmt 0 view .LVU24
+  88 0030 04EB4403 		add	r3, r4, r4, lsl #1
+  89              	.LVL5:
+  90              		.loc 1 249 13 view .LVU25
+  91 0034 2649     		ldr	r1, .L14+12
+  92 0036 01EB4311 		add	r1, r1, r3, lsl #5
+ARM GAS  /tmp/ccVDEtR1.s 			page 7
+
+
+  93              	.LVL6:
+ 250:colorchord/DFT32.c **** 	int32_t * dsB = &Sdatspace32B[oct*FIXBPERO*2];
+  94              		.loc 1 250 2 is_stmt 1 view .LVU26
+  95              		.loc 1 250 12 is_stmt 0 view .LVU27
+  96 003a 264A     		ldr	r2, .L14+16
+  97 003c 02EB8312 		add	r2, r2, r3, lsl #6
+  98              	.LVL7:
+ 251:colorchord/DFT32.c **** 
+ 252:colorchord/DFT32.c **** 	filteredsample = Saccum_octavebins[oct]>>(OCTAVES-oct);
+  99              		.loc 1 252 2 is_stmt 1 view .LVU28
+ 100              		.loc 1 252 36 is_stmt 0 view .LVU29
+ 101 0040 2248     		ldr	r0, .L14+8
+ 102              	.LVL8:
+ 103              		.loc 1 252 36 view .LVU30
+ 104 0042 50F82430 		ldr	r3, [r0, r4, lsl #2]
+ 105              		.loc 1 252 51 view .LVU31
+ 106 0046 C4F10505 		rsb	r5, r4, #5
+ 107              		.loc 1 252 41 view .LVU32
+ 108 004a 2B41     		asrs	r3, r3, r5
+ 109              		.loc 1 252 17 view .LVU33
+ 110 004c 0FFA83FE 		sxth	lr, r3
+ 111              	.LVL9:
+ 253:colorchord/DFT32.c **** 	Saccum_octavebins[oct] = 0;
+ 112              		.loc 1 253 2 is_stmt 1 view .LVU34
+ 113              		.loc 1 253 25 is_stmt 0 view .LVU35
+ 114 0050 0023     		movs	r3, #0
+ 115 0052 40F82430 		str	r3, [r0, r4, lsl #2]
+ 254:colorchord/DFT32.c **** 
+ 255:colorchord/DFT32.c **** 	for( i = 0; i < FIXBPERO; i++ )
+ 116              		.loc 1 255 2 is_stmt 1 view .LVU36
+ 117              	.LVL10:
+ 118              		.loc 1 255 9 is_stmt 0 view .LVU37
+ 119 0056 9C46     		mov	ip, r3
+ 120              		.loc 1 255 2 view .LVU38
+ 121 0058 2FE0     		b	.L8
+ 122              	.LVL11:
+ 123              	.L6:
+ 124              	.LBB2:
+ 125              	.LBB3:
+ 237:colorchord/DFT32.c **** 			*(binsOut++) = val;
+ 126              		.loc 1 237 4 is_stmt 1 view .LVU39
+ 237:colorchord/DFT32.c **** 			*(binsOut++) = val;
+ 127              		.loc 1 237 12 is_stmt 0 view .LVU40
+ 128 005a 1A68     		ldr	r2, [r3]
+ 129              	.LVL12:
+ 238:colorchord/DFT32.c **** 			*(bins++) -= val>>DFTIIR;
+ 130              		.loc 1 238 4 is_stmt 1 view .LVU41
+ 238:colorchord/DFT32.c **** 			*(bins++) -= val>>DFTIIR;
+ 131              		.loc 1 238 17 is_stmt 0 view .LVU42
+ 132 005c 2146     		mov	r1, r4
+ 133 005e 41F8082B 		str	r2, [r1], #8
+ 239:colorchord/DFT32.c **** 
+ 134              		.loc 1 239 4 is_stmt 1 view .LVU43
+ 135              	.LVL13:
+ 239:colorchord/DFT32.c **** 
+ 136              		.loc 1 239 14 is_stmt 0 view .LVU44
+ 137 0062 A2EBA212 		sub	r2, r2, r2, asr #6
+ARM GAS  /tmp/ccVDEtR1.s 			page 8
+
+
+ 138              	.LVL14:
+ 239:colorchord/DFT32.c **** 
+ 139              		.loc 1 239 14 view .LVU45
+ 140 0066 1A60     		str	r2, [r3]
+ 141              	.LVL15:
+ 241:colorchord/DFT32.c **** 			*(binsOut++) = val;
+ 142              		.loc 1 241 4 is_stmt 1 view .LVU46
+ 241:colorchord/DFT32.c **** 			*(binsOut++) = val;
+ 143              		.loc 1 241 8 is_stmt 0 view .LVU47
+ 144 0068 5A68     		ldr	r2, [r3, #4]
+ 145              	.LVL16:
+ 242:colorchord/DFT32.c **** 			*(bins++) -= val>>DFTIIR;
+ 146              		.loc 1 242 4 is_stmt 1 view .LVU48
+ 242:colorchord/DFT32.c **** 			*(bins++) -= val>>DFTIIR;
+ 147              		.loc 1 242 17 is_stmt 0 view .LVU49
+ 148 006a 6260     		str	r2, [r4, #4]
+ 243:colorchord/DFT32.c **** 		}
+ 149              		.loc 1 243 4 is_stmt 1 view .LVU50
+ 150              	.LVL17:
+ 243:colorchord/DFT32.c **** 		}
+ 151              		.loc 1 243 14 is_stmt 0 view .LVU51
+ 152 006c A2EBA212 		sub	r2, r2, r2, asr #6
+ 153              	.LVL18:
+ 243:colorchord/DFT32.c **** 		}
+ 154              		.loc 1 243 14 view .LVU52
+ 155 0070 5A60     		str	r2, [r3, #4]
+ 156              	.LVL19:
+ 243:colorchord/DFT32.c **** 		}
+ 157              		.loc 1 243 14 view .LVU53
+ 158              	.LBE3:
+ 234:colorchord/DFT32.c **** 		{
+ 159              		.loc 1 234 29 is_stmt 1 discriminator 3 view .LVU54
+ 160 0072 0130     		adds	r0, r0, #1
+ 161              	.LVL20:
+ 162              	.LBB4:
+ 242:colorchord/DFT32.c **** 			*(bins++) -= val>>DFTIIR;
+ 163              		.loc 1 242 13 is_stmt 0 view .LVU55
+ 164 0074 0C46     		mov	r4, r1
+ 243:colorchord/DFT32.c **** 		}
+ 165              		.loc 1 243 10 view .LVU56
+ 166 0076 0833     		adds	r3, r3, #8
+ 167              	.LVL21:
+ 168              	.L4:
+ 243:colorchord/DFT32.c **** 		}
+ 169              		.loc 1 243 10 view .LVU57
+ 170              	.LBE4:
+ 234:colorchord/DFT32.c **** 		{
+ 171              		.loc 1 234 17 is_stmt 1 discriminator 1 view .LVU58
+ 172 0078 7728     		cmp	r0, #119
+ 173 007a EEDD     		ble	.L6
+ 174 007c 20E0     		b	.L1
+ 175              	.LVL22:
+ 176              	.L13:
+ 232:colorchord/DFT32.c **** 
+ 177              		.loc 1 232 13 is_stmt 0 view .LVU59
+ 178 007e 164C     		ldr	r4, .L14+20
+ 179              	.LVL23:
+ARM GAS  /tmp/ccVDEtR1.s 			page 9
+
+
+ 231:colorchord/DFT32.c **** 		int32_t * binsOut = &Sdatspace32BOut[0];
+ 180              		.loc 1 231 13 view .LVU60
+ 181 0080 144B     		ldr	r3, .L14+16
+ 182              	.LVL24:
+ 234:colorchord/DFT32.c **** 		{
+ 183              		.loc 1 234 10 view .LVU61
+ 184 0082 0020     		movs	r0, #0
+ 185              	.LVL25:
+ 234:colorchord/DFT32.c **** 		{
+ 186              		.loc 1 234 10 view .LVU62
+ 187 0084 F8E7     		b	.L4
+ 188              	.LVL26:
+ 189              	.L9:
+ 234:colorchord/DFT32.c **** 		{
+ 190              		.loc 1 234 10 view .LVU63
+ 191              	.LBE2:
+ 256:colorchord/DFT32.c **** 	{
+ 257:colorchord/DFT32.c **** 		adv = *(dsA++);
+ 192              		.loc 1 257 3 is_stmt 1 view .LVU64
+ 193              		.loc 1 257 7 is_stmt 0 view .LVU65
+ 194 0086 0C88     		ldrh	r4, [r1]
+ 195              	.LVL27:
+ 258:colorchord/DFT32.c **** 		localipl = *(dsA) >> 8;
+ 196              		.loc 1 258 3 is_stmt 1 view .LVU66
+ 197              		.loc 1 258 14 is_stmt 0 view .LVU67
+ 198 0088 4888     		ldrh	r0, [r1, #2]
+ 199              		.loc 1 258 12 view .LVU68
+ 200 008a 030A     		lsrs	r3, r0, #8
+ 201              	.LVL28:
+ 259:colorchord/DFT32.c **** 		*(dsA++) += adv;
+ 202              		.loc 1 259 3 is_stmt 1 view .LVU69
+ 203              		.loc 1 259 12 is_stmt 0 view .LVU70
+ 204 008c 2044     		add	r0, r0, r4
+ 205 008e 4880     		strh	r0, [r1, #2]	@ movhi
+ 260:colorchord/DFT32.c **** 
+ 261:colorchord/DFT32.c **** 		*(dsB++) += (Ssinonlytable[localipl] * filteredsample);
+ 206              		.loc 1 261 3 is_stmt 1 view .LVU71
+ 207              	.LVL29:
+ 208              		.loc 1 261 3 is_stmt 0 view .LVU72
+ 209 0090 1068     		ldr	r0, [r2]
+ 210              		.loc 1 261 29 view .LVU73
+ 211 0092 124D     		ldr	r5, .L14+24
+ 212 0094 35F91340 		ldrsh	r4, [r5, r3, lsl #1]
+ 213              		.loc 1 261 12 view .LVU74
+ 214 0098 0EFB0404 		mla	r4, lr, r4, r0
+ 215 009c 1046     		mov	r0, r2
+ 216 009e 40F8084B 		str	r4, [r0], #8
+ 217              	.LVL30:
+ 262:colorchord/DFT32.c **** 		//Get the cosine (1/4 wavelength out-of-phase with sin)
+ 263:colorchord/DFT32.c **** 		localipl += 64;
+ 218              		.loc 1 263 3 is_stmt 1 view .LVU75
+ 219              		.loc 1 263 12 is_stmt 0 view .LVU76
+ 220 00a2 4033     		adds	r3, r3, #64
+ 221              	.LVL31:
+ 222              		.loc 1 263 12 view .LVU77
+ 223 00a4 DBB2     		uxtb	r3, r3
+ 224              	.LVL32:
+ARM GAS  /tmp/ccVDEtR1.s 			page 10
+
+
+ 264:colorchord/DFT32.c **** 		*(dsB++) += (Ssinonlytable[localipl] * filteredsample);
+ 225              		.loc 1 264 3 is_stmt 1 view .LVU78
+ 226              		.loc 1 264 3 is_stmt 0 view .LVU79
+ 227 00a6 5468     		ldr	r4, [r2, #4]
+ 228              		.loc 1 264 29 view .LVU80
+ 229 00a8 35F91330 		ldrsh	r3, [r5, r3, lsl #1]
+ 230              	.LVL33:
+ 231              		.loc 1 264 12 view .LVU81
+ 232 00ac 03FB0E44 		mla	r4, r3, lr, r4
+ 233 00b0 5460     		str	r4, [r2, #4]
+ 255:colorchord/DFT32.c **** 	{
+ 234              		.loc 1 255 29 is_stmt 1 discriminator 3 view .LVU82
+ 235 00b2 0CF1010C 		add	ip, ip, #1
+ 236              	.LVL34:
+ 237              		.loc 1 264 8 is_stmt 0 view .LVU83
+ 238 00b6 0246     		mov	r2, r0
+ 259:colorchord/DFT32.c **** 
+ 239              		.loc 1 259 8 view .LVU84
+ 240 00b8 0431     		adds	r1, r1, #4
+ 241              	.LVL35:
+ 242              	.L8:
+ 255:colorchord/DFT32.c **** 	{
+ 243              		.loc 1 255 16 is_stmt 1 discriminator 1 view .LVU85
+ 244 00ba BCF1170F 		cmp	ip, #23
+ 245 00be E2DD     		ble	.L9
+ 246              	.LVL36:
+ 247              	.L1:
+ 265:colorchord/DFT32.c **** 	}
+ 266:colorchord/DFT32.c **** }
+ 248              		.loc 1 266 1 is_stmt 0 view .LVU86
+ 249 00c0 30BD     		pop	{r4, r5, pc}
+ 250              	.L15:
+ 251 00c2 00BF     		.align	2
+ 252              	.L14:
+ 253 00c4 00000000 		.word	Swhichoctaveplace
+ 254 00c8 00000000 		.word	Sdo_this_octave
+ 255 00cc 00000000 		.word	Saccum_octavebins
+ 256 00d0 00000000 		.word	Sdatspace32A
+ 257 00d4 00000000 		.word	Sdatspace32B
+ 258 00d8 00000000 		.word	Sdatspace32BOut
+ 259 00dc 00000000 		.word	Ssinonlytable
+ 260              		.cfi_endproc
+ 261              	.LFE1:
+ 263              		.section	.text.UpdateOutputBins32,"ax",%progbits
+ 264              		.align	1
+ 265              		.global	UpdateOutputBins32
+ 266              		.syntax unified
+ 267              		.thumb
+ 268              		.thumb_func
+ 270              	UpdateOutputBins32:
+ 271              	.LFB0:
+ 166:colorchord/DFT32.c **** 	int i;
+ 272              		.loc 1 166 1 is_stmt 1 view -0
+ 273              		.cfi_startproc
+ 274              		@ args = 0, pretend = 0, frame = 0
+ 275              		@ frame_needed = 0, uses_anonymous_args = 0
+ 167:colorchord/DFT32.c **** 	int32_t * ipt = &Sdatspace32BOut[0];
+ARM GAS  /tmp/ccVDEtR1.s 			page 11
+
+
+ 276              		.loc 1 167 2 view .LVU88
+ 168:colorchord/DFT32.c **** 	for( i = 0; i < FIXBINS; i++ )
+ 277              		.loc 1 168 2 view .LVU89
+ 278              	.LVL37:
+ 169:colorchord/DFT32.c **** 	{
+ 279              		.loc 1 169 2 view .LVU90
+ 168:colorchord/DFT32.c **** 	for( i = 0; i < FIXBINS; i++ )
+ 280              		.loc 1 168 12 is_stmt 0 view .LVU91
+ 281 0000 154B     		ldr	r3, .L26
+ 169:colorchord/DFT32.c **** 	{
+ 282              		.loc 1 169 9 view .LVU92
+ 283 0002 0022     		movs	r2, #0
+ 284              	.LVL38:
+ 169:colorchord/DFT32.c **** 	{
+ 285              		.loc 1 169 16 is_stmt 1 discriminator 1 view .LVU93
+ 286 0004 772A     		cmp	r2, #119
+ 287 0006 25DC     		bgt	.L24
+ 166:colorchord/DFT32.c **** 	int i;
+ 288              		.loc 1 166 1 is_stmt 0 view .LVU94
+ 289 0008 10B5     		push	{r4, lr}
+ 290              		.cfi_def_cfa_offset 8
+ 291              		.cfi_offset 4, -8
+ 292              		.cfi_offset 14, -4
+ 293 000a 0CE0     		b	.L20
+ 294              	.LVL39:
+ 295              	.L18:
+ 296              	.LBB5:
+ 191:colorchord/DFT32.c **** 		rmux = rmux>>16; // keep most significant 16 bits
+ 297              		.loc 1 191 54 discriminator 2 view .LVU95
+ 298 000c 03EB6103 		add	r3, r3, r1, asr #1
+ 299              	.LVL40:
+ 300              	.L19:
+ 192:colorchord/DFT32.c **** #else
+ 301              		.loc 1 192 3 is_stmt 1 view .LVU96
+ 192:colorchord/DFT32.c **** #else
+ 302              		.loc 1 192 8 is_stmt 0 view .LVU97
+ 303 0010 1B0C     		lsrs	r3, r3, #16
+ 304              	.LVL41:
+ 202:colorchord/DFT32.c **** 
+ 305              		.loc 1 202 3 is_stmt 1 view .LVU98
+ 202:colorchord/DFT32.c **** 
+ 306              		.loc 1 202 8 is_stmt 0 view .LVU99
+ 307 0012 5B00     		lsls	r3, r3, #1
+ 308              	.LVL42:
+ 204:colorchord/DFT32.c **** 	}
+ 309              		.loc 1 204 3 is_stmt 1 view .LVU100
+ 204:colorchord/DFT32.c **** 	}
+ 310              		.loc 1 204 28 is_stmt 0 view .LVU101
+ 311 0014 23FA0CF3 		lsr	r3, r3, ip
+ 312              	.LVL43:
+ 204:colorchord/DFT32.c **** 	}
+ 313              		.loc 1 204 21 view .LVU102
+ 314 0018 1049     		ldr	r1, .L26+4
+ 315              	.LVL44:
+ 204:colorchord/DFT32.c **** 	}
+ 316              		.loc 1 204 21 view .LVU103
+ 317 001a 21F81230 		strh	r3, [r1, r2, lsl #1]	@ movhi
+ARM GAS  /tmp/ccVDEtR1.s 			page 12
+
+
+ 318              	.LVL45:
+ 204:colorchord/DFT32.c **** 	}
+ 319              		.loc 1 204 21 view .LVU104
+ 320              	.LBE5:
+ 169:colorchord/DFT32.c **** 	{
+ 321              		.loc 1 169 28 is_stmt 1 discriminator 2 view .LVU105
+ 322 001e 0132     		adds	r2, r2, #1
+ 323              	.LVL46:
+ 324              	.LBB6:
+ 172:colorchord/DFT32.c **** 		// take absolute values
+ 325              		.loc 1 172 23 is_stmt 0 view .LVU106
+ 326 0020 0346     		mov	r3, r0
+ 327              	.LVL47:
+ 172:colorchord/DFT32.c **** 		// take absolute values
+ 328              		.loc 1 172 23 view .LVU107
+ 329              	.LBE6:
+ 169:colorchord/DFT32.c **** 	{
+ 330              		.loc 1 169 16 is_stmt 1 discriminator 1 view .LVU108
+ 331 0022 772A     		cmp	r2, #119
+ 332 0024 15DC     		bgt	.L25
+ 333              	.LVL48:
+ 334              	.L20:
+ 335              	.LBB7:
+ 171:colorchord/DFT32.c **** 		int32_t ispc = *(ipt++);
+ 336              		.loc 1 171 3 view .LVU109
+ 171:colorchord/DFT32.c **** 		int32_t ispc = *(ipt++);
+ 337              		.loc 1 171 11 is_stmt 0 view .LVU110
+ 338 0026 1846     		mov	r0, r3
+ 339 0028 50F8081B 		ldr	r1, [r0], #8
+ 340              	.LVL49:
+ 172:colorchord/DFT32.c **** 		// take absolute values
+ 341              		.loc 1 172 3 is_stmt 1 view .LVU111
+ 172:colorchord/DFT32.c **** 		// take absolute values
+ 342              		.loc 1 172 11 is_stmt 0 view .LVU112
+ 343 002c 5B68     		ldr	r3, [r3, #4]
+ 344              	.LVL50:
+ 174:colorchord/DFT32.c **** 		ispc = ispc<0? -ispc : ispc;
+ 345              		.loc 1 174 3 is_stmt 1 view .LVU113
+ 174:colorchord/DFT32.c **** 		ispc = ispc<0? -ispc : ispc;
+ 346              		.loc 1 174 8 is_stmt 0 view .LVU114
+ 347 002e 0029     		cmp	r1, #0
+ 348 0030 B8BF     		it	lt
+ 349 0032 4942     		rsblt	r1, r1, #0
+ 350              	.LVL51:
+ 175:colorchord/DFT32.c **** 		int octave = i / FIXBPERO;
+ 351              		.loc 1 175 3 is_stmt 1 view .LVU115
+ 175:colorchord/DFT32.c **** 		int octave = i / FIXBPERO;
+ 352              		.loc 1 175 8 is_stmt 0 view .LVU116
+ 353 0034 002B     		cmp	r3, #0
+ 354 0036 B8BF     		it	lt
+ 355 0038 5B42     		rsblt	r3, r3, #0
+ 356              	.LVL52:
+ 176:colorchord/DFT32.c **** 
+ 357              		.loc 1 176 3 is_stmt 1 view .LVU117
+ 176:colorchord/DFT32.c **** 
+ 358              		.loc 1 176 7 is_stmt 0 view .LVU118
+ 359 003a 094C     		ldr	r4, .L26+8
+ARM GAS  /tmp/ccVDEtR1.s 			page 13
+
+
+ 360 003c 84FB024E 		smull	r4, lr, r4, r2
+ 361 0040 4FEAE27C 		asr	ip, r2, #31
+ 362 0044 CCEBAE0C 		rsb	ip, ip, lr, asr #2
+ 363              	.LVL53:
+ 191:colorchord/DFT32.c **** 		rmux = rmux>>16; // keep most significant 16 bits
+ 364              		.loc 1 191 3 is_stmt 1 view .LVU119
+ 191:colorchord/DFT32.c **** 		rmux = rmux>>16; // keep most significant 16 bits
+ 365              		.loc 1 191 47 is_stmt 0 view .LVU120
+ 366 0048 9942     		cmp	r1, r3
+ 367 004a DFDD     		ble	.L18
+ 191:colorchord/DFT32.c **** 		rmux = rmux>>16; // keep most significant 16 bits
+ 368              		.loc 1 191 35 discriminator 1 view .LVU121
+ 369 004c 01EB6303 		add	r3, r1, r3, asr #1
+ 370              	.LVL54:
+ 191:colorchord/DFT32.c **** 		rmux = rmux>>16; // keep most significant 16 bits
+ 371              		.loc 1 191 35 discriminator 1 view .LVU122
+ 372 0050 DEE7     		b	.L19
+ 373              	.LVL55:
+ 374              	.L25:
+ 191:colorchord/DFT32.c **** 		rmux = rmux>>16; // keep most significant 16 bits
+ 375              		.loc 1 191 35 discriminator 1 view .LVU123
+ 376              	.LBE7:
+ 206:colorchord/DFT32.c **** 
+ 377              		.loc 1 206 1 view .LVU124
+ 378 0052 10BD     		pop	{r4, pc}
+ 379              	.LVL56:
+ 380              	.L24:
+ 381              		.cfi_def_cfa_offset 0
+ 382              		.cfi_restore 4
+ 383              		.cfi_restore 14
+ 206:colorchord/DFT32.c **** 
+ 384              		.loc 1 206 1 view .LVU125
+ 385 0054 7047     		bx	lr
+ 386              	.L27:
+ 387 0056 00BF     		.align	2
+ 388              	.L26:
+ 389 0058 00000000 		.word	Sdatspace32BOut
+ 390 005c 00000000 		.word	embeddedbins32
+ 391 0060 ABAAAA2A 		.word	715827883
+ 392              		.cfi_endproc
+ 393              	.LFE0:
+ 395              		.section	.text.SetupDFTProgressive32,"ax",%progbits
+ 396              		.align	1
+ 397              		.global	SetupDFTProgressive32
+ 398              		.syntax unified
+ 399              		.thumb
+ 400              		.thumb_func
+ 402              	SetupDFTProgressive32:
+ 403              	.LFB2:
+ 267:colorchord/DFT32.c **** 
+ 268:colorchord/DFT32.c **** int SetupDFTProgressive32()
+ 269:colorchord/DFT32.c **** {
+ 404              		.loc 1 269 1 is_stmt 1 view -0
+ 405              		.cfi_startproc
+ 406              		@ args = 0, pretend = 0, frame = 0
+ 407              		@ frame_needed = 0, uses_anonymous_args = 0
+ 408              		@ link register save eliminated.
+ARM GAS  /tmp/ccVDEtR1.s 			page 14
+
+
+ 270:colorchord/DFT32.c **** 	int i;
+ 409              		.loc 1 270 2 view .LVU127
+ 271:colorchord/DFT32.c **** 	int j;
+ 410              		.loc 1 271 2 view .LVU128
+ 272:colorchord/DFT32.c **** 
+ 273:colorchord/DFT32.c **** 	Sdonefirstrun = 1;
+ 411              		.loc 1 273 2 view .LVU129
+ 412              		.loc 1 273 16 is_stmt 0 view .LVU130
+ 413 0000 0E4B     		ldr	r3, .L37
+ 414 0002 0122     		movs	r2, #1
+ 415 0004 1A70     		strb	r2, [r3]
+ 274:colorchord/DFT32.c **** 	Sdo_this_octave[0] = 0xff;
+ 416              		.loc 1 274 2 is_stmt 1 view .LVU131
+ 417              		.loc 1 274 21 is_stmt 0 view .LVU132
+ 418 0006 0E4B     		ldr	r3, .L37+4
+ 419 0008 FF22     		movs	r2, #255
+ 420 000a 1A70     		strb	r2, [r3]
+ 275:colorchord/DFT32.c **** 	for( i = 0; i < BINCYCLE-1; i++ )
+ 421              		.loc 1 275 2 is_stmt 1 view .LVU133
+ 422              	.LVL57:
+ 423              		.loc 1 275 9 is_stmt 0 view .LVU134
+ 424 000c 0021     		movs	r1, #0
+ 425              	.LVL58:
+ 426              	.L29:
+ 427              		.loc 1 275 16 is_stmt 1 discriminator 1 view .LVU135
+ 428 000e 1E29     		cmp	r1, #30
+ 429 0010 12DC     		bgt	.L35
+ 276:colorchord/DFT32.c **** 	{
+ 277:colorchord/DFT32.c **** 		// Sdo_this_octave = 
+ 278:colorchord/DFT32.c **** 		// 255 4 3 4 2 4 3 4 1 4 3 4 2 4 3 4 0 4 3 4 2 4 3 4 1 4 3 4 2 4 3 4 is case for 5 octaves.
+ 279:colorchord/DFT32.c **** 		// Initial state is special one, then at step i do octave = Sdo_this_octave with averaged samples
+ 280:colorchord/DFT32.c **** 		//search for "first" zero
+ 281:colorchord/DFT32.c **** 
+ 282:colorchord/DFT32.c **** 		for( j = 0; j <= OCTAVES; j++ )
+ 430              		.loc 1 282 10 is_stmt 0 view .LVU136
+ 431 0012 0023     		movs	r3, #0
+ 432              	.L33:
+ 433              	.LVL59:
+ 434              		.loc 1 282 17 is_stmt 1 discriminator 1 view .LVU137
+ 435 0014 052B     		cmp	r3, #5
+ 436 0016 06DC     		bgt	.L36
+ 283:colorchord/DFT32.c **** 		{
+ 284:colorchord/DFT32.c **** 			if( ((1<<j) & i) == 0 ) break;
+ 437              		.loc 1 284 4 view .LVU138
+ 438              		.loc 1 284 21 is_stmt 0 view .LVU139
+ 439 0018 41FA03F2 		asr	r2, r1, r3
+ 440              		.loc 1 284 6 view .LVU140
+ 441 001c 12F0010F 		tst	r2, #1
+ 442 0020 04D0     		beq	.L30
+ 282:colorchord/DFT32.c **** 		{
+ 443              		.loc 1 282 30 is_stmt 1 discriminator 2 view .LVU141
+ 444 0022 0133     		adds	r3, r3, #1
+ 445              	.LVL60:
+ 282:colorchord/DFT32.c **** 		{
+ 446              		.loc 1 282 30 is_stmt 0 discriminator 2 view .LVU142
+ 447 0024 F6E7     		b	.L33
+ 448              	.L36:
+ARM GAS  /tmp/ccVDEtR1.s 			page 15
+
+
+ 285:colorchord/DFT32.c **** 		}
+ 286:colorchord/DFT32.c **** 		if( j > OCTAVES )
+ 287:colorchord/DFT32.c **** 		{
+ 288:colorchord/DFT32.c **** #ifndef CCEMBEDDED
+ 289:colorchord/DFT32.c **** 			fprintf( stderr, "Error: algorithm fault.\n" );
+ 290:colorchord/DFT32.c **** 			exit( -1 );
+ 291:colorchord/DFT32.c **** #endif
+ 292:colorchord/DFT32.c **** 			return -1;
+ 449              		.loc 1 292 11 view .LVU143
+ 450 0026 4FF0FF30 		mov	r0, #-1
+ 451 002a 7047     		bx	lr
+ 452              	.L30:
+ 286:colorchord/DFT32.c **** 		{
+ 453              		.loc 1 286 3 is_stmt 1 view .LVU144
+ 293:colorchord/DFT32.c **** 		}
+ 294:colorchord/DFT32.c **** 		Sdo_this_octave[i+1] = OCTAVES-j-1;
+ 454              		.loc 1 294 3 view .LVU145
+ 455              		.loc 1 294 20 is_stmt 0 view .LVU146
+ 456 002c 0131     		adds	r1, r1, #1
+ 457              	.LVL61:
+ 458              		.loc 1 294 35 view .LVU147
+ 459 002e C3F10403 		rsb	r3, r3, #4
+ 460              	.LVL62:
+ 461              		.loc 1 294 24 view .LVU148
+ 462 0032 034A     		ldr	r2, .L37+4
+ 463 0034 5354     		strb	r3, [r2, r1]
+ 275:colorchord/DFT32.c **** 	{
+ 464              		.loc 1 275 31 is_stmt 1 discriminator 2 view .LVU149
+ 465 0036 EAE7     		b	.L29
+ 466              	.LVL63:
+ 467              	.L35:
+ 295:colorchord/DFT32.c **** 	}
+ 296:colorchord/DFT32.c **** 	return 0;
+ 468              		.loc 1 296 9 is_stmt 0 view .LVU150
+ 469 0038 0020     		movs	r0, #0
+ 297:colorchord/DFT32.c **** }
+ 470              		.loc 1 297 1 view .LVU151
+ 471 003a 7047     		bx	lr
+ 472              	.L38:
+ 473              		.align	2
+ 474              	.L37:
+ 475 003c 00000000 		.word	Sdonefirstrun
+ 476 0040 00000000 		.word	Sdo_this_octave
+ 477              		.cfi_endproc
+ 478              	.LFE2:
+ 480              		.section	.text.UpdateBins32,"ax",%progbits
+ 481              		.align	1
+ 482              		.global	UpdateBins32
+ 483              		.syntax unified
+ 484              		.thumb
+ 485              		.thumb_func
+ 487              	UpdateBins32:
+ 488              	.LVL64:
+ 489              	.LFB3:
+ 298:colorchord/DFT32.c **** 
+ 299:colorchord/DFT32.c **** 
+ 300:colorchord/DFT32.c **** 
+ARM GAS  /tmp/ccVDEtR1.s 			page 16
+
+
+ 301:colorchord/DFT32.c **** void UpdateBins32( const uint16_t * frequencies )
+ 302:colorchord/DFT32.c **** {
+ 490              		.loc 1 302 1 is_stmt 1 view -0
+ 491              		.cfi_startproc
+ 492              		@ args = 0, pretend = 0, frame = 0
+ 493              		@ frame_needed = 0, uses_anonymous_args = 0
+ 494              		@ link register save eliminated.
+ 303:colorchord/DFT32.c **** 	int i;
+ 495              		.loc 1 303 2 view .LVU153
+ 304:colorchord/DFT32.c **** 	int imod = 0;
+ 496              		.loc 1 304 2 view .LVU154
+ 305:colorchord/DFT32.c **** 	for( i = 0; i < FIXBINS; i++, imod++ )
+ 497              		.loc 1 305 2 view .LVU155
+ 304:colorchord/DFT32.c **** 	int imod = 0;
+ 498              		.loc 1 304 6 is_stmt 0 view .LVU156
+ 499 0000 0023     		movs	r3, #0
+ 500              		.loc 1 305 9 view .LVU157
+ 501 0002 1A46     		mov	r2, r3
+ 502              		.loc 1 305 2 view .LVU158
+ 503 0004 06E0     		b	.L40
+ 504              	.LVL65:
+ 505              	.L41:
+ 506              	.LBB8:
+ 306:colorchord/DFT32.c **** 	{
+ 307:colorchord/DFT32.c **** 		if (imod >= FIXBPERO) imod=0;
+ 308:colorchord/DFT32.c **** 		uint16_t freq = frequencies[imod];
+ 507              		.loc 1 308 3 is_stmt 1 view .LVU159
+ 508              		.loc 1 308 12 is_stmt 0 view .LVU160
+ 509 0006 30F813C0 		ldrh	ip, [r0, r3, lsl #1]
+ 510              	.LVL66:
+ 309:colorchord/DFT32.c **** 		Sdatspace32A[i*2] = freq;// / oneoveroctave;
+ 511              		.loc 1 309 3 is_stmt 1 view .LVU161
+ 512              		.loc 1 309 21 is_stmt 0 view .LVU162
+ 513 000a 0649     		ldr	r1, .L45
+ 514 000c 21F822C0 		strh	ip, [r1, r2, lsl #2]	@ movhi
+ 515              	.LBE8:
+ 305:colorchord/DFT32.c **** 	for( i = 0; i < FIXBINS; i++, imod++ )
+ 516              		.loc 1 305 30 is_stmt 1 discriminator 2 view .LVU163
+ 305:colorchord/DFT32.c **** 	for( i = 0; i < FIXBINS; i++, imod++ )
+ 517              		.loc 1 305 28 is_stmt 0 discriminator 2 view .LVU164
+ 518 0010 0132     		adds	r2, r2, #1
+ 519              	.LVL67:
+ 305:colorchord/DFT32.c **** 	for( i = 0; i < FIXBINS; i++, imod++ )
+ 520              		.loc 1 305 36 discriminator 2 view .LVU165
+ 521 0012 0133     		adds	r3, r3, #1
+ 522              	.LVL68:
+ 523              	.L40:
+ 305:colorchord/DFT32.c **** 	for( i = 0; i < FIXBINS; i++, imod++ )
+ 524              		.loc 1 305 16 is_stmt 1 discriminator 1 view .LVU166
+ 525 0014 772A     		cmp	r2, #119
+ 526 0016 03DC     		bgt	.L44
+ 527              	.LBB9:
+ 307:colorchord/DFT32.c **** 		uint16_t freq = frequencies[imod];
+ 528              		.loc 1 307 3 view .LVU167
+ 307:colorchord/DFT32.c **** 		uint16_t freq = frequencies[imod];
+ 529              		.loc 1 307 6 is_stmt 0 view .LVU168
+ 530 0018 172B     		cmp	r3, #23
+ARM GAS  /tmp/ccVDEtR1.s 			page 17
+
+
+ 531 001a F4DD     		ble	.L41
+ 307:colorchord/DFT32.c **** 		uint16_t freq = frequencies[imod];
+ 532              		.loc 1 307 29 discriminator 1 view .LVU169
+ 533 001c 0023     		movs	r3, #0
+ 534              	.LVL69:
+ 307:colorchord/DFT32.c **** 		uint16_t freq = frequencies[imod];
+ 535              		.loc 1 307 29 discriminator 1 view .LVU170
+ 536 001e F2E7     		b	.L41
+ 537              	.LVL70:
+ 538              	.L44:
+ 307:colorchord/DFT32.c **** 		uint16_t freq = frequencies[imod];
+ 539              		.loc 1 307 29 discriminator 1 view .LVU171
+ 540              	.LBE9:
+ 310:colorchord/DFT32.c **** 	}
+ 311:colorchord/DFT32.c **** }
+ 541              		.loc 1 311 1 view .LVU172
+ 542 0020 7047     		bx	lr
+ 543              	.L46:
+ 544 0022 00BF     		.align	2
+ 545              	.L45:
+ 546 0024 00000000 		.word	Sdatspace32A
+ 547              		.cfi_endproc
+ 548              	.LFE3:
+ 550              		.section	.text.PushSample32,"ax",%progbits
+ 551              		.align	1
+ 552              		.global	PushSample32
+ 553              		.syntax unified
+ 554              		.thumb
+ 555              		.thumb_func
+ 557              	PushSample32:
+ 558              	.LVL71:
+ 559              	.LFB4:
+ 312:colorchord/DFT32.c **** 
+ 313:colorchord/DFT32.c **** void PushSample32( int16_t dat )
+ 314:colorchord/DFT32.c **** {
+ 560              		.loc 1 314 1 is_stmt 1 view -0
+ 561              		.cfi_startproc
+ 562              		@ args = 0, pretend = 0, frame = 0
+ 563              		@ frame_needed = 0, uses_anonymous_args = 0
+ 564              		.loc 1 314 1 is_stmt 0 view .LVU174
+ 565 0000 10B5     		push	{r4, lr}
+ 566              		.cfi_def_cfa_offset 8
+ 567              		.cfi_offset 4, -8
+ 568              		.cfi_offset 14, -4
+ 569 0002 0446     		mov	r4, r0
+ 315:colorchord/DFT32.c **** 	HandleInt( dat );
+ 570              		.loc 1 315 2 is_stmt 1 view .LVU175
+ 571 0004 FFF7FEFF 		bl	HandleInt
+ 572              	.LVL72:
+ 316:colorchord/DFT32.c **** 	HandleInt( dat );
+ 573              		.loc 1 316 2 view .LVU176
+ 574 0008 2046     		mov	r0, r4
+ 575 000a FFF7FEFF 		bl	HandleInt
+ 576              	.LVL73:
+ 317:colorchord/DFT32.c **** }
+ 577              		.loc 1 317 1 is_stmt 0 view .LVU177
+ 578 000e 10BD     		pop	{r4, pc}
+ARM GAS  /tmp/ccVDEtR1.s 			page 18
+
+
+ 579              		.loc 1 317 1 view .LVU178
+ 580              		.cfi_endproc
+ 581              	.LFE4:
+ 583              		.global	embeddedbins
+ 584              		.section	.bss.embeddedbins,"aw",%nobits
+ 585              		.align	2
+ 588              	embeddedbins:
+ 589 0000 00000000 		.space	240
+ 589      00000000 
+ 589      00000000 
+ 589      00000000 
+ 589      00000000 
+ 590              		.section	.bss.Swhichoctaveplace,"aw",%nobits
+ 593              	Swhichoctaveplace:
+ 594 0000 00       		.space	1
+ 595              		.section	.bss.Saccum_octavebins,"aw",%nobits
+ 596              		.align	2
+ 599              	Saccum_octavebins:
+ 600 0000 00000000 		.space	20
+ 600      00000000 
+ 600      00000000 
+ 600      00000000 
+ 600      00000000 
+ 601              		.section	.bss.Sdo_this_octave,"aw",%nobits
+ 602              		.align	2
+ 605              	Sdo_this_octave:
+ 606 0000 00000000 		.space	32
+ 606      00000000 
+ 606      00000000 
+ 606      00000000 
+ 606      00000000 
+ 607              		.global	Sdatspace32BOut
+ 608              		.section	.bss.Sdatspace32BOut,"aw",%nobits
+ 609              		.align	2
+ 612              	Sdatspace32BOut:
+ 613 0000 00000000 		.space	960
+ 613      00000000 
+ 613      00000000 
+ 613      00000000 
+ 613      00000000 
+ 614              		.global	Sdatspace32B
+ 615              		.section	.bss.Sdatspace32B,"aw",%nobits
+ 616              		.align	2
+ 619              	Sdatspace32B:
+ 620 0000 00000000 		.space	960
+ 620      00000000 
+ 620      00000000 
+ 620      00000000 
+ 620      00000000 
+ 621              		.global	Sdatspace32A
+ 622              		.section	.bss.Sdatspace32A,"aw",%nobits
+ 623              		.align	2
+ 626              	Sdatspace32A:
+ 627 0000 00000000 		.space	480
+ 627      00000000 
+ 627      00000000 
+ 627      00000000 
+ARM GAS  /tmp/ccVDEtR1.s 			page 19
+
+
+ 627      00000000 
+ 628              		.global	Ssinonlytable
+ 629              		.section	.rodata.Ssinonlytable,"a"
+ 630              		.align	2
+ 633              	Ssinonlytable:
+ 634 0000 0000     		.short	0
+ 635 0002 2400     		.short	36
+ 636 0004 4900     		.short	73
+ 637 0006 6E00     		.short	110
+ 638 0008 9300     		.short	147
+ 639 000a B700     		.short	183
+ 640 000c DC00     		.short	220
+ 641 000e 0001     		.short	256
+ 642 0010 2401     		.short	292
+ 643 0012 4801     		.short	328
+ 644 0014 6C01     		.short	364
+ 645 0016 9001     		.short	400
+ 646 0018 B301     		.short	435
+ 647 001a D601     		.short	470
+ 648 001c F901     		.short	505
+ 649 001e 1B02     		.short	539
+ 650 0020 3E02     		.short	574
+ 651 0022 5F02     		.short	607
+ 652 0024 8102     		.short	641
+ 653 0026 A202     		.short	674
+ 654 0028 C302     		.short	707
+ 655 002a E302     		.short	739
+ 656 002c 0303     		.short	771
+ 657 002e 2203     		.short	802
+ 658 0030 4103     		.short	833
+ 659 0032 5F03     		.short	863
+ 660 0034 7D03     		.short	893
+ 661 0036 9A03     		.short	922
+ 662 0038 B703     		.short	951
+ 663 003a D303     		.short	979
+ 664 003c EF03     		.short	1007
+ 665 003e 0A04     		.short	1034
+ 666 0040 2404     		.short	1060
+ 667 0042 3E04     		.short	1086
+ 668 0044 5704     		.short	1111
+ 669 0046 6F04     		.short	1135
+ 670 0048 8704     		.short	1159
+ 671 004a 9E04     		.short	1182
+ 672 004c B404     		.short	1204
+ 673 004e CA04     		.short	1226
+ 674 0050 DF04     		.short	1247
+ 675 0052 F304     		.short	1267
+ 676 0054 0605     		.short	1286
+ 677 0056 1905     		.short	1305
+ 678 0058 2A05     		.short	1322
+ 679 005a 3B05     		.short	1339
+ 680 005c 4B05     		.short	1355
+ 681 005e 5B05     		.short	1371
+ 682 0060 6905     		.short	1385
+ 683 0062 7705     		.short	1399
+ 684 0064 8405     		.short	1412
+ 685 0066 9005     		.short	1424
+ARM GAS  /tmp/ccVDEtR1.s 			page 20
+
+
+ 686 0068 9B05     		.short	1435
+ 687 006a A505     		.short	1445
+ 688 006c AF05     		.short	1455
+ 689 006e B705     		.short	1463
+ 690 0070 BF05     		.short	1471
+ 691 0072 C505     		.short	1477
+ 692 0074 CB05     		.short	1483
+ 693 0076 D005     		.short	1488
+ 694 0078 D405     		.short	1492
+ 695 007a D705     		.short	1495
+ 696 007c DA05     		.short	1498
+ 697 007e DB05     		.short	1499
+ 698 0080 DC05     		.short	1500
+ 699 0082 DB05     		.short	1499
+ 700 0084 DA05     		.short	1498
+ 701 0086 D705     		.short	1495
+ 702 0088 D405     		.short	1492
+ 703 008a D005     		.short	1488
+ 704 008c CB05     		.short	1483
+ 705 008e C505     		.short	1477
+ 706 0090 BF05     		.short	1471
+ 707 0092 B705     		.short	1463
+ 708 0094 AF05     		.short	1455
+ 709 0096 A505     		.short	1445
+ 710 0098 9B05     		.short	1435
+ 711 009a 9005     		.short	1424
+ 712 009c 8405     		.short	1412
+ 713 009e 7705     		.short	1399
+ 714 00a0 6905     		.short	1385
+ 715 00a2 5B05     		.short	1371
+ 716 00a4 4C05     		.short	1356
+ 717 00a6 3B05     		.short	1339
+ 718 00a8 2A05     		.short	1322
+ 719 00aa 1905     		.short	1305
+ 720 00ac 0605     		.short	1286
+ 721 00ae F304     		.short	1267
+ 722 00b0 DF04     		.short	1247
+ 723 00b2 CA04     		.short	1226
+ 724 00b4 B404     		.short	1204
+ 725 00b6 9E04     		.short	1182
+ 726 00b8 8704     		.short	1159
+ 727 00ba 6F04     		.short	1135
+ 728 00bc 5704     		.short	1111
+ 729 00be 3E04     		.short	1086
+ 730 00c0 2404     		.short	1060
+ 731 00c2 0A04     		.short	1034
+ 732 00c4 EF03     		.short	1007
+ 733 00c6 D303     		.short	979
+ 734 00c8 B703     		.short	951
+ 735 00ca 9A03     		.short	922
+ 736 00cc 7D03     		.short	893
+ 737 00ce 5F03     		.short	863
+ 738 00d0 4103     		.short	833
+ 739 00d2 2203     		.short	802
+ 740 00d4 0303     		.short	771
+ 741 00d6 E302     		.short	739
+ 742 00d8 C302     		.short	707
+ARM GAS  /tmp/ccVDEtR1.s 			page 21
+
+
+ 743 00da A202     		.short	674
+ 744 00dc 8102     		.short	641
+ 745 00de 5F02     		.short	607
+ 746 00e0 3E02     		.short	574
+ 747 00e2 1B02     		.short	539
+ 748 00e4 F901     		.short	505
+ 749 00e6 D601     		.short	470
+ 750 00e8 B301     		.short	435
+ 751 00ea 9001     		.short	400
+ 752 00ec 6C01     		.short	364
+ 753 00ee 4801     		.short	328
+ 754 00f0 2401     		.short	292
+ 755 00f2 0001     		.short	256
+ 756 00f4 DC00     		.short	220
+ 757 00f6 B700     		.short	183
+ 758 00f8 9300     		.short	147
+ 759 00fa 6E00     		.short	110
+ 760 00fc 4900     		.short	73
+ 761 00fe 2400     		.short	36
+ 762 0100 0000     		.short	0
+ 763 0102 DCFF     		.short	-36
+ 764 0104 B7FF     		.short	-73
+ 765 0106 92FF     		.short	-110
+ 766 0108 6EFF     		.short	-146
+ 767 010a 49FF     		.short	-183
+ 768 010c 25FF     		.short	-219
+ 769 010e 00FF     		.short	-256
+ 770 0110 DCFE     		.short	-292
+ 771 0112 B8FE     		.short	-328
+ 772 0114 94FE     		.short	-364
+ 773 0116 71FE     		.short	-399
+ 774 0118 4DFE     		.short	-435
+ 775 011a 2AFE     		.short	-470
+ 776 011c 07FE     		.short	-505
+ 777 011e E5FD     		.short	-539
+ 778 0120 C3FD     		.short	-573
+ 779 0122 A1FD     		.short	-607
+ 780 0124 7FFD     		.short	-641
+ 781 0126 5EFD     		.short	-674
+ 782 0128 3EFD     		.short	-706
+ 783 012a 1DFD     		.short	-739
+ 784 012c FDFC     		.short	-771
+ 785 012e DEFC     		.short	-802
+ 786 0130 BFFC     		.short	-833
+ 787 0132 A1FC     		.short	-863
+ 788 0134 83FC     		.short	-893
+ 789 0136 66FC     		.short	-922
+ 790 0138 49FC     		.short	-951
+ 791 013a 2DFC     		.short	-979
+ 792 013c 11FC     		.short	-1007
+ 793 013e F6FB     		.short	-1034
+ 794 0140 DCFB     		.short	-1060
+ 795 0142 C2FB     		.short	-1086
+ 796 0144 A9FB     		.short	-1111
+ 797 0146 91FB     		.short	-1135
+ 798 0148 79FB     		.short	-1159
+ 799 014a 62FB     		.short	-1182
+ARM GAS  /tmp/ccVDEtR1.s 			page 22
+
+
+ 800 014c 4CFB     		.short	-1204
+ 801 014e 36FB     		.short	-1226
+ 802 0150 21FB     		.short	-1247
+ 803 0152 0DFB     		.short	-1267
+ 804 0154 FAFA     		.short	-1286
+ 805 0156 E7FA     		.short	-1305
+ 806 0158 D6FA     		.short	-1322
+ 807 015a C5FA     		.short	-1339
+ 808 015c B5FA     		.short	-1355
+ 809 015e A5FA     		.short	-1371
+ 810 0160 97FA     		.short	-1385
+ 811 0162 89FA     		.short	-1399
+ 812 0164 7CFA     		.short	-1412
+ 813 0166 70FA     		.short	-1424
+ 814 0168 65FA     		.short	-1435
+ 815 016a 5BFA     		.short	-1445
+ 816 016c 52FA     		.short	-1454
+ 817 016e 49FA     		.short	-1463
+ 818 0170 41FA     		.short	-1471
+ 819 0172 3BFA     		.short	-1477
+ 820 0174 35FA     		.short	-1483
+ 821 0176 30FA     		.short	-1488
+ 822 0178 2CFA     		.short	-1492
+ 823 017a 29FA     		.short	-1495
+ 824 017c 26FA     		.short	-1498
+ 825 017e 25FA     		.short	-1499
+ 826 0180 24FA     		.short	-1500
+ 827 0182 25FA     		.short	-1499
+ 828 0184 26FA     		.short	-1498
+ 829 0186 29FA     		.short	-1495
+ 830 0188 2CFA     		.short	-1492
+ 831 018a 30FA     		.short	-1488
+ 832 018c 35FA     		.short	-1483
+ 833 018e 3BFA     		.short	-1477
+ 834 0190 41FA     		.short	-1471
+ 835 0192 49FA     		.short	-1463
+ 836 0194 51FA     		.short	-1455
+ 837 0196 5BFA     		.short	-1445
+ 838 0198 65FA     		.short	-1435
+ 839 019a 70FA     		.short	-1424
+ 840 019c 7CFA     		.short	-1412
+ 841 019e 89FA     		.short	-1399
+ 842 01a0 97FA     		.short	-1385
+ 843 01a2 A5FA     		.short	-1371
+ 844 01a4 B4FA     		.short	-1356
+ 845 01a6 C5FA     		.short	-1339
+ 846 01a8 D6FA     		.short	-1322
+ 847 01aa E7FA     		.short	-1305
+ 848 01ac FAFA     		.short	-1286
+ 849 01ae 0DFB     		.short	-1267
+ 850 01b0 21FB     		.short	-1247
+ 851 01b2 36FB     		.short	-1226
+ 852 01b4 4CFB     		.short	-1204
+ 853 01b6 62FB     		.short	-1182
+ 854 01b8 79FB     		.short	-1159
+ 855 01ba 91FB     		.short	-1135
+ 856 01bc A9FB     		.short	-1111
+ARM GAS  /tmp/ccVDEtR1.s 			page 23
+
+
+ 857 01be C2FB     		.short	-1086
+ 858 01c0 DCFB     		.short	-1060
+ 859 01c2 F6FB     		.short	-1034
+ 860 01c4 11FC     		.short	-1007
+ 861 01c6 2DFC     		.short	-979
+ 862 01c8 49FC     		.short	-951
+ 863 01ca 65FC     		.short	-923
+ 864 01cc 83FC     		.short	-893
+ 865 01ce A1FC     		.short	-863
+ 866 01d0 BFFC     		.short	-833
+ 867 01d2 DEFC     		.short	-802
+ 868 01d4 FDFC     		.short	-771
+ 869 01d6 1DFD     		.short	-739
+ 870 01d8 3DFD     		.short	-707
+ 871 01da 5EFD     		.short	-674
+ 872 01dc 7FFD     		.short	-641
+ 873 01de A0FD     		.short	-608
+ 874 01e0 C2FD     		.short	-574
+ 875 01e2 E4FD     		.short	-540
+ 876 01e4 07FE     		.short	-505
+ 877 01e6 2AFE     		.short	-470
+ 878 01e8 4DFE     		.short	-435
+ 879 01ea 70FE     		.short	-400
+ 880 01ec 94FE     		.short	-364
+ 881 01ee B8FE     		.short	-328
+ 882 01f0 DCFE     		.short	-292
+ 883 01f2 00FF     		.short	-256
+ 884 01f4 24FF     		.short	-220
+ 885 01f6 49FF     		.short	-183
+ 886 01f8 6DFF     		.short	-147
+ 887 01fa 92FF     		.short	-110
+ 888 01fc B7FF     		.short	-73
+ 889 01fe DBFF     		.short	-37
+ 890              		.section	.bss.Sdonefirstrun,"aw",%nobits
+ 893              	Sdonefirstrun:
+ 894 0000 00       		.space	1
+ 895              		.global	embeddedbins32
+ 896              		.section	.bss.embeddedbins32,"aw",%nobits
+ 897              		.align	2
+ 900              	embeddedbins32:
+ 901 0000 00000000 		.space	240
+ 901      00000000 
+ 901      00000000 
+ 901      00000000 
+ 901      00000000 
+ 902              		.text
+ 903              	.Letext0:
+ 904              		.file 2 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 905              		.file 3 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 906              		.file 4 "colorchord/DFT32.h"
+ARM GAS  /tmp/ccVDEtR1.s 			page 24
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 DFT32.c
+     /tmp/ccVDEtR1.s:21     .text.HandleInt:00000000 $t
+     /tmp/ccVDEtR1.s:26     .text.HandleInt:00000000 HandleInt
+     /tmp/ccVDEtR1.s:253    .text.HandleInt:000000c4 $d
+     /tmp/ccVDEtR1.s:593    .bss.Swhichoctaveplace:00000000 Swhichoctaveplace
+     /tmp/ccVDEtR1.s:605    .bss.Sdo_this_octave:00000000 Sdo_this_octave
+     /tmp/ccVDEtR1.s:599    .bss.Saccum_octavebins:00000000 Saccum_octavebins
+     /tmp/ccVDEtR1.s:626    .bss.Sdatspace32A:00000000 Sdatspace32A
+     /tmp/ccVDEtR1.s:619    .bss.Sdatspace32B:00000000 Sdatspace32B
+     /tmp/ccVDEtR1.s:612    .bss.Sdatspace32BOut:00000000 Sdatspace32BOut
+     /tmp/ccVDEtR1.s:633    .rodata.Ssinonlytable:00000000 Ssinonlytable
+     /tmp/ccVDEtR1.s:264    .text.UpdateOutputBins32:00000000 $t
+     /tmp/ccVDEtR1.s:270    .text.UpdateOutputBins32:00000000 UpdateOutputBins32
+     /tmp/ccVDEtR1.s:389    .text.UpdateOutputBins32:00000058 $d
+     /tmp/ccVDEtR1.s:900    .bss.embeddedbins32:00000000 embeddedbins32
+     /tmp/ccVDEtR1.s:396    .text.SetupDFTProgressive32:00000000 $t
+     /tmp/ccVDEtR1.s:402    .text.SetupDFTProgressive32:00000000 SetupDFTProgressive32
+     /tmp/ccVDEtR1.s:475    .text.SetupDFTProgressive32:0000003c $d
+     /tmp/ccVDEtR1.s:893    .bss.Sdonefirstrun:00000000 Sdonefirstrun
+     /tmp/ccVDEtR1.s:481    .text.UpdateBins32:00000000 $t
+     /tmp/ccVDEtR1.s:487    .text.UpdateBins32:00000000 UpdateBins32
+     /tmp/ccVDEtR1.s:546    .text.UpdateBins32:00000024 $d
+     /tmp/ccVDEtR1.s:551    .text.PushSample32:00000000 $t
+     /tmp/ccVDEtR1.s:557    .text.PushSample32:00000000 PushSample32
+     /tmp/ccVDEtR1.s:588    .bss.embeddedbins:00000000 embeddedbins
+     /tmp/ccVDEtR1.s:585    .bss.embeddedbins:00000000 $d
+     /tmp/ccVDEtR1.s:594    .bss.Swhichoctaveplace:00000000 $d
+     /tmp/ccVDEtR1.s:596    .bss.Saccum_octavebins:00000000 $d
+     /tmp/ccVDEtR1.s:602    .bss.Sdo_this_octave:00000000 $d
+     /tmp/ccVDEtR1.s:609    .bss.Sdatspace32BOut:00000000 $d
+     /tmp/ccVDEtR1.s:616    .bss.Sdatspace32B:00000000 $d
+     /tmp/ccVDEtR1.s:623    .bss.Sdatspace32A:00000000 $d
+     /tmp/ccVDEtR1.s:630    .rodata.Ssinonlytable:00000000 $d
+     /tmp/ccVDEtR1.s:894    .bss.Sdonefirstrun:00000000 $d
+     /tmp/ccVDEtR1.s:897    .bss.embeddedbins32:00000000 $d
+
+NO UNDEFINED SYMBOLS

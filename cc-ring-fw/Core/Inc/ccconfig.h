@@ -1,0 +1,14 @@
+#ifndef _CCCONFIG_H
+#define _CCCONFIG_H
+
+#define CCEMBEDDED
+#define NUM_LIN_LEDS 14
+#define USE_NUM_LIN_LEDS 14
+#define NERF_NOTE_PORP 15
+#define DFREQ 19250
+
+
+#define MIN_AMP_FOR_NOTE 80
+#define MINIMUM_AMP_FOR_NOTE_TO_DISAPPEAR 64
+
+#endif
